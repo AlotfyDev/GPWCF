@@ -1,0 +1,800 @@
+{
+  "documentType": "GPWCFFilesystemArchitecture",
+  "documentId": "gpwcf.phase03.filesystem-architecture",
+  "documentVersion": "0.3.0",
+  "status": "accepted-for-filesystem-skeleton",
+  "phase": "PHASE-03 - GPWCF Framework Filesystem & Package Architecture",
+  "assessmentDate": "2026-11-09",
+  "purpose": "Accepted filesystem/package ownership architecture for the GPWCF source and verification skeleton. The physical tree materializes only approved package boundaries and package markers; unresolved contracts do not become placeholder modules or public APIs.",
+  "scope": {
+    "project": "SMRB.GenericPipelineWorkflowComponentsFramework",
+    "referenceConsumer": "SMRB.PayloadDescriptionGenerator",
+    "referenceConsumerRole": "Reference consumer used to test framework genericity only. Its 13 stages, stage models, step models, tools and business policies do not determine GPWCF folder names or package structure.",
+    "governingInputs": [
+      ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-03_GPWCF_Structure/01.01_Contract_Classification_and_Allocation.json",
+      ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-03_GPWCF_Structure/Framework_Module_Boundary_Model.json",
+      ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-03_GPWCF_Structure/Dependency_and_Public_API_Architecture.json",
+      ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-00/ADR-GPWCF-PREFECT-001.json",
+      ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-01/PHASE-01_Qualification_Report.md",
+      ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Qualification_Report.md"
+    ],
+    "exclusions": [
+      "No specialized Stage, Step, SPU or Supporting Pattern contract is modified.",
+      "No Generator stage/step model or Generator-specific contract is copied into GPWCF.",
+      "No generic Pipeline Root entity/package is created.",
+      "No Prefect adoption reconsideration; Prefect 3.9.2 remains accepted.",
+      "Draft Wave 1-6 detailed designs are not implementation authority until explicitly accepted."
+    ]
+  },
+  "designPrinciples": [
+    "Allocate directories by cohesive ownership and dependency boundary, not by source document names, contract filenames or consumer workflow stage numbering.",
+    "Stage, Step and SPU are distinct Entities. Their packages are the organizing centers for the contracts and components that realize their responsibilities.",
+    "Composition is owned by the Aggregate it composes: Stage Composition is nested under Stage; Step Composition is nested under Step. Composition is not a peer top-level entity or generic framework package.",
+    "A component belongs with the Entity/Aggregate that owns its invocation, coordination and result semantics unless it is independently reusable with its own specialized contract, in which case it receives its own package.",
+    "SPU is an independently callable processing Entity, not a Step subfolder.",
+    "Supporting Patterns are independent optional capability packages. They are not subclasses or instances of an assumed universal SupportingUnit base.",
+    "Public API is an explicit curated stable boundary under public_api; __init__.py files alone do not define the public contract.",
+    "Core and Prefect Integration have separate import and dependency boundaries. Core must remain usable with Prefect absent.",
+    "Only create directories for established responsibilities. Do not create speculative managers, registries, universal adapters, shared-contracts packages or empty component taxonomies.",
+    "Keep development documentation, PoC evidence and runtime source separate.",
+    "The filesystem represents semantic ownership and allowed dependencies; it does not imply that every contract document is an implemented Python type."
+  ],
+  "canonicalSourceTree": {
+    "root": "SMRB.GenericPipelineWorkflowComponentsFramework/",
+    "tree": [
+      {
+        "path": "pyproject.toml",
+        "kind": "project_configuration",
+        "status": "required-before-package-build",
+        "purpose": "Single-distribution project metadata with a dependency-free Core base and optional Prefect extra. Create build metadata only after FS-GATE-02 selects/pins the build backend; do not invent backend or version metadata in the skeleton."
+      },
+      {
+        "path": "README.md",
+        "kind": "project_documentation",
+        "status": "required",
+        "purpose": "Framework purpose, supported public APIs, installation profiles, minimal usage and link to architecture docs."
+      },
+      {
+        "path": "LICENSE",
+        "kind": "project_metadata",
+        "status": "conditional",
+        "purpose": "Include the project license when distribution is prepared; do not invent license content."
+      },
+      {
+        "path": "src/gpwcf/__init__.py",
+        "kind": "python_package",
+        "status": "required",
+        "purpose": "Minimal namespace/package initialization. Must not eagerly import Core internals, optional patterns or Prefect."
+      },
+      {
+        "path": "src/gpwcf/core/__init__.py",
+        "kind": "python_package",
+        "status": "required",
+        "purpose": "Minimal Core package marker; does not eagerly import entities, optional patterns or Prefect."
+      },
+      {
+        "path": "src/gpwcf/core/",
+        "kind": "core_implementation",
+        "status": "required",
+        "purpose": "Prefect-independent domain entities, contracts, composition ownership and typed results."
+      },
+      {
+        "path": "src/gpwcf/integrations/prefect/",
+        "kind": "optional_integration_package",
+        "status": "required_for_selected_integration",
+        "purpose": "Prefect-specific functional binding, native hierarchy invocation and operational mapping; isolated from Core."
+      },
+      {
+        "path": "tests/core/",
+        "kind": "verification",
+        "status": "required",
+        "purpose": "Core contract, entity, composition and result tests in a Prefect-free environment."
+      },
+      {
+        "path": "tests/public_api/",
+        "kind": "verification",
+        "status": "required",
+        "purpose": "Public import, export, compatibility and API boundary tests."
+      },
+      {
+        "path": "tests/integrations/prefect/",
+        "kind": "verification",
+        "status": "required_for_selected_integration",
+        "purpose": "Prefect binding and operational mapping tests, clearly distinguishing fixture qualification from production GPWCF binding."
+      },
+      {
+        "path": "tests/architecture/",
+        "kind": "verification",
+        "status": "required",
+        "purpose": "Dependency direction, forbidden-import, optional-pattern isolation and package boundary checks."
+      },
+      {
+        "path": "docs/",
+        "kind": "published_documentation",
+        "status": "optional",
+        "purpose": "Consumer-facing documentation only. Governing architecture decision records remain under .docs."
+      },
+      {
+        "path": ".docs/",
+        "kind": "architecture_and_project_records",
+        "status": "existing_preserve",
+        "purpose": "Retain PHASE-01/02 evidence and PHASE-03 architecture artifacts here; do not relocate them as part of source package creation."
+      },
+      {
+        "path": ".poc/",
+        "kind": "qualification_prototypes",
+        "status": "existing_preserve",
+        "purpose": "Retain Prefect qualification scripts, evidence and local PoC assets outside distributable runtime packages."
+      },
+      {
+        "path": "requirements.txt",
+        "kind": "solution_development_aggregator",
+        "status": "existing_preserve",
+        "purpose": "Keep current solution-level aggregation semantics; it is not the authoritative published Core runtime dependency manifest."
+      }
+    ],
+    "pythonPackages": [
+      {
+        "path": "src/gpwcf/core/stage/",
+        "moduleId": "MOD-CORE-STAGE",
+        "ownership": "Stage Entity / Stage Aggregate",
+        "packageShape": [
+          "src/gpwcf/core/stage/__init__.py",
+          "src/gpwcf/core/stage/entity.py",
+          "src/gpwcf/core/stage/contracts.py",
+          "src/gpwcf/core/stage/composition/__init__.py",
+          "src/gpwcf/core/stage/composition/step_coordination.py"
+        ],
+        "responsibilities": [
+          "Stage identity and generic Stage domain semantics.",
+          "Stage-owned composition and coordination of Step instances through the Step public callable contract.",
+          "Stage owns Stage-specific Flow Result semantics; no reusable Core Stage result package/schema is established.",
+          "No direct SPU invocation and no Prefect Flow/Deployment imports."
+        ],
+        "notes": [
+          "The Stage package represents the established Stage Aggregate ownership boundary.",
+          "Stage callable signature remains unresolved; contracts.py must not invent a callable signature.",
+          "Do not materialize core/stage/results/ or a generic FlowResult until a separate Stage result contract is approved."
+        ]
+      },
+      {
+        "path": "src/gpwcf/core/step/",
+        "moduleId": "MOD-CORE-STEP",
+        "ownership": "Step Entity / Step Aggregate",
+        "packageShape": [
+          "src/gpwcf/core/step/__init__.py",
+          "src/gpwcf/core/step/entity.py",
+          "src/gpwcf/core/step/contracts.py",
+          "src/gpwcf/core/step/composition/__init__.py",
+          "src/gpwcf/core/step/composition/spu_coordination.py",
+          "src/gpwcf/core/step/composition/supporting_unit_selection.py",
+          "src/gpwcf/core/step/composition/result_assembly.py",
+          "src/gpwcf/core/step/lifecycle.py",
+          "src/gpwcf/core/step/results/__init__.py",
+          "src/gpwcf/core/step/results/step_execution_result.py"
+        ],
+        "responsibilities": [
+          "Step identity and Stage-facing callable contract.",
+          "Step Composition and coordination of SPUs and only selected Supporting Unit capabilities.",
+          "Step lifecycle/settlement decision authority.",
+          "Assembly and publication of StepExecutionResult."
+        ],
+        "notes": [
+          "Composition modules are private implementation collaborators owned by Step Aggregate, not consumer-facing independent plugin components.",
+          "Create only the collaborators justified by approved contracts and implementation; the proposed names do not authorize new semantics.",
+          "Do not put SPU implementations or Supporting Pattern implementations inside Step.",
+          "StepExecutionResult is a distinct logical contract module physically nested under the Step Aggregate package; see MOD-CORE-STEP-RESULTS."
+        ]
+      },
+      {
+        "path": "src/gpwcf/core/step/results/",
+        "moduleId": "MOD-CORE-STEP-RESULTS",
+        "ownership": "Step Aggregate result contract boundary (distinct logical module, physically nested under Step)",
+        "packageShape": [
+          "src/gpwcf/core/step/results/__init__.py",
+          "src/gpwcf/core/step/results/step_execution_result.py"
+        ],
+        "responsibilities": [
+          "Own the StepExecutionResult contract as a standalone logical result module.",
+          "Preserve distinction from SPUExecutionResult, supporting-pattern result contracts and Prefect operational State.",
+          "Keep optional specialized result typing unresolved until the approved optional-slot strategy is established."
+        ],
+        "notes": [
+          "This is not a separate Entity/Aggregate or distribution.",
+          "The physical path is shared with the Step Aggregate package; Step Composition owns assembly while the result contract remains a distinct logical module.",
+          "Do not add concrete optional result annotations or eager imports of optional Supporting Patterns at skeleton stage."
+        ]
+      },
+      {
+        "path": "src/gpwcf/core/processing_units/spu/",
+        "moduleId": "MOD-CORE-SPU",
+        "ownership": "Standalone Processing Unit Entity",
+        "packageShape": [
+          "src/gpwcf/core/processing_units/__init__.py",
+          "src/gpwcf/core/processing_units/spu/__init__.py",
+          "src/gpwcf/core/processing_units/spu/contracts.py",
+          "src/gpwcf/core/processing_units/spu/results/__init__.py",
+          "src/gpwcf/core/processing_units/spu/results/spu_execution_result.py"
+        ],
+        "responsibilities": [
+          "SPU callable contract and generic processing-unit identity boundary where established.",
+          "SPU input/output and SPUExecutionResult semantics.",
+          "Independent callable unit invoked by Step Composition."
+        ],
+        "notes": [
+          "Do not place SPU inside the Step package; it is an independently identifiable processing Entity.",
+          "Do not introduce a generic executable-unit base merely to share naming with Supporting Patterns."
+        ]
+      },
+      {
+        "path": "src/gpwcf/core/supporting_patterns/error_handling/",
+        "moduleId": "MOD-CORE-SUPPORT-EH",
+        "ownership": "Optional Error Handling Supporting Pattern",
+        "packageShape": [
+          "src/gpwcf/core/supporting_patterns/__init__.py",
+          "src/gpwcf/core/supporting_patterns/error_handling/__init__.py",
+          "src/gpwcf/core/supporting_patterns/error_handling/contracts.py",
+          "src/gpwcf/core/supporting_patterns/error_handling/results.py"
+        ],
+        "responsibilities": [
+          "Error Handling specialized capability contracts and result semantics.",
+          "Only selected error-handling behaviors and publication/recovery protocol surfaces that are generic under the classified contracts."
+        ],
+        "notes": [
+          "No generic Common Error Model is placed here until its Generator dependency is detached and separately approved.",
+          "Single Step Publication concrete policy and recovery ownership remain consumer specialization.",
+          "Do not import Step Composition implementation from this package."
+        ]
+      },
+      {
+        "path": "src/gpwcf/core/supporting_patterns/validation/",
+        "moduleId": "MOD-CORE-SUPPORT-VALIDATION",
+        "ownership": "Optional Validation Supporting Pattern",
+        "packageShape": [
+          "src/gpwcf/core/supporting_patterns/validation/__init__.py",
+          "src/gpwcf/core/supporting_patterns/validation/contracts.py",
+          "src/gpwcf/core/supporting_patterns/validation/results.py"
+        ],
+        "responsibilities": [
+          "Validator specialized behavior, association/lifecycle contract surfaces and validator result semantics where generic."
+        ],
+        "notes": [
+          "Optional and independently importable. No mandatory Validator Manager and no Step implementation dependency."
+        ]
+      },
+      {
+        "path": "src/gpwcf/core/supporting_patterns/observation/",
+        "moduleId": "MOD-CORE-SUPPORT-OBSERVATION",
+        "ownership": "Optional Observation Supporting Pattern",
+        "packageShape": [
+          "src/gpwcf/core/supporting_patterns/observation/__init__.py",
+          "src/gpwcf/core/supporting_patterns/observation/contracts.py",
+          "src/gpwcf/core/supporting_patterns/observation/results.py"
+        ],
+        "responsibilities": [
+          "Observation specialized behavior and lifecycle/relationship contract surfaces where generic."
+        ],
+        "notes": [
+          "Optional and independently importable. No universal event bus and no Step implementation dependency."
+        ]
+      },
+      {
+        "path": "src/gpwcf/integrations/prefect/",
+        "moduleId": "MOD-INTEGRATION-PREFECT",
+        "ownership": "Selected Prefect 3.9.2 Integration",
+        "packageShape": [
+          "src/gpwcf/integrations/__init__.py",
+          "src/gpwcf/integrations/prefect/__init__.py",
+          "src/gpwcf/integrations/prefect/bindings/__init__.py",
+          "src/gpwcf/integrations/prefect/bindings/step.py",
+          "src/gpwcf/integrations/prefect/bindings/spu.py",
+          "src/gpwcf/integrations/prefect/bindings/supporting_units.py",
+          "src/gpwcf/integrations/prefect/invocation/__init__.py",
+          "src/gpwcf/integrations/prefect/invocation/stage_deployment.py",
+          "src/gpwcf/integrations/prefect/invocation/step_subflow.py",
+          "src/gpwcf/integrations/prefect/correlation/__init__.py",
+          "src/gpwcf/integrations/prefect/correlation/identity_mapping.py",
+          "src/gpwcf/integrations/prefect/correlation/context_mapping.py",
+          "src/gpwcf/integrations/prefect/results/__init__.py",
+          "src/gpwcf/integrations/prefect/results/state_mapping.py",
+          "src/gpwcf/integrations/prefect/configuration/__init__.py"
+        ],
+        "responsibilities": [
+          "Bind public GPWCF Stage, Step, SPU and selected Supporting Unit callable contracts to supported Prefect-native executable elements.",
+          "Implement qualified Stage Deployment/Parent Flow and nested Step Subflow invocation boundaries.",
+          "Map GPWCF domain invocation context and identities to Prefect operational correlation identifiers without conflation.",
+          "Map Prefect operational state and persisted result retrieval separately from GPWCF domain results."
+        ],
+        "notes": [
+          "This is an integration binding package, not a generic adapter framework, scheduler, worker manager, plugin manager or runtime registry.",
+          "Stage callable binding remains gated by the unresolved Stage callable contract.",
+          "Production functional binding is not yet qualified; PHASE-01/02 fixture evidence must not be described as production binding evidence.",
+          "Prefect-specific imports are permitted only below this package boundary.",
+          "Do not add server, database, worker, queue or cloud-service modules as Core runtime prerequisites.",
+          "The logical Stage integration responsibility remains recognized, but bindings/stage.py is deferred until GAP-STAGE-CALLABLE-001 is resolved."
+        ]
+      }
+    ]
+  },
+  "entityAndCompositionPlacement": {
+    "rule": "The Entity/Aggregate is the directory ownership center. Its Composition is a child package of that Entity's package.",
+    "placements": [
+      {
+        "entity": "Stage",
+        "aggregate": "core.stage",
+        "composition": "core.stage.composition",
+        "relationship": "Composition nested within owning Stage Aggregate; coordinates Step public contracts."
+      },
+      {
+        "entity": "Step",
+        "aggregate": "core.step",
+        "composition": "core.step.composition",
+        "relationship": "Composition nested within owning Step Aggregate; coordinates SPUs and selected Supporting Unit contracts."
+      },
+      {
+        "entity": "SPU",
+        "aggregate": "core.processing_units.spu",
+        "composition": "None",
+        "relationship": "Standalone callable processing entity; composed by Step but not owned by Step."
+      },
+      {
+        "entity": "Supporting Pattern specialization",
+        "aggregate": "core.supporting_patterns.<pattern>",
+        "composition": "None",
+        "relationship": "Independent optional capability package; selected and coordinated by Step Composition through its specialized contract."
+      }
+    ],
+    "componentPlacementRule": "Do not create core/components as a peer root. Internal components are placed under the owning Entity/Aggregate when their function is aggregate-owned. Independently reusable executable entities receive their own domain package. A future components/ subpackage is allowed only when multiple established cohesive components exist and the boundary is justified."
+  },
+  "publicApiAndImportRules": [
+    "Only modules below src/gpwcf/public_api are supported consumer import paths.",
+    "Internal modules below src/gpwcf/core and src/gpwcf/integrations are implementation locations, not stable consumer API.",
+    "Core API import must succeed when Prefect is not installed.",
+    "Core package initialization must not eagerly import optional Supporting Patterns.",
+    "Step Composition may import only the selected Supporting Pattern contract surfaces; no import of every optional pattern is allowed.",
+    "Supporting Pattern packages must not import Step Composition implementation.",
+    "Prefect Integration depends inward on Core Public API and must not depend on Core private modules.",
+    "Core must never import integrations.prefect, Prefect types, Prefect State or Prefect runtime packages.",
+    "Consumer code must not import GPWCF private modules or use Prefect Integration implementation internals.",
+    "No wildcard exports that silently enlarge the stable API surface.",
+    "No circular runtime imports between Entity Aggregates; use contract/protocol boundaries and type-only references where necessary.",
+    "The conceptual public API boundary is accepted, but source public_api package markers and exports remain deferred until Wave 6 Public API design acceptance."
+  ],
+  "dependencyManifestPlacement": {
+    "existingSolutionRoot": "SMRB solution-root .dependencies/ is the location for external dependency/source assets and project-scoped dependency material. SMRB solution-root .env/ is the shared Python virtual environment. Both remain solution-level and outside the GPWCF repository.",
+    "gpwcfRoot": "Do not create GPWCF/.dependencies, a duplicate venv, embedded Python runtime, or copied dependency bundle. Use the existing sibling solution-root SMRB/.dependencies/ hierarchy for external dependency assets and SMRB/.env/ for the shared developer interpreter.",
+    "coreRuntime": "No third-party runtime dependencies in current baseline; Python standard library only.",
+    "prefectIntegration": "Prefect 3.9.2 belongs to the optional Integration installation profile. The exact transitive closure and lock must be derived from a clean isolated environment before release.",
+    "generator": "pygccxml and Generator extraction/tool dependencies remain in the Generator consumer's own requirements.",
+    "pyprojectPolicy": "The eventual root pyproject.toml describes the single distribution and optional prefect extra. Do not create build metadata until the build backend and build-system requirements are selected and pinned.",
+    "lockPolicy": "Do not check in the 106-package environment snapshot as the minimal lock. Keep qualification environment snapshots under PHASE-00/PoC evidence; add a minimized Integration lock only after clean resolution and verification.",
+    "buildBackend": "Build backend and build-system requirements are development/build dependencies, not Core runtime requirements; select and pin them as a separate packaging decision.",
+    "distributionDecision": "Accepted initial packaging shape: one distribution with a dependency-free Core base and optional prefect extra. Build backend and build-system pinning remain deferred until FS-GATE-02 is closed.",
+    "pythonProjectAssets": "The user-designated Python project dependency asset location is the SMRB solution-root .dependencies/ hierarchy, with project-scoped assets under .dependencies/SMRB.GenericPipelineWorkflowComponentsFramework/. The shared interpreter remains SMRB/.env/.",
+    "draftPackagingProposal": "The draft Packaging design proposes setuptools.build_meta with setuptools==84.2.1, gpwcf 0.1.0, Python >=3.15,<3.16, optional prefect extra and py.typed. These details are not adopted by this PHASE-03 skeleton; pyproject.toml and py.typed remain deferred pending Wave 6 acceptance."
+  },
+  "testsAndVerificationLayout": {
+    "tree": [
+      "tests/conftest.py",
+      "tests/core/stage/",
+      "tests/core/step/",
+      "tests/core/processing_units/spu/",
+      "tests/core/supporting_patterns/error_handling/",
+      "tests/core/supporting_patterns/validation/",
+      "tests/core/supporting_patterns/observation/",
+      "tests/public_api/core/",
+      "tests/public_api/integrations/prefect/",
+      "tests/integrations/prefect/bindings/",
+      "tests/integrations/prefect/invocation/",
+      "tests/integrations/prefect/correlation/",
+      "tests/integrations/prefect/results/",
+      "tests/architecture/test_dependency_directions.py",
+      "tests/architecture/test_core_import_without_prefect.py",
+      "tests/architecture/test_optional_pattern_isolation.py",
+      "tests/architecture/test_public_api_boundary.py"
+    ],
+    "acceptance": [
+      "Run Core tests in a clean environment with Prefect and Generator dependencies absent.",
+      "Verify import of gpwcf.public_api.core does not load Prefect modules.",
+      "Verify each optional pattern can be imported independently and unselected patterns are not required.",
+      "Verify Integration imports only when the Prefect optional installation profile is active.",
+      "Verify forbidden dependency edges and circular imports.",
+      "Verify public imports resolve only documented symbols and internal modules are not relied on by consumer tests.",
+      "Test Stage-to-Step and Step-to-SPU boundaries without allowing Stage-to-SPU direct invocation.",
+      "Keep fixture-level Prefect qualification tests distinct from production GPWCF binding tests."
+    ]
+  },
+  "documentationPlacement": {
+    "governingArchitecture": ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-03_GPWCF_Structure/",
+    "runtimeConsumerDocs": "docs/",
+    "pocEvidence": ".poc/",
+    "rule": "Architecture decision records and qualification evidence remain outside distributable source packages; consumer-facing usage documentation may be published under docs/."
+  },
+  "excludedFilesystemConcepts": [
+    {
+      "path": "src/gpwcf/core/pipeline_root/",
+      "reason": "No generic GPWCF Pipeline Root Entity or contract is established."
+    },
+    {
+      "path": "src/gpwcf/core/shared_contracts/",
+      "reason": "No cohesive generic shared contract module has been demonstrated; do not create a folder solely because terms are shared."
+    },
+    {
+      "path": "src/gpwcf/core/components/",
+      "reason": "Components are allocated to their owning Entity/Aggregate; no independent cross-entity components root is justified."
+    },
+    {
+      "path": "src/gpwcf/core/composition/",
+      "reason": "Composition belongs to Stage or Step Aggregate and must not be elevated into a universal peer package."
+    },
+    {
+      "path": "src/gpwcf/core/supporting_units/base.py",
+      "reason": "No universal SupportingUnit base contract is established."
+    },
+    {
+      "path": "src/gpwcf/runtime/",
+      "reason": "GPWCF does not own scheduler, dispatch engine, worker manager or runtime orchestrator."
+    },
+    {
+      "path": "src/gpwcf/plugin_manager/ or registry/",
+      "reason": "No universal plugin manager, dynamic loader or runtime registry is part of the accepted architecture."
+    },
+    {
+      "path": "src/gpwcf/core/error_model/",
+      "reason": "Generator Common Error Model dependency closure and genericity are unresolved; keep current model consumer-owned."
+    },
+    {
+      "path": "src/gpwcf/adapters/",
+      "reason": "No universal adapter layer; Prefect-specific binding belongs only in integrations/prefect."
+    },
+    {
+      "path": "SMRB.GenericPipelineWorkflowComponentsFramework/.dependencies/",
+      "reason": "Shared SMRB .dependencies/.env already owns solution-level development dependency setup."
+    },
+    {
+      "path": "src/gpwcf/generator/",
+      "reason": "Generator is a consumer, not a GPWCF subpackage."
+    }
+  ],
+  "implementationSequencing": [
+    {
+      "order": 1,
+      "step": "Reconcile and accept PHASE-03 classification, module boundary, dependency/Public API and filesystem artifacts.",
+      "gate": "Completed: accepted-for-filesystem-skeleton on 2026-11-09."
+    },
+    {
+      "order": 2,
+      "step": "Create the approved source/package and test directory skeleton with package markers only.",
+      "gate": "Do not create speculative callable/result/error modules, public exports or implementation placeholders."
+    },
+    {
+      "order": 3,
+      "step": "Select and pin the Python build backend, then create root pyproject.toml for the accepted single distribution and optional Prefect extra.",
+      "gate": "FS-GATE-02; no build artifacts until resolved."
+    },
+    {
+      "order": 4,
+      "step": "Resolve remaining domain contracts and implement Core Entities/Aggregates and typed results.",
+      "gate": "Stage callable, Stage result, optional Step result typing and generic error-model gates remain explicit."
+    },
+    {
+      "order": 5,
+      "step": "Implement optional Supporting Pattern packages and verify independent selection/isolation.",
+      "gate": "Unselected patterns are not imported or required."
+    },
+    {
+      "order": 6,
+      "step": "Implement Prefect Integration bindings against Core Public API and Prefect 3.9.2.",
+      "gate": "Production functional binding and operational tests; unqualified failure/recovery and multi-host capabilities remain open."
+    },
+    {
+      "order": 7,
+      "step": "Integrate the reference Generator consumer only through public APIs.",
+      "gate": "No Generator-specific names, stage numbering or dependencies leak into Core."
+    }
+  ],
+  "unresolvedDecisions": [
+    {
+      "id": "FS-GATE-02",
+      "subject": "Python build backend and build-system dependency pinning",
+      "impact": "Root pyproject build metadata is deferred until backend selection; this does not block source/package directory skeleton creation."
+    },
+    {
+      "id": "FS-GATE-03",
+      "subject": "Stage callable contract and Stage public facade",
+      "impact": "Stage package exists as an architectural ownership boundary, but callable exports remain incomplete until contract approval."
+    },
+    {
+      "id": "FS-GATE-04",
+      "subject": "Stage-specific Flow Result type strategy",
+      "impact": "Do not create universal result schema."
+    },
+    {
+      "id": "FS-GATE-05",
+      "subject": "StepExecutionResult optional result slot typing",
+      "impact": "Must preserve optionality without eager imports of optional patterns."
+    },
+    {
+      "id": "FS-GATE-06",
+      "subject": "Generic Error Model and conditional Step error model",
+      "impact": "Generator Common Error Model stays outside Core baseline."
+    },
+    {
+      "id": "FS-GATE-07",
+      "subject": "Exact implementation granularity of internal composition collaborators",
+      "impact": "Only package directories and package markers are created now; implementation file/class granularity follows approved contracts and cohesive implementation needs."
+    },
+    {
+      "id": "FS-GATE-08",
+      "subject": "Prefect Integration minimal transitive dependency lock",
+      "impact": "prefect==3.9.2 direct pin is established; transitive closure requires clean isolated resolution and qualification."
+    },
+    {
+      "id": "FS-GATE-09",
+      "subject": "Acceptance of detailed design waves 1-6 before proposed module/Public API materialization",
+      "impact": "The proposed core.identities, core.diagnostics, StageResult/invocation, StepInvocation/lifecycle, publication and public_api packages remain absent until explicit design acceptance and PHASE-03 reconciliation."
+    }
+  ],
+  "acceptanceCriteria": [
+    "Filesystem is organized around Stage, Step and SPU Entities and their ownership boundaries, not around Generator stages or contract document filenames.",
+    "Stage Composition is nested within Stage Aggregate; Step Composition is nested within Step Aggregate.",
+    "SPU remains an independent processing entity invoked by Step Composition.",
+    "Supporting Patterns remain independent optional capability packages with no universal base assumption.",
+    "Core and Prefect Integration source and Public API boundaries are distinct.",
+    "Core imports and installs without Prefect; Prefect imports remain isolated to opt-in Integration.",
+    "Public API is an explicit curated contract boundary; internal implementation paths are not supported consumer imports.",
+    "No generic Pipeline Root, shared_contracts, universal components/composition package, runtime orchestrator, adapter framework, plugin manager or universal SupportingUnit base is introduced.",
+    "No GPWCF-local dependency directory or Python runtime bundle is created.",
+    "Generator remains an external reference consumer and its dependencies/contracts remain outside GPWCF.",
+    "PoC evidence and architecture records remain outside distributable runtime package.",
+    "All unresolved contract and packaging decisions remain explicit and are not silently decided by folder layout.",
+    "MOD-CORE-STEP-RESULTS is explicitly mapped to src/gpwcf/core/step/results/ as a distinct logical module nested within Step.",
+    "No src/gpwcf/core/stage/results/, src/gpwcf/core/step/error_model/, src/gpwcf/core/shared_contracts/, or speculative Stage Prefect binding/public facade file is materialized.",
+    "The initial distribution shape is one distribution with an optional prefect extra; pyproject build metadata waits for build-backend selection.",
+    "The solution-root SMRB/.dependencies/ store and SMRB/.env/ shared interpreter are reused without creating GPWCF-local duplicates.",
+    "The public API test path mirrors gpwcf.public_api.integrations.prefect as tests/public_api/integrations/prefect/.",
+    "All 16 detailed design-wave proposals remain explicitly pending and none of their proposed modules or public API files is materialized by this skeleton.",
+    "The conceptual Public API boundary is retained, but src/gpwcf/public_api/ is absent until Wave 6 Public API design acceptance."
+  ],
+  "changeControl": {
+    "authority": "Accepted GPWCF filesystem architecture for the initial source/test skeleton.",
+    "implementationAuthorization": "Granted by the user on 2026-11-09 for creation of the approved directory and package-marker skeleton only.",
+    "sourceContractPolicy": "No specialized source contract edits, renames, moves or version changes are authorized by skeleton creation.",
+    "repositorySafety": "Preserve all existing tracked, staged, unstaged and untracked changes. Do not stage, commit, reset, checkout, clean or overwrite unrelated project files.",
+    "nextStep": "The accepted baseline skeleton is materialized. Next, perform explicit review/acceptance of the 16 detailed design-wave proposals; reconcile any accepted module/dependency/API changes before adding their source packages."
+  },
+  "deferredFilesystemElements": [
+    {
+      "moduleId": "MOD-CORE-STEP-ERROR-MODEL-CONDITIONAL",
+      "path": "src/gpwcf/core/step/error_model/",
+      "disposition": "deferred-not-materialized",
+      "reason": "Generator-scoped error vocabulary is not detached or approved as a generic Core contract."
+    },
+    {
+      "moduleId": "MOD-CORE-SHARED-CONTRACTS",
+      "path": "src/gpwcf/core/shared_contracts/",
+      "disposition": "not-established-not-materialized",
+      "reason": "No independently reusable generic contract or owner has been established."
+    },
+    {
+      "moduleId": "MOD-CORE-STAGE",
+      "path": "src/gpwcf/core/stage/results/",
+      "disposition": "draft-proposal-not-materialized",
+      "reason": "Wave 1 StageResult generic envelope proposal remains draft-for-architecture-review."
+    },
+    {
+      "moduleId": "MOD-CORE-IDENTITIES-PROPOSAL",
+      "path": "src/gpwcf/core/identities/",
+      "disposition": "draft-proposal-not-materialized",
+      "reason": "Wave 1/3 identity value-type allocation remains in draft detailed designs."
+    },
+    {
+      "moduleId": "MOD-CORE-DIAGNOSTICS-PROPOSAL",
+      "path": "src/gpwcf/core/diagnostics/",
+      "disposition": "draft-proposal-not-materialized",
+      "reason": "Wave 4 optional Diagnostic contract remains draft-for-architecture-review."
+    },
+    {
+      "moduleId": "MOD-CORE-STAGE-CALLABLE-PROPOSAL",
+      "path": "src/gpwcf/core/stage/contracts/",
+      "disposition": "draft-proposal-not-materialized",
+      "reason": "StageCallable/StageInvocation contracts remain draft; no source modules are created."
+    },
+    {
+      "moduleId": "MOD-CORE-STAGE-CALLABLE-PROPOSAL",
+      "path": "src/gpwcf/core/stage/invocation/",
+      "disposition": "draft-proposal-not-materialized",
+      "reason": "StageInvocation identity/correlation proposal remains draft."
+    },
+    {
+      "moduleId": "MOD-CORE-STAGE-LIFECYCLE-PROPOSAL",
+      "path": "src/gpwcf/core/stage/lifecycle/",
+      "disposition": "draft-proposal-not-materialized",
+      "reason": "No Stage lifecycle module allocation is accepted from the Wave 1 proposal."
+    },
+    {
+      "moduleId": "MOD-CORE-STEP-CALLABLE-PROPOSAL",
+      "path": "src/gpwcf/core/step/contracts/",
+      "disposition": "draft-proposal-not-materialized",
+      "reason": "Wave 2 StepInvocation/StepCallable revisions remain draft."
+    },
+    {
+      "moduleId": "MOD-CORE-STEP-CALLABLE-PROPOSAL",
+      "path": "src/gpwcf/core/step/invocation/",
+      "disposition": "draft-proposal-not-materialized",
+      "reason": "Wave 2 StepInvocation envelope and identity contract remain draft."
+    },
+    {
+      "moduleId": "MOD-CORE-STEP-LIFECYCLE-PROPOSAL",
+      "path": "src/gpwcf/core/step/lifecycle/",
+      "disposition": "draft-proposal-not-materialized",
+      "reason": "Wave 2 lifecycle package allocation remains draft."
+    },
+    {
+      "moduleId": "MOD-CORE-SUPPORT-PUBLICATION-PROPOSAL",
+      "path": "src/gpwcf/core/supporting_patterns/error_handling/publication/",
+      "disposition": "draft-proposal-not-materialized",
+      "reason": "Wave 4 publication architecture remains draft and does not authorize a new package path."
+    },
+    {
+      "moduleId": "PUBLIC-API-ROOT",
+      "path": "src/gpwcf/public_api/",
+      "disposition": "draft-proposal-not-materialized",
+      "reason": "Wave 6 Public API architecture explicitly gates package markers and exports until its acceptance."
+    },
+    {
+      "moduleId": "PACKAGING-PROPOSAL",
+      "path": "src/gpwcf/py.typed",
+      "disposition": "draft-proposal-not-materialized",
+      "reason": "py.typed/package discovery requirement belongs to the unaccepted Wave 6 Packaging proposal."
+    },
+    {
+      "moduleId": "PACKAGING-PROPOSAL",
+      "path": "pyproject.toml",
+      "disposition": "draft-proposal-not-materialized",
+      "reason": "Wave 6 Packaging design remains draft; proposed setuptools backend and metadata are not adopted by this skeleton."
+    }
+  ],
+  "resolvedDecisions": [
+    {
+      "id": "FS-GATE-01",
+      "subject": "Single distribution with optional Prefect extra versus separate Core and Integration distributions",
+      "resolution": "Resolved: Option A, one distribution with a dependency-free Core base and an optional prefect extra.",
+      "constraints": [
+        "Core installation/import must work without Prefect installed.",
+        "Prefect imports remain within the opt-in Integration boundary.",
+        "The optional extra must not turn Prefect into a base dependency."
+      ]
+    }
+  ],
+  "skeletonMaterializationPolicy": {
+    "authorizedScope": "Directory tree and Python package __init__.py markers only, plus tests directory tree.",
+    "notAuthorizedBySkeleton": [
+      "Domain class/protocol/function implementations",
+      "Placeholder source modules for unresolved contracts",
+      "Public API symbol exports",
+      "Stage callable or Stage result schema",
+      "Conditional Step error model or generic shared contracts",
+      "Prefect Stage binding or Stage integration public facade",
+      "Build metadata before build backend selection",
+      "Public API source package markers and exports before Wave 6 Public API design acceptance",
+      "Draft Wave 1-6 proposed identities, diagnostics, Stage/Step invocation/result and publication modules",
+      "py.typed and pyproject build metadata before Wave 6 Packaging design acceptance"
+    ],
+    "packageMarkerPolicy": "Only accepted baseline package markers are present. No public_api markers or markers for draft Wave 1-6 proposed modules are materialized."
+  },
+  "pendingDetailedDesignProposals": [
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/03.00_Pipeline_Invocation.json",
+      "documentId": "gpwcf.architecture-closure.wave1.pipeline-invocation",
+      "status": "draft-for-architecture-review",
+      "wave": 1,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Common/08.00_Supporting_Pattern_Functional_Binding.json",
+      "documentId": "gpwcf.architecture-closure.wave3.supporting-pattern-functional-binding",
+      "status": "draft-for-architecture-review",
+      "wave": 3,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Common/09.00_Generic_Diagnostics.json",
+      "documentId": "gpwcf.architecture-closure.wave4.generic-diagnostics",
+      "status": "draft-for-architecture-review",
+      "wave": 4,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Common/10.00_Error_Handling.json",
+      "documentId": "gpwcf.architecture-closure.wave4.generic-error-handling",
+      "status": "draft-for-architecture-review",
+      "wave": 4,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Common/11,00_Publication.json",
+      "documentId": "gpwcf.architecture-closure.wave4.publication-architecture",
+      "status": "draft-for-architecture-review",
+      "wave": 4,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "documentId": "gpwcf.architecture-closure.wave6-dependency",
+      "status": "draft-for-architecture-review",
+      "wave": 6,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "documentId": "gpwcf.architecture-closure.wave6-packaging",
+      "status": "draft-for-architecture-review",
+      "wave": 6,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "documentId": "gpwcf.architecture-closure.wave5-prefect-integration-binding",
+      "status": "draft-for-architecture-review",
+      "wave": 5,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+      "documentId": "gpwcf.architecture-closure.wave5-operational-mapping",
+      "status": "draft-for-architecture-review",
+      "wave": 5,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "documentId": "gpwcf.architecture-closure.wave6-public-api",
+      "status": "draft-for-architecture-review",
+      "wave": 6,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+      "documentId": "gpwcf.architecture-closure.wave1.stage-callable",
+      "status": "draft-for-architecture-review",
+      "wave": 1,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Level/02.00_Stage_Result.json",
+      "documentId": "gpwcf.architecture-closure.wave1.stage-result",
+      "status": "draft-for-architecture-review",
+      "wave": 1,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/04.00_Step_Callable.json",
+      "documentId": "gpwcf.architecture-closure.wave2.step-callable",
+      "status": "draft-for-architecture-review",
+      "wave": 2,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/05.00_Step_Execution_Result.json",
+      "documentId": "gpwcf.architecture-closure.wave2.step-execution-result",
+      "status": "draft-for-architecture-review",
+      "wave": 2,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/06.00_Optional_Result_Contributions.json",
+      "documentId": "gpwcf.architecture-closure.wave2.optional-result-contributions",
+      "status": "draft-for-architecture-review",
+      "wave": 2,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/07.00_SPU.json",
+      "documentId": "gpwcf.architecture-closure.wave3.spu-functional-binding",
+      "status": "draft-for-architecture-review",
+      "wave": 3,
+      "disposition": "Not materialized; requires explicit architecture acceptance and PHASE-03 reconciliation."
+    }
+  ]
+}

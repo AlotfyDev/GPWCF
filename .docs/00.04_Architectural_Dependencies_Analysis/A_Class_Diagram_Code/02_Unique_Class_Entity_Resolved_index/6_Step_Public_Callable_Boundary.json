@@ -1,0 +1,10 @@
+{
+  "serialNumber": 6,
+  "name": "Step Public Callable Boundary",
+  "category": "Feature / Boundary",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+  "description": "Stage-facing facade boundary that exposes Step capability without exposing internal component topology. Stage sees only public input/output contract and Step-level result; Stage does not invoke SPUs or supporting units directly.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

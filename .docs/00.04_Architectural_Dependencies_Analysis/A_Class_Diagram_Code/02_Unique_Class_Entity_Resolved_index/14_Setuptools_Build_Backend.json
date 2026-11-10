@@ -1,0 +1,10 @@
+{
+  "serialNumber": 14,
+  "name": "Setuptools Build Backend",
+  "category": "Feature / Build Policy",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "Record setuptools==84.2.1 / setuptools.build_meta as isolated build-system dependency; build backend dependencies remain isolated from runtime dependencies.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

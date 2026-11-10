@@ -1,0 +1,10 @@
+{
+  "serialNumber": 10,
+  "name": "Supporting Pattern Public Sub-Surfaces",
+  "category": "Feature / API Sub-Surface",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Separate Supporting Pattern public sub-surfaces under Core Public API; Validation, Observation, and Error Handling patterns remain separately importable and opt-in.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

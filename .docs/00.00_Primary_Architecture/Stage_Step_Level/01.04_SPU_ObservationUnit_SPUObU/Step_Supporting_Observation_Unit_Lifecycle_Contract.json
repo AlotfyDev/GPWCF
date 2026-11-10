@@ -1,0 +1,218 @@
+{
+  "documentId": "pipeline.step-supporting-observation-unit.lifecycle.contract",
+  "documentVersion": "0.1.1",
+  "status": "design-baseline",
+  "title": "Step Supporting Observation Unit Lifecycle Contract",
+  "scope": {
+    "architecturalLevel": "stage-step",
+    "component": "StepSupportingObservationUnitLifecycle",
+    "owningLevel": "StepComposition",
+    "purpose": "Define lifecycle responsibilities and boundaries for Observation Unit instances, including readiness, activation eligibility, ongoing observation, quiescence, reuse, release, and preservation of independently retained observation records.",
+    "appliesTo": "Each concrete Step specialization that provisions, acquires, admits, reuses, or releases Observation Unit instances."
+  },
+  "lifecyclePrinciples": {
+    "separation": [
+      "Observation Unit instance lifetime is distinct from each association lifetime.",
+      "Observation Unit instance lifetime is distinct from each observation activity or subscription activation lifetime.",
+      "Observation Unit instance lifetime is distinct from the retention lifetime of emitted observation records.",
+      "Ending an association does not automatically release an instance.",
+      "Retaining observation records does not require retaining the Observation Unit runtime instance."
+    ],
+    "authority": "The owning Step Composition owns lifecycle decisions and coordinates lifecycle transitions. The concrete Observation Unit implementation performs its own initialization, activation mechanics, shutdown, and resource-release mechanics.",
+    "specialization": "The common contract defines lifecycle obligations and conceptual milestones only. It does not impose one universal state machine, pool, scheduler, subscription mechanism, or resource-management implementation."
+  },
+  "lifecycleMilestones": [
+    {
+      "name": "ProvisionedOrAcquired",
+      "meaning": "An Observation Unit instance has been created or obtained and has a stable observationUnitIdentity."
+    },
+    {
+      "name": "Prepared",
+      "meaning": "Specialization-required configuration, dependencies, capture resources, or observation interfaces have been prepared."
+    },
+    {
+      "name": "Ready",
+      "meaning": "The instance satisfies its declared technical readiness conditions for admission or activation."
+    },
+    {
+      "name": "Admitted",
+      "meaning": "Step Composition has authorized the instance for use within the owning Step."
+    },
+    {
+      "name": "AvailableOrInUse",
+      "meaning": "The instance is available for observation activity or is currently performing/servicing one or more activities."
+    },
+    {
+      "name": "ObservingOrSubscribed",
+      "meaning": "Where applicable, the instance has an active sampling loop, event subscription, callback registration, or other ongoing observation mechanism."
+    },
+    {
+      "name": "Quiescing",
+      "meaning": "Step Composition has stopped authorizing new activities and is coordinating termination or reconciliation of active observation work and pending emissions."
+    },
+    {
+      "name": "RetainedForReuse",
+      "meaning": "The instance remains available for possible reuse under the concrete Step's reset, isolation, and readiness requirements."
+    },
+    {
+      "name": "Released",
+      "meaning": "The instance's release operation has completed successfully and the instance is no longer available for invocation or observation."
+    }
+  ],
+  "milestoneSemantics": {
+    "conceptualOnly": true,
+    "rules": [
+      "The milestones are descriptive lifecycle concepts, not a mandatory enum or linear state machine.",
+      "A concrete specialization may omit, combine, repeat, or refine milestones where its lifecycle mechanics require it.",
+      "The order and transition conditions are defined by the concrete Step specialization.",
+      "A subscription or ongoing observer may remain active across multiple observed events without treating each event as a new instance lifecycle transition.",
+      "Released means successful completion of release; a failed or indeterminate release remains an unresolved lifecycle outcome and must not be labelled Released."
+    ]
+  },
+  "lifecycleAuthority": {
+    "stepComposition": [
+      "Decides whether an Observation Unit instance is provisioned, acquired, admitted, activated, available, reused, quiesced, or released.",
+      "Determines whether the instance is eligible for new observation activities and which associations may be used.",
+      "Coordinates association termination/deactivation with observation activity shutdown.",
+      "Defines instance reuse, reset, isolation, concurrency, and release policy for the concrete Step.",
+      "Ensures active work and emitted-record custody are reconciled before successful release."
+    ],
+    "observationUnitImplementation": [
+      "Performs specialization-specific preparation and readiness checks.",
+      "Implements technical activation/deactivation, sampling, subscription, callback, and shutdown mechanics where applicable.",
+      "Reports readiness, activation, quiescence, and release outcomes through its declared interaction boundary.",
+      "Ensures resources it owns are released according to the specialization."
+    ],
+    "associationTarget": [
+      "May expose or withdraw its own observation surface or event source under its own contract.",
+      "Does not acquire Observation Unit lifecycle authority merely by being an association target."
+    ]
+  },
+  "admissionAndActivation": {
+    "rules": [
+      "An instance may be associated or admitted only under the concrete Step's lifecycle and association preconditions.",
+      "Admission is a Step Composition decision and is distinct from technical readiness.",
+      "Association establishment does not necessarily activate observation immediately.",
+      "An instance may be admitted and available while having no active association or observation activity if the concrete Step permits it.",
+      "The concrete Step defines whether a persistent subscription/callback is activated per association, per activity, or for a broader instance lifetime.",
+      "The instance must not accept new work after Step Composition has withdrawn authorization for new observation activity."
+    ]
+  },
+  "activityAndResourceLifetime": {
+    "rules": [
+      "Each observation activity or subscription activation has a lifetime distinct from the Observation Unit instance.",
+      "The concrete Step defines whether activities are short-lived calls, long-lived subscriptions, periodic sampling processes, or another model.",
+      "The concrete Step defines handling of concurrent activities, callback reentrancy, queued events, buffering, backpressure, and cancellation where applicable.",
+      "An instance may remain alive after an activity completes and may be reused according to its specialization.",
+      "An active association does not require continuous observation unless the concrete Step explicitly activates a continuous mechanism.",
+      "The instance must expose enough readiness/availability information for Step Composition to determine whether it can safely accept new activities or enter quiescence."
+    ]
+  },
+  "quiescenceAndRelease": {
+    "preReleaseConditions": [
+      "Step Composition has stopped authorizing new observation activities for the instance.",
+      "All associations that could authorize new activities have been ended, deactivated, or otherwise rendered unusable according to the Association Contract.",
+      "Active calls, callbacks, sampling cycles, subscriptions, and asynchronous observation work have completed, been cancelled, or been explicitly reconciled under the specialization.",
+      "Queued or in-flight source events and produced-but-not-yet-accepted observation records have been delivered, transferred to a named recovery owner, or explicitly resolved under the custody contract.",
+      "Target-side registrations, callbacks, subscriptions, handles, and resources owned by the Observation Unit have been detached or scheduled for safe release.",
+      "The specialization's reuse/reset and resource-isolation requirements have been satisfied if reuse rather than release is selected."
+    ],
+    "releaseRules": [
+      "Step Composition decides when release is appropriate and coordinates the release operation.",
+      "The Observation Unit implementation performs the mechanics of releasing resources it owns.",
+      "Successful release is recorded only after the implementation confirms completion under the concrete release contract.",
+      "A failed or indeterminate release remains unresolved; it must not be treated as successful or silently retried if retry could duplicate or corrupt release effects.",
+      "Release does not erase observation records already accepted by their destination or retained under the Step's observation retention policy.",
+      "Release does not require retaining the runtime instance merely because historical records reference observationUnitIdentity."
+    ]
+  },
+  "reuse": {
+    "rules": [
+      "An instance may be reused only if the concrete Step specialization permits it and the instance satisfies readiness and isolation requirements for the next use.",
+      "The concrete Step defines whether reuse requires reconfiguration, reset, re-subscription, or fresh association identities.",
+      "A reused instance retains observationUnitIdentity only when it is the same runtime instance under the identity contract.",
+      "New associations and observation activities receive new identities; prior association and activity provenance is not reused.",
+      "Reuse must not cause observations from a prior association, target, or invocation to be attributed to a later one.",
+      "The common contract does not mandate an object pool, reference counting, locks, or a global lifecycle manager."
+    ]
+  },
+  "failureAndRecovery": {
+    "rules": [
+      "Preparation, readiness, activation, quiescence, or release failure is a lifecycle outcome, not an observation payload or validation outcome.",
+      "No universal lifecycle error taxonomy, retry, replacement, compensation, or fallback policy is prescribed.",
+      "Step Composition determines the concrete recovery response, including whether to retry, replace, isolate, retain unresolved state, or terminate the Step path.",
+      "If release outcome is indeterminate, instance identity and release status remain unresolved until reconciled; it must not be treated as Released or reused without an explicit safety determination.",
+      "Lifecycle failure does not invalidate observation records already accepted by their destination.",
+      "Records produced before a lifecycle failure remain subject to their established custody and retention contracts."
+    ]
+  },
+  "recordAndEvidenceIndependence": {
+    "rules": [
+      "Observation records and provenance may outlive the association and the runtime instance.",
+      "Retention of observation data must not implicitly retain runtime handles, callback registrations, subscription objects, borrowed references, or leases that prevent release, unless an independently specified requirement exists.",
+      "If a record refers to instance-owned memory or resources, the specialization must define how that content is detached or materialized before those resources are released.",
+      "Historical observationUnitIdentity and observationUnitAssociationIdentity remain interpretable after release and dissociation.",
+      "The retention owner and retention policy are defined by the concrete Step or destination, not by the mere fact that the Observation Unit produced the record."
+    ]
+  },
+  "specializationRequirements": {
+    "required": [
+      "Define provisioning/acquisition and instance identity generation.",
+      "Define preparation and technical readiness criteria.",
+      "Define admission and activation authority and conditions.",
+      "Define the lifetime of calls, subscriptions, callbacks, sampling loops, and other observation activities.",
+      "Define association activation/deactivation behavior and coordination with association termination.",
+      "Define concurrency, reentrancy, cancellation, buffering, and backpressure requirements where applicable.",
+      "Define quiescence conditions, including in-flight work, queued events, and pending record custody.",
+      "Define successful release confirmation and indeterminate/failure reconciliation.",
+      "Define reuse/reset/isolation requirements if reuse is permitted.",
+      "Define ownership and release of subscriptions, callbacks, target handles, and other runtime resources.",
+      "Define observation-record detachment, custody, retention owner, and historical provenance preservation."
+    ],
+    "completionRule": "A concrete lifecycle specialization is complete when instance identity, readiness/admission, activity and association interaction, quiescence, custody reconciliation, reuse, release, and historical evidence independence are explicit."
+  },
+  "explicitNonGoals": [
+    "No universal linear lifecycle state machine or mandatory lifecycle enum.",
+    "No mandatory object pool, factory, service locator, scheduler, reference counter, or global lifecycle manager.",
+    "No assumption that every Observation Unit is a continuously running observer or subscription.",
+    "No assumption that every Observation Unit is stateless or stateful.",
+    "No automatic release when the last association ends.",
+    "No retention of runtime instances solely to preserve historical observation records.",
+    "No universal retry, replacement, fallback, or compensation policy."
+  ],
+  "references": [
+    {
+      "document": "Step_Supporting_Observation_Unit_Contract.json",
+      "relationship": "Observation activity, output, record custody, and provenance obligations."
+    },
+    {
+      "document": "Step_Supporting_Observation_Unit_Association_Contract.json",
+      "relationship": "Association establishment, activation, dissociation, and in-flight activity boundaries."
+    },
+    {
+      "document": "../00.00_Step/Step_Composition_Contract.json",
+      "relationship": "Step Composition lifecycle authority, component coordination, and invocation evidence retention."
+    },
+    {
+      "document": "../00.00_Step/Step_Contract.json",
+      "relationship": "Owning Step aggregate boundary and optional supporting-unit lifecycle."
+    },
+    {
+      "document": "../01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "relationship": "Observation records remain outside the common Step result and have an independent retention boundary."
+    },
+    {
+      "document": "../Stage_Step_Level_Architecture.json",
+      "relationship": "Observation Unit independence and Step Composition coordination."
+    },
+    {
+      "document": "../../../Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+      "relationship": "Framework-level lifecycle coordination invariants refined by this specialized Lifecycle Contract; component-specific phases, resources, and custody remain authoritative."
+    }
+  ],
+  "frameworkCoordination": {
+    "commonContract": "../../../Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+    "conformance": "This contract specializes the shared Step Composition coordination invariants. Where the shared contract defines only conceptual identity roles or lifecycle distinctions, this document supplies the component-specific identity names, semantics, mechanics, and constraints.",
+    "precedence": "The common contract governs cross-cutting Step Composition coordination invariants. This specialized contract governs component-specific behavior and mechanics. Neither contract changes the component pattern?s distinct behavioral result semantics."
+  }
+}

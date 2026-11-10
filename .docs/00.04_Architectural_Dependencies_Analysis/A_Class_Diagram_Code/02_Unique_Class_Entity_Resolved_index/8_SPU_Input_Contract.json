@@ -1,0 +1,10 @@
+{
+  "serialNumber": 8,
+  "name": "SPU Input Contract",
+  "category": "Feature / Contract Rule",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+  "description": "The supplied input must conform to the concrete SPU's TInput type; the generic contract does not prescribe internal structure, ownership model, mutability, lifetime, or pass-by semantics of TInput.",
+  "resolvedFrom": "02,00_Step_SPU_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "step-spu-level-domain-features-entities-classes-components-index"
+}

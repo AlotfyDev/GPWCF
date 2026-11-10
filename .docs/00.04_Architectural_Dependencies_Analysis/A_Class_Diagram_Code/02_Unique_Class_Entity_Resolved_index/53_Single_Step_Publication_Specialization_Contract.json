@@ -1,0 +1,10 @@
+{
+  "serialNumber": 53,
+  "name": "Single Step Publication Specialization Contract",
+  "category": "Class / Contract",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json",
+  "description": "Mandatory per-Step concrete instantiation of publication protocol representations, Recovery Owner and recovery procedure, identity rules, publication-status retention, and end-to-end state/custody trace for Single Steps using ErrorHandlingUnits and an OperationEntryPublisher.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

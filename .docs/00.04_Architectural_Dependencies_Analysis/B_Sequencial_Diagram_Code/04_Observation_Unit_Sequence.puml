@@ -1,0 +1,28 @@
+@startuml
+title Observation Unit Sequence - Observation Activity & Record Provenance
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+skinparam roundcorner 0
+
+participant "Step Composition" as SC
+participant "SPU Observation Unit (SPUObU)" as OU
+participant "Observation Target Scope" as TS
+participant "Observation Record" as OR
+
+SC -> OU : associate with target scope
+OU -> TS : observe(call, callback, sampling, subscription)
+TS --> OU : observation activity
+OU --> OR : produce Observation Record
+(stepInstanceIdentity, observationUnitIdentity,
+observationUnitAssociationIdentity,
+associationTargetIdentity,
+observationInvocationIdentity,
+observationRecordIdentity)
+OR --> SC : observation record (outside StepExecutionResult)
+
+note right of SC : Observation Records remain independent of StepExecutionResult
+Preserve provenance/custody
+Association establishes applicability only
+Does not guarantee active observation
+
+@enduml

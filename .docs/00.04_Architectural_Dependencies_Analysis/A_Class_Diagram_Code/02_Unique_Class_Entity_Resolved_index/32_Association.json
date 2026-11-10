@@ -1,0 +1,10 @@
+{
+  "serialNumber": 32,
+  "name": "Association",
+  "category": "Entity / Concept",
+  "type": "Entity",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+  "description": "An explicit relationship between one concrete Step-internal runtime component instance and one target scope within the owning Step instance; distinct from both the component instance and the target.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

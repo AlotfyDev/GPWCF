@@ -1,0 +1,210 @@
+{
+  "documentId": "pipeline.stage-level.architecture",
+  "documentVersion": "0.4.0",
+  "status": "design-baseline",
+  "title": "Pipeline Stage-Level Architecture",
+  "scope": {
+    "architecturalLevel": "stage",
+    "parentLevel": "pipeline",
+    "childLevel": "stage-step",
+    "purpose": "Describe the reusable structural responsibilities and relationships of a Stage Template and its concrete instances, without defining workflow-specific processing semantics or implementation details.",
+    "appliesTo": "Any concrete Stage Instance conforming to the reusable Stage contract; it is not limited to the thirteen Generator processing stages."
+  },
+  "stage": {
+    "definition": "A bounded orchestration component that exposes a Stage-level interface to its consuming workflow and internally coordinates the Step Instances required by that Stage.",
+    "responsibilities": [
+      "Expose the Stage contract to its consuming workflow.",
+      "Own the composition of Step Instances belonging to the Stage.",
+      "Coordinate invocation of its Steps through their Stage-facing callable contracts.",
+      "Define the Stage-specific internal execution structure, dependencies, transition conditions, and flow-decision semantics; execution of the corresponding native workflow graph may be delegated to the selected external Workflow Framework under those GPWCF-defined semantics.",
+      "Manage the Stage-specific flow semantics and determine the final Stage-specific Flow Result from the execution facts returned by the execution mechanism.",
+      "Publish the Stage outputs and execution status required by the consuming workflow.",
+      "Define and register Stage-owned error type definitions through the StageErrorTypeDefinitionRegistry Instance assigned to the Stage by the consuming workflow where the common Error Model requires it.",
+      "Create StageError occurrences for errors arising within Stage-owned responsibilities, using definitions registered in its assigned Registry."
+    ],
+    "doesNotOwn": [
+      "The semantic ownership of artifacts assigned to another Stage by the consuming workflow's contracts.",
+      "The internal processing implementation or component topology of an individual Step.",
+      "The implementation details of Step-specific SPUs, validators, error models, error-handling units, or observation units."
+    ]
+  },
+  "structuralRoles": {
+    "stageFacade": {
+      "role": "Provide the Stage-level boundary and interface through which the Pipeline invokes and receives results from the Stage.",
+      "responsibilities": [
+        "Present the Stage execution contract without exposing internal Step composition.",
+        "Accept the Stage-level inputs defined by the concrete Stage specialization.",
+        "Return the Stage-level outputs and status defined by the concrete Stage specialization."
+      ],
+      "implementationForm": "The facade is an architectural role. Whether it is implemented as a distinct class or another explicit interface realization is not prescribed here."
+    },
+    "stepComposition": {
+      "role": "Own the semantic composition and flow rules of the Step Instances belonging to the Stage; coordinate their contract-level participation and result collection while allowing an external Workflow Framework to execute the corresponding native Parent Workflow graph.",
+      "responsibilities": [
+        "Maintain the Stage-specific set of Step Instances.",
+        "Coordinate their invocation through their public Stage-facing Step contracts.",
+        "Respect the Stage-specific dependencies and execution constraints.",
+        "Own the meaning, conditions, and permitted outcomes of the Stage-specific flow and transitions between Steps. Where an external Workflow Framework executes the Stage as a native Parent Workflow, its runtime may evaluate and enact those GPWCF-defined conditions and transitions without acquiring semantic ownership or requiring a second GPWCF scheduler.",
+        "Determine when a Step Instance is to be created or acquired, reused, and released as required by the Stage's execution and lifecycle needs.",
+        "Coordinate Step Instance lifecycle decisions without prescribing or owning the concrete lifecycle mechanism used by an individual Step.",
+        "Collect and retain the StepExecutionResult produced by each Step invocation that returns a result.",
+        "Record invocation exceptions independently from StepExecutionResult when a Step invocation terminates by throwing and does not return a result.",
+        "Determine the Stage-specific response to an invocation exception; no universal exception-handling action or policy is imposed at this architectural level.",
+        "Compose the final Flow Result from the execution information and flow context relevant to the Stage.",
+        "Consume StageError occurrences and other Stage execution information relevant to flow coordination.",
+        "Determine the Stage-specific response to StageError occurrences and represent them in the Flow Result or another Stage-owned result contract as defined by that Stage.",
+        "A Stage Composition may create a StageError occurrence when an error arises within its own responsibility; it is not the exclusive creator of StageError occurrences.",
+        "Choose whether the current Stage-level use of a Step ends with retention for reuse or terminal retirement, according to Stage-specific lifecycle needs.",
+        "Request the selected disposition through the Step public lifecycle boundary and consume its confirmed, failed, or indeterminate outcome.",
+        "Do not treat request submission as completion or make an unresolved Step eligible for reuse or destruction.",
+        "Retain or explicitly transfer recovery responsibility/access for a Step whose terminal retirement remains unresolved."
+      ],
+      "implementationForm": "The composition is an architectural responsibility. A separate Composite class is not mandated by this document."
+    }
+  },
+  "resultContracts": {
+    "flowResult": {
+      "role": "Represent the result of the Stage's internal Step-execution flow, independently of the result of any individual Step invocation.",
+      "responsibilities": [
+        "Represent the outcome of the Stage-specific flow after the flow has reached its Stage-defined completion point.",
+        "Allow the Stage-specific Flow Result to retain or aggregate StepExecutionResult values returned by Step invocations during the flow.",
+        "Allow the Stage-specific Flow Result to record Step invocation exceptions independently from returned StepExecutionResult values.",
+        "Represent, as appropriate to the Stage, the flow decisions and transitions and the execution context at which the flow concluded.",
+        "Retain or represent StageError occurrences when required by the owning Stage's Flow Result design."
+      ],
+      "constraints": [
+        "Flow Result is an independent result contract; it is neither a StepExecutionResult nor an extension or specialization of StepExecutionResult.",
+        "A StepExecutionResult describes one Step invocation that returned an execution result; Flow Result describes the Stage's overall Step-execution flow.",
+        "An invocation exception that prevents a Step from returning StepExecutionResult must not be represented as a StepExecutionResult.",
+        "The occurrence or recording of an invocation exception does not, by itself, prescribe the final Flow Result or determine that the flow must fail.",
+        "The detailed Flow Result structure, the representation of retained execution results and exceptions, and the rules for composing the result are Stage-specific; no uniform schema or composition policy is mandated here.",
+        "A StageError occurrence is created by the Stage-owned component whose responsibility produces the error; Stage Composition consumes the resulting error information and determines the Stage-specific flow response.",
+        "The Stage defines how StageError occurrences are represented in its Flow Result or another Stage-owned result contract; no universal StageError-to-FlowResult schema is imposed.",
+        "A thrown exception is not automatically converted into a StageError occurrence."
+      ]
+    }
+  },
+  "externalWorkflowIntegration": {
+    "purpose": "Define how a Stage's GPWCF-owned Stage/Step composition semantics are realized as a native Stage Parent Workflow by an external Workflow Framework while preserving the Stage public boundary and Stage-specific result semantics.",
+    "semanticAuthority": [
+      "The concrete Stage specialization and its Stage Composition own the selected Step membership, functional responsibilities, Step-facing invocation contracts, permitted dependencies, transition conditions, flow-decision meanings, exception-response semantics, and Stage Flow Result assembly rules.",
+      "This authority defines the Stage's intended behavior and constraints; it does not require GPWCF to schedule or dispatch the native workflow graph."
+    ],
+    "nativeExecutionRealization": [
+      "Where an external Workflow Framework is selected, the Stage may be realized as a native Parent Workflow whose child Step executions are native nested workflows/subworkflows.",
+      "The external runtime executes the native Stage graph, including scheduling/dispatch and evaluation/enactment of GPWCF-defined Stage transition conditions, subject to the Stage specialization's declared semantics.",
+      "Each Step must be invoked through its public Stage-facing Step contract. The native realization must not bypass a Step boundary by directly invoking its internal SPUs or Supporting Units.",
+      "The Stage facade remains the Pipeline-facing boundary. The Pipeline/root integration invokes the Stage contract and consumes the Stage-defined outputs, execution status, and Flow Result as applicable; it does not own Stage-internal topology.",
+      "The integration must not create a second GPWCF scheduler, universal graph executor, or alternate source of Stage flow semantics."
+    ],
+    "resultAndFailurePreservation": [
+      "Each Step invocation's returned StepExecutionResult remains distinct from a thrown invocation exception and remains attributable to its originating Step invocation.",
+      "The native runtime's workflow/task status is execution evidence only; it does not replace StepExecutionResult, Stage Flow Result, Stage outputs, or Stage-defined execution status.",
+      "The Stage Flow Result remains the Stage-owned representation of the Stage's Step-execution flow, including the Stage-defined treatment of returned Step results, invocation exceptions, transitions, and StageError occurrences.",
+      "Stage identity, Step identity, parent/child invocation correlation, context, and result provenance remain traceable across native workflow boundaries."
+    ],
+    "functionalBinding": [
+      "The Stage facade and each Step public callable contract are bound to the corresponding native workflow invocation boundary without exposing internal implementation details.",
+      "The exact native relationship mechanism is selected according to its semantics (for example, workflow composition, parent-child invocation, containment, or another native construct); no Association construct is mandatory merely because the Pipeline root coordinates multiple Stages.",
+      "Any specialized Association semantics remain governed by their existing contracts and are not generalized by this Stage-level integration clause."
+    ],
+    "nonMandates": [
+      "No universal Pipeline or Stage runtime, scheduler, workflow graph representation, adapter, plugin manager, registry, or generic result model is introduced.",
+      "No particular external Workflow Framework, native workflow type, or relationship mechanism is mandated.",
+      "External execution authority does not transfer ownership of Stage/Step domain semantics or Stage Flow Result assembly to the external runtime."
+    ]
+  },
+  "relationships": [
+    {
+      "from": "Consuming Workflow",
+      "to": "Stage.stageFacade",
+      "relationship": "invokes-through-stage-contract"
+    },
+    {
+      "from": "Stage.stageFacade",
+      "to": "Stage.stepComposition",
+      "relationship": "delegates-stage-execution"
+    },
+    {
+      "from": "Stage.stepComposition",
+      "to": "Stage_Step_Level.Step",
+      "relationship": "coordinates-Step-execution-through-Step-contract"
+    },
+    {
+      "from": "Stage.stepComposition",
+      "to": "Stage.resultContracts.flowResult",
+      "relationship": "composes-stage-flow-result-from-Step-execution-history-and-flow-context"
+    },
+    {
+      "from": "Stage",
+      "to": "assigned StageErrorTypeDefinitionRegistry",
+      "relationship": "defines-and-registers-Stage-owned-error-type-definitions-through"
+    },
+    {
+      "from": "Stage-owned components",
+      "to": "StageError[TErrorOccurrenceContext]",
+      "relationship": "create-occurrences-for-errors-within-their-responsibilities"
+    },
+    {
+      "from": "Stage.stepComposition",
+      "to": "StageError occurrences",
+      "relationship": "consumes-error-information-and-determines-Stage-specific-flow-response"
+    },
+    {
+      "from": "Stage.stepComposition",
+      "to": "Step.lifecycleBoundary",
+      "relationship": "selects-disposition-requests-through-public-boundary-and-responds-to-confirmed-or-unresolved-outcome"
+    }
+  ],
+  "constraints": [
+    "A Stage must not bypass a Step's Stage-facing execution contract by invoking its internal SPUs or supporting units directly.",
+    "A Stage may contain a Stage-specific number and arrangement of Step Instances; uniform Step counts or identical internal workflows across Stages are not required.",
+    "The internal execution order, branching, repetition, concurrency, and dependency rules are defined by the owning Stage specialization, not inferred from the Stage-level structure.",
+    "Stage-level outputs must conform to the authoritative contracts defined by the consuming workflow.",
+    "The Stage architecture must preserve the distinction between Stage orchestration, Step orchestration, and SPU processing responsibilities.",
+    "StepExecutionResult and Flow Result are distinct contracts with distinct scopes; neither is defined as an extension or specialization of the other.",
+    "Each returned StepExecutionResult remains attributable to the Step invocation that produced it and available to Stage Composition for flow coordination.",
+    "Invocation exceptions are recorded separately from returned StepExecutionResult values, and recording an exception does not impose a universal flow-control response.",
+    "Stage Composition owns lifecycle decisions about when a Step Instance is created or acquired, reused, and released when lifecycle management is required; the concrete lifecycle mechanism remains associated with the individual Step.",
+    "No universal Step lifecycle policy, exception-handling action, Flow Result schema, or Flow Result composition policy is imposed across Stages.",
+    "Flow Result is distinct from the Stage outputs and Stage execution status exposed through the Stage facade; their exact relationship is defined by the owning Stage contract.",
+    "Ending Stage-level use of a Step is distinct from terminal retirement; Stage Composition explicitly selects the intended disposition.",
+    "Stage Composition requests retention/reuse or terminal retirement only through the public Step boundary and never manages internal SPU/supporting-unit lifecycles.",
+    "A Step is terminally retired only after its public contract reports confirmed completion; request acceptance, timeout, reference loss, or destructor execution is insufficient.",
+    "Failed/indeterminate lifecycle outcomes remain Stage-owned coordination facts requiring a Stage-specific response; no universal continue, abort, or retry policy is imposed.",
+    "Stage Composition does not discard the only access path or recovery responsibility while retirement remains unresolved."
+  ],
+  "references": [
+    {
+      "document": "../Pipeline_Architecture_and_Stage_Interface_Contract.md",
+      "relationship": "normative-cross-stage-integration-contract-when-consumed-by-Generator"
+    },
+    {
+      "document": "Stage_Step_Level/Stage_Step_Level_Architecture.json",
+      "relationship": "child-level-structural-contract"
+    },
+    {
+      "document": "Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "relationship": "Stage-facing Step contract"
+    },
+    {
+      "document": "Stage_Step_Level/01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "relationship": "result contract for an individual Step invocation"
+    }
+  ],
+  "openDesignDetails": [
+    "The exact Stage-level input and output type contracts are defined per concrete Stage.",
+    "The exact Stage facade and composition implementation types remain an implementation-level decision.",
+    "Stage-specific execution topology and flow-control decisions are defined in each consuming workflow's Stage specialization.",
+    "The detailed Flow Result structure and representation or aggregation of its StepExecutionResult records, invocation exceptions, flow decisions, transitions, and terminal execution context are defined per Stage.",
+    "The exact relationship between a Stage-specific Flow Result and the Stage outputs and execution status exposed to the consuming workflow is defined by the owning Stage contract.",
+    "Each concrete Stage defines when a Step is retained for reuse versus terminally retired and its response to confirmed, failed, or indeterminate outcomes; Step defines the public boundary and Step Composition defines internal settlement."
+  ],
+  "stageErrorResponsibilities": {
+    "definitionOwnership": "The concrete Stage owns the specialized StageErrorTypeDefinition types and definitions for its Stage-level error domain.",
+    "registration": "The Stage registers its StageErrorTypeDefinition instances through the StageErrorTypeDefinitionRegistry Instance assigned to it by the Pipeline. The Pipeline retains exclusive ownership of that Registry Instance.",
+    "occurrenceCreation": "A Stage-owned component creates a StageError[TErrorOccurrenceContext] occurrence when an error arises within that component's Stage-owned responsibility. Stage Composition may create occurrences for errors arising within its own responsibility but is not the exclusive occurrence producer.",
+    "flowConsumption": "Stage Composition consumes StageError information as relevant to Stage flow coordination and determines the Stage-specific response and representation.",
+    "exceptionSeparation": "Thrown exceptions remain distinct from StageError occurrences unless an explicit Stage-owned contract defines a conversion; no automatic conversion is implied."
+  }
+}

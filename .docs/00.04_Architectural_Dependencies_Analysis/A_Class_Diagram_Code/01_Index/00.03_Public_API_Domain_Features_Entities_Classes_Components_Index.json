@@ -1,0 +1,179 @@
+{
+  "indexId": "public-api-domain-features-entities-classes-components-index",
+  "indexVersion": "1.0.0",
+  "sourceDirectory": ".docs/00.00_Primary_Architecture/Public_API",
+  "sourceFileCount": 1,
+  "totalRecords": 24,
+  "description": "Index of all relevant features, classes, entities, components, and contracts defined in the GPWCF Primary Architecture Public API domain documents. Links are relative to this index file location.",
+  "records": [
+    {
+      "number": 1,
+      "name": "Public API Architecture (Wave 6 Artifact 3)",
+      "category": "Architectural Design / Feature",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Wave 6 detailed design (artifact 3) defining the stable, supported consumer-facing Public API surfaces of GPWCF Core and the optional Prefect Integration, including what consumers may implement/customize/compose, how they invoke Stage, how optional Supporting Patterns are accessed, and how Prefect-specific binding is used without exposing private implementation paths."
+    },
+    {
+      "number": 2,
+      "name": "Core Public API Surface",
+      "category": "Class / API Surface",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Core Public API (PUBLIC-CORE) with namespace gpwcf.public_api.core; owner: GPWCF Core; availability: Always available, no Prefect dependency; exposes Stage/Step/SPU callable and result contracts."
+    },
+    {
+      "number": 3,
+      "name": "Prefect Integration Public API Surface",
+      "category": "Class / API Surface",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Prefect Integration Public API (PUBLIC-PREFECT) with namespace gpwcf.public_api.integrations.prefect; exposes Prefect-specific binding/configuration/correlation/result retrieval API groups without exposing private wrappers or native metadata internals."
+    },
+    {
+      "number": 4,
+      "name": "Public API Governing Decision Principle",
+      "category": "Feature / Governing Rule",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Public API is the stable supported consumer contract boundary; it is not merely an __init__.py re-export list or a convenient alias for internal modules; public symbols are explicit, curated, versioned, and tested."
+    },
+    {
+      "number": 5,
+      "name": "Stage Callable / Stage Invocation / Stage Result Contract Group",
+      "category": "Feature / API Contract Group",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Core Public API contract group covering StageCallable, StageInvocation, and StageResult; readiness gaps resolved according to Waves 1-4."
+    },
+    {
+      "number": 6,
+      "name": "Step Invocation / Step Execution Result / Optional Result Contributions Contract Group",
+      "category": "Feature / API Contract Group",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Core Public API contract group covering StepInvocation, StepExecutionResult, and OptionalResultContributions; readiness gaps resolved according to Waves 1-4."
+    },
+    {
+      "number": 7,
+      "name": "Generic SPU Result Types Contract Group",
+      "category": "Feature / API Contract Group",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Core Public API contract group covering generic SPU result types; SPUExecutionResult[TOutput] remains distinct from StepExecutionResult."
+    },
+    {
+      "number": 8,
+      "name": "Canonical Identities Contract Group",
+      "category": "Feature / API Contract Group",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Core Public API contract group covering canonical identity value types; provided through core.identities module as narrow dependency-free nominal identity types."
+    },
+    {
+      "number": 9,
+      "name": "Optional Diagnostics Public Sub-Surface",
+      "category": "Feature / API Sub-Surface",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Optional Diagnostics public sub-surface under Core Public API; core.diagnostics module is optional and does not become a universal Error Model."
+    },
+    {
+      "number": 10,
+      "name": "Supporting Pattern Public Sub-Surfaces",
+      "category": "Feature / API Sub-Surface",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Separate Supporting Pattern public sub-surfaces under Core Public API; Validation, Observation, and Error Handling patterns remain separately importable and opt-in."
+    },
+    {
+      "number": 11,
+      "name": "Prefect Binding API Group",
+      "category": "Feature / API Group",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Prefect Integration Public API group exposing supported Prefect-specific binding contract; no Prefect imports or types in Core Public API."
+    },
+    {
+      "number": 12,
+      "name": "Prefect Configuration API Group",
+      "category": "Feature / API Group",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Prefect Integration Public API group exposing supported Prefect configuration contract; configuration ownership held by integration package."
+    },
+    {
+      "number": 13,
+      "name": "Prefect Correlation API Group",
+      "category": "Feature / API Group",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Prefect Integration Public API group exposing supported Prefect correlation contract; domain/native identity correlation preserved without conflating namespaces."
+    },
+    {
+      "number": 14,
+      "name": "Prefect Result Retrieval API Group",
+      "category": "Feature / API Group",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Prefect Integration Public API group exposing supported result retrieval contract; persisted Stage domain results retrieved separately from Prefect State."
+    },
+    {
+      "number": 15,
+      "name": "Optional Import Guarantees",
+      "category": "Feature / API Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Optional import guarantees defined for Supporting Patterns and Diagnostics; consumers that do not select optional patterns incur no mandatory import; internal module paths have no consumer compatibility guarantee."
+    },
+    {
+      "number": 16,
+      "name": "Public Symbol Curation",
+      "category": "Feature / API Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Public symbols and imports are explicit, curated, versioned, and tested; no wildcard re-exports; internal modules kept outside public_api packages."
+    },
+    {
+      "number": 17,
+      "name": "Compatibility / Versioning Policy",
+      "category": "Feature / API Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Public API compatibility and versioning policy defines stability guarantees across version changes; every public symbol has a source contract/design owner and versioning classification."
+    },
+    {
+      "number": 18,
+      "name": "Public API Conformance Tests",
+      "category": "Feature / Verification",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Public API conformance tests verify supported exports, not private imports; tests validate public API manifest matches exported __all__ symbols, module ownership maps to Framework_Module_Boundary_Model, no duplicate public identity/result type under multiple internal packages."
+    },
+    {
+      "number": 19,
+      "name": "Consumer Implementation / Specialization Points",
+      "category": "Feature / API Surface",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Defines what consumers may implement, customize, compose, and invoke; consumer owns Pipeline Root (no generic Root API created); consumer-specific Generator Stage/Step Models or business contracts excluded from Public API."
+    },
+    {
+      "number": 20,
+      "name": "Stage/Step/SPU Invocation and Typed Result Contracts",
+      "category": "Feature / API Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Stage/Step/SPU invocation and typed result contracts match detailed designs in Waves 1-3; Stage, Step, and SPU callable/result signatures align with Wave 1-3 detailed designs."
+    },
+    {
+      "number": 21,
+      "name": "Required Governing Artifact Changes - Dependency_and_Public_API_Architecture",
+      "category": "Feature / Change Control",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Update Core Public API contract groups to include StageCallable/StageInvocation/StageResult, StepInvocation/StepExecutionResult/OptionalResultContributions, generic SPU result types, and canonical identities; add optional Diagnostics and separate Supporting Pattern public sub-surfaces; update Prefect Integration API to binding/configuration/correlation/result retrieval contract groups."
+    },
+    {
+      "number": 22,
+      "name": "Required Governing Artifact Changes - Filesystem Architecture",
+      "category": "Feature / Change Control",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Allocate explicit public_api/core and public_api/integrations/prefect source packages; allocate documented optional public sub-surfaces for identities, diagnostics, and Supporting Patterns; keep internal modules outside public_api and do not wildcard re-export them."
+    },
+    {
+      "number": 23,
+      "name": "Required Governing Artifact Changes - Framework Module Boundary Model",
+      "category": "Feature / Change Control",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Add MOD-CORE-IDENTITIES and MOD-CORE-DIAGNOSTICS modules; map each Public API surface/sub-surface to its logical module owner; keep consumer and Prefect Integration ownership boundaries separate."
+    },
+    {
+      "number": 24,
+      "name": "Change Control / Implementation Gate",
+      "category": "Feature / Change Control",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "description": "Wave 6 Public API proposal; becomes supported consumer contract only after architecture review, governing-artifact reconciliation, and implementation conformance tests; do not create public_api package files or export symbols until six-wave design set and governing PHASE-03 artifacts are reconciled and accepted; next step: cross-wave consistency review of all six waves."
+    }
+  ]
+}
+

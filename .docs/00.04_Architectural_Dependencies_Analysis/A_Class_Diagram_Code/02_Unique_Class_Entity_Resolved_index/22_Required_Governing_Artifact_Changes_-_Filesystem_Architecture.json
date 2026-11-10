@@ -1,0 +1,10 @@
+{
+  "serialNumber": 22,
+  "name": "Required Governing Artifact Changes - Filesystem Architecture",
+  "category": "Feature / Change Control",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Allocate explicit public_api/core and public_api/integrations/prefect source packages; allocate documented optional public sub-surfaces for identities, diagnostics, and Supporting Patterns; keep internal modules outside public_api and do not wildcard re-export them.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,67 @@
+{
+  "documentType": "ProjectIdentity",
+  "documentVersion": "1.0.0",
+  "project": {
+    "id": "SMRB.GenericPipelineWorkflowComponentsFramework",
+    "name": "Generic Pipeline and Workflow Components Framework",
+    "abbreviation": "GPWCF",
+    "projectKind": "ReusablePythonFrameworkPackage",
+    "language": "Python",
+    "pythonVersion": "3.15.1",
+    "repositoryRelativePath": "SMRB.GenericPipelineWorkflowComponentsFramework",
+    "description": "A reusable Python framework that provides programmatic contracts, reusable component implementations, composition capabilities, and specialization mechanisms for constructing Stage and Step components and their associated Processing Units and optional Supporting Units. It defines the internal behavior and composition responsibilities of these components, and provides the Stage contract, Stage behavior, and integration mechanisms needed to make a GPWCF Stage usable as an executable Node within a selected external workflow framework. GPWCF does not own or implement the consuming workflow's pipeline orchestration and does not presume a universal adapter or integration abstraction across workflow frameworks."
+  },
+  "architecturalScope": {
+    "provides": [
+      "Programmatic contracts and reusable implementations for Stage and Step components",
+      "Stage-level composition capabilities for coordinating Steps within a Stage",
+      "Step-level composition capabilities for selecting, associating, invoking, and coordinating Processing Units and optional Supporting Units",
+      "Specialized contracts and execution-result models for Processing Units and Supporting Units",
+      "Common architectural coordination contracts for component association and lifecycle responsibilities",
+      "Component integration capabilities that enable specialized implementations to participate in their owning composition boundaries",
+      "The Stage programmatic contract, Stage behavior, and integration mechanisms required to expose a GPWCF Stage as an executable Node within a selected external workflow framework",
+      "Composition and specialization mechanisms that preserve component-specific responsibilities without prescribing a universal execution topology",
+      "Generic behavioral contracts, guarantees, and architectural constraints governing GPWCF components and their composition boundaries"
+    ],
+    "consumerResponsibilities": [
+      "Select and specialize the framework components and optional Supporting Unit patterns required by the consuming workflow",
+      "Provide or select concrete Processing Unit and Supporting Unit implementations that satisfy the applicable specialized contracts",
+      "Configure and compose Stage and Step components according to their actual responsibilities",
+      "Select the external workflow framework that will own pipeline orchestration and invoke GPWCF Stage components",
+      "Provide workflow-specific integration configuration and any target-framework-specific integration elements not supplied by GPWCF",
+      "Define workflow-specific execution, concurrency, cancellation, recovery, lifecycle, and reuse policies to the extent that these are not governed by the selected GPWCF contracts or the integrated workflow framework",
+      "Define workflow topology and workflow-level operational decisions without requiring GPWCF to prescribe them"
+    ],
+    "exclusions": [
+      "Owning, implementing, or replacing the consuming workflow's pipeline orchestration engine",
+      "Implementing the business workflow of SMRB.PayloadDescriptionGenerator",
+      "Prescribing a fixed number, arrangement, or execution topology for Stages, Steps, Processing Units, or Supporting Units",
+      "Requiring every consumer to use every framework component or Supporting Unit pattern",
+      "Imposing a universal Processing Unit registry, plugin manager, loader, or runtime orchestration mechanism",
+      "Prescribing a specific external workflow framework or defining target-specific integration mechanisms before an integration target is selected",
+      "Defining consumer-specific business logic, workflow topology, or operational policies"
+    ]
+  },
+  "dependencyManagement": {
+    "developmentInterpreter": {
+      "source": "SMRB solution shared virtual environment",
+      "path": "..\\.env\\Scripts\\python.exe",
+      "version": "3.15.1",
+      "userSitePackages": "disabled"
+    },
+    "projectRequirementsFile": "requirements.txt",
+    "solutionRequirementsAggregator": "..\\requirements.txt",
+    "thirdPartyRuntimeDependencies": [],
+    "runtimeBundling": "The framework does not own or duplicate a Python runtime. Its current implementation baseline uses the Python standard library only.",
+    "consumerIsolation": "A consuming application retains ownership of its runtime and dependency environment. The framework package must not depend on the private dependency bundle of SMRB.PayloadDescriptionGenerator."
+  },
+  "documentation": {
+    "root": ".docs",
+    "architecture": ".docs/00.00_Primary_Architecture"
+  },
+  "status": {
+    "identityEstablished": false,
+    "implementationCapabilities": "Not yet implemented or verified",
+    "consumerIntegration": "Not yet established"
+  }
+}

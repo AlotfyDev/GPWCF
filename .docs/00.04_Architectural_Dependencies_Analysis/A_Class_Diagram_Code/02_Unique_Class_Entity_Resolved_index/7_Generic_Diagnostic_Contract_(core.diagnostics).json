@@ -1,0 +1,10 @@
+{
+  "serialNumber": 7,
+  "name": "Generic Diagnostic Contract (core.diagnostics)",
+  "category": "Class / Contract",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/09.00_Generic_Diagnostics.json",
+  "description": "Wave 4 detailed design (artifact 1) defining a narrow, typed, descriptive, and optional Diagnostic value contract, deliberately kept distinct from a universal Error Model, Failure taxonomy, execution outcome, or control-flow policy.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

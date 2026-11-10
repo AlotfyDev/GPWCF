@@ -1,0 +1,44 @@
+{
+  "taskId": "03_Stage",
+  "serialNumber": 3,
+  "target": "Stage",
+  "category": "Core Component",
+  "description": "Implement the Stage aggregate root exposing StageCallableContract to consuming workflows. The Stage owns Step membership and Stage Composition, coordinates Step invocation, defines Stage-specific flow semantics, and produces StageResult[TStagePayload] (envelope + specialized payload). Stage registers StageErrorTypeDefinition instances via Pipeline-assigned registry and creates StageError occurrences. Stage Flow Result is independent of any StepExecutionResult.",
+  "implementationClasses": [
+    "Stage",
+    "StageCallableContract",
+    "StageInvocation",
+    "StageComposition",
+    "StageResult[TStagePayload]",
+    "StageFlowResult",
+    "StageErrorTypeDefinition",
+    "StageErrorTypeDefinitionRegistry"
+  ],
+  "relatedDiagrams": {
+    "class": "03_Diagrams_Codes_Files/03_Stage.dot",
+    "sequence": "B_Sequencial_Diagram_Code/06_Stage_Execution_Sequence.puml",
+    "association": "C_Association_Diagram_Code/03_Stage_Associations.puml",
+    "dependency": "D_Architectural_Dependency_Diagram_Code/02_Architectural_Level_Dependency_Graph.dot"
+  },
+  "dependencies": [
+    "02_Step",
+    "11_Core_Identities_Diagnostics"
+  ],
+  "acceptanceCriteria": [
+    "StageCallableContract boundary implemented (acceptance/completion/result/exception distinctions)",
+    "Stage owns Step membership and Stage Composition",
+    "StageResult envelope separate from Stage outputs, flow result, domain outcome",
+    "Stage registers StageErrorTypeDefinition via Pipeline-assigned registry",
+    "Stage Flow Result independent of StepExecutionResult",
+    "Prefect State never substitutes for StageResult"
+  ],
+  "definitionOfDone": [
+    "Stage callable contract tests for acceptance/completion/exception",
+    "StageResult serialization/persistence integration test",
+    "Architecture test: Core not permitted to import Prefect"
+  ],
+  "priority": "high",
+  "status": "pending",
+  "estimatedEffort": "high",
+  "testStrategy": "Stage callable unit tests; StageResult persistence/retrieval tests; architecture boundary tests"
+}

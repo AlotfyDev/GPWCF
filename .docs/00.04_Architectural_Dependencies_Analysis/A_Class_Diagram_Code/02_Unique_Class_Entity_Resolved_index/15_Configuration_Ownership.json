@@ -1,0 +1,10 @@
+{
+  "serialNumber": 15,
+  "name": "Configuration Ownership",
+  "category": "Feature / Responsibility",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+  "description": "Configuration ownership for the integration package; defines how integration configuration is held and applied without creating a universal scheduler, dispatcher, worker manager, deployment manager, or runtime registry.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

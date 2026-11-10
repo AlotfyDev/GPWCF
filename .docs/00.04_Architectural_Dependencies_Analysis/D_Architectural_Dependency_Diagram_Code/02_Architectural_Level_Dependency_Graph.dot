@@ -1,0 +1,25 @@
+digraph "Architectural Level Dependency Graph (Pipeline -> Stage -> Step -> SPU)" {
+  rankdir=LR;
+  node [shape=box, style=filled, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=8, len=1.5];
+  label="Architectural Level Dependency Graph (Pipeline -> Stage -> Step -> SPU)";
+  labelloc=t;
+  Pipeline [fillcolor="#e6f3ff", tooltip="Pipeline: owns registries, allocation, settlement"];
+  Stage [fillcolor="#e6f3ff", tooltip="Stage: bounded orchestration, owns Step membership"];
+  StageComposition [fillcolor="#e6f3ff", tooltip="Stage Composition: coordinates Step public contracts"];
+  Step [fillcolor="#fff2e6", tooltip="Step: aggregate root, owns internal composition"];
+  StepComposition [fillcolor="#fff2e6", tooltip="Step Composition: coordinates SPUs & supporting units"];
+  SPU [fillcolor="#fff2e6", tooltip="SPU: processing entity, no reverse dep on Step"];
+  ValidatorUnit [fillcolor="#fff2e6", tooltip="Validator Unit: optional supporting pattern"];
+  ErrorHandlingUnit [fillcolor="#fff2e6", tooltip="Error Handling Unit: optional supporting pattern"];
+  ObservationUnit [fillcolor="#fff2e6", tooltip="Observation Unit: optional supporting pattern"];
+  Pipeline -> Stage [label="owns & allocates", color="#0066cc"];
+  Stage -> StageComposition [label="coordinates", color="#0066cc"];
+  StageComposition -> Step [label="invokes public contract", color="#0066cc"];
+  Step -> StepComposition [label="owns internal", color="#cc6600"];
+  StepComposition -> SPU [label="selects & invokes", color="#cc6600"];
+  StepComposition -> ValidatorUnit [label="optional association", style=dashed, color="#cc6600"];
+  StepComposition -> ErrorHandlingUnit [label="optional association", style=dashed, color="#cc6600"];
+  StepComposition -> ObservationUnit [label="optional association", style=dashed, color="#cc6600"];
+  SPU -> Step [label="NO reverse dependency", style=dashed, color="#ff0000"];
+}

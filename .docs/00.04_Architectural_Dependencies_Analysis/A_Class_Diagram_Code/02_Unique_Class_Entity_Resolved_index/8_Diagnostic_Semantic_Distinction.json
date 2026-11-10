@@ -1,0 +1,10 @@
+{
+  "serialNumber": 8,
+  "name": "Diagnostic Semantic Distinction",
+  "category": "Feature / Concept",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/09.00_Generic_Diagnostics.json",
+  "description": "The deliberate semantic distinction among Diagnostic, Error Occurrence, Failure, Exception, and domain Outcome; diagnostics are descriptive only and never a substitute for Error, Failure, Exception, or Outcome semantics.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

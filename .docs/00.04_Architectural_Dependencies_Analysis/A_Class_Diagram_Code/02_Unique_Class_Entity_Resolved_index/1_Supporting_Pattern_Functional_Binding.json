@@ -1,0 +1,10 @@
+{
+  "serialNumber": 1,
+  "name": "Supporting Pattern Functional Binding",
+  "category": "Architectural Design / Feature",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/08.00_Supporting_Pattern_Functional_Binding.json",
+  "description": "Wave 3 detailed design (artifact 2) defining how each optional Supporting Pattern (Validation, Error Handling, Observation) is functionally bound to Prefect native execution without flattening distinct behavior, result, association, lifecycle, identity, and custody contracts into a universal Supporting Unit abstraction.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

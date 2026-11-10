@@ -1,0 +1,137 @@
+{
+  "indexId": "packaging-domain-features-entities-classes-components-index",
+  "indexVersion": "1.0.0",
+  "sourceDirectory": ".docs/00.00_Primary_Architecture/Packaging",
+  "sourceFileCount": 1,
+  "totalRecords": 18,
+  "description": "Index of all relevant features, classes, entities, components, and contracts defined in the GPWCF Primary Architecture Packaging domain documents. Links are relative to this index file location.",
+  "records": [
+    {
+      "number": 1,
+      "name": "Packaging Architecture (Wave 6 Artifact 2)",
+      "category": "Architectural Design / Feature",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "Wave 6 detailed design (artifact 2) defining the initial Python distribution model, build backend, project metadata, optional Prefect installation extra, dependency lock strategy, package discovery, and clean installation/build verification profiles for GPWCF."
+    },
+    {
+      "number": 2,
+      "name": "Single-Distribution Decision",
+      "category": "Feature / Packaging Decision",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "Selected option B: one gpwcf distribution containing Core and optional Prefect Integration package; Prefect declared only under optional [prefect] extra; Core base metadata has no third-party runtime dependencies."
+    },
+    {
+      "number": 3,
+      "name": "Two-Separate-Distributions Option (Deferred)",
+      "category": "Feature / Packaging Option",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "Option A (deferred): Build gpwcf-core and gpwcf-prefect as separately published distributions from the initial release; requires coordinated multi-distribution build/release and version compatibility policy."
+    },
+    {
+      "number": 4,
+      "name": "PEP 517/518 Build-System Declaration",
+      "category": "Feature / Build Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "Build-system declaration following PEP 517/518; declares build backend and isolated build requirements separate from runtime dependencies."
+    },
+    {
+      "number": 5,
+      "name": "PEP 621 Project Metadata",
+      "category": "Feature / Build Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "Project metadata following PEP 621 in [project] table of pyproject.toml; provides standardized project metadata declaration."
+    },
+    {
+      "number": 6,
+      "name": "Setuptools Build Backend",
+      "category": "Feature / Build Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "Build backend setuptools.build_meta pinned to setuptools==84.2.1, subject to clean CPython 3.15.1 build verification; supports wheel/sdist build hooks."
+    },
+    {
+      "number": 7,
+      "name": "src/gpwcf Source Layout",
+      "category": "Feature / Package Layout",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "Package uses src/gpwcf layout with PEP 621 metadata in pyproject.toml; source package discovery and package-data policy defined for the distribution."
+    },
+    {
+      "number": 8,
+      "name": "Core Runtime Dependency Metadata",
+      "category": "Feature / Dependency Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "Core base runtime dependencies remain empty; Core-only installation/import succeeds without Prefect, pygccxml, or Generator assets."
+    },
+    {
+      "number": 9,
+      "name": "Optional Prefect Extra",
+      "category": "Feature / Dependency Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "Prefect declared only under the optional [prefect] extra as prefect==3.9.2; Prefect extra installs Prefect 3.9.2 and its minimized verified transitive closure."
+    },
+    {
+      "number": 10,
+      "name": "Build/Development/Runtime Lock Separation",
+      "category": "Feature / Dependency Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "Build-system dependencies isolated from runtime dependencies; build/development/test/verification tools excluded from runtime metadata; separate lock profiles for each category."
+    },
+    {
+      "number": 11,
+      "name": "py.typed Inclusion",
+      "category": "Feature / Package Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "The wheel includes py.typed; package markers and exports not created before Wave 6 Public API design acceptance."
+    },
+    {
+      "number": 12,
+      "name": "Wheel/sdist Exclusion Policy",
+      "category": "Feature / Package Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "The wheel excludes docs, PoC, dependencies, virtual environment, and consumer-specific assets; only accepted baseline package markers materialized."
+    },
+    {
+      "number": 13,
+      "name": "Clean Installation/Build Verification Profiles",
+      "category": "Feature / Verification",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "Installation commands and packaging verification profiles defined; wheel/sdist and import-isolation verification profiles established; clean isolated build verification is a release gate."
+    },
+    {
+      "number": 14,
+      "name": "Future Split Distribution Condition",
+      "category": "Feature / Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "A future split distribution (Core vs Prefect Integration) requires an explicit release/dependency rationale and compatibility policy; not done at initial release."
+    },
+    {
+      "number": 15,
+      "name": "Conformance Requirement PKG-001",
+      "category": "Feature / Conformance Rule",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "The initial release uses one gpwcf distribution with a rigorously optional Prefect extra."
+    },
+    {
+      "number": 16,
+      "name": "Conformance Requirement PKG-002",
+      "category": "Feature / Conformance Rule",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "Core base runtime dependencies remain empty."
+    },
+    {
+      "number": 17,
+      "name": "Conformance Requirement PKG-003",
+      "category": "Feature / Conformance Rule",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "Prefect is declared only under the prefect optional extra as prefect==3.9.2."
+    },
+    {
+      "number": 18,
+      "name": "Change Control / Implementation Gate",
+      "category": "Feature / Change Control",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "description": "Wave 6 packaging proposal; becomes implementation constraint only after review and explicit acceptance; do not create pyproject.toml until all Wave 6 artifacts and governing-artifact reconciliation are accepted; next step: design 16.00_Public_API_Architecture.json."
+    }
+  ]
+}
+

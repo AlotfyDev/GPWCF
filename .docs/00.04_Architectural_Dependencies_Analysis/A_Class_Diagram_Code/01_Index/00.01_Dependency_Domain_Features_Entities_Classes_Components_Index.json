@@ -1,0 +1,151 @@
+{
+  "indexId": "dependency-domain-features-entities-classes-components-index",
+  "indexVersion": "1.0.0",
+  "sourceDirectory": ".docs/00.00_Primary_Architecture/Dependency",
+  "sourceFileCount": 1,
+  "totalRecords": 20,
+  "description": "Index of all relevant features, classes, entities, components, and contracts defined in the GPWCF Primary Architecture Dependency domain documents. Links are relative to this index file location.",
+  "records": [
+    {
+      "number": 1,
+      "name": "Dependency Architecture (Wave 6 Artifact 1)",
+      "category": "Architectural Design / Feature",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Wave 6 detailed design (artifact 1) finalizing GPWCF dependency ownership and allowed/forbidden dependency directions across Core, optional Supporting Patterns, Prefect Integration, consumers, and the SMRB development environment, including the newly justified identity and diagnostics modules."
+    },
+    {
+      "number": 2,
+      "name": "Dependency Ownership Principle",
+      "category": "Feature / Governing Principle",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Dependency ownership follows semantic and operational responsibility, not repository proximity or current developer environment installation."
+    },
+    {
+      "number": 3,
+      "name": "Core Runtime Standard-Library-Only",
+      "category": "Feature / Constraint",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Core runtime imports remain standard-library-only in the current baseline; Core is installable and importable without Prefect, Generator dependencies, or SMRB development assets."
+    },
+    {
+      "number": 4,
+      "name": "Prefect 3.9.2 Optional Runtime",
+      "category": "Feature / Dependency Rule",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Prefect 3.9.2 is an accepted optional external runtime owned only by integrations.prefect; installed only through the optional Prefect profile; never a Core dependency."
+    },
+    {
+      "number": 5,
+      "name": "Optional Supporting Pattern Dependencies",
+      "category": "Feature / Dependency Rule",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Optional Supporting Patterns remain separately importable and are required only when selected by a concrete Step; consumers that do not select them incur no mandatory pattern package import."
+    },
+    {
+      "number": 6,
+      "name": "Generator Extraction Dependencies",
+      "category": "Feature / Dependency Rule",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Generator extraction dependencies remain consumer-owned; GPWCF does not own or impose Generator-specific dependency closures."
+    },
+    {
+      "number": 7,
+      "name": "SMRB .dependencies and Shared .env Treatment",
+      "category": "Feature / Environment Rule",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "SMRB .dependencies and shared .env remain the solution-level development dependency-management mechanism; GPWCF must not create a parallel local dependency bundle or environment; no GPWCF-local .dependencies directory is introduced."
+    },
+    {
+      "number": 8,
+      "name": "Core Identities Module",
+      "category": "Class / Module",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "core.identities is a narrow dependency-free module for nominal identity value types only; justified as part of Wave 6 dependency architecture."
+    },
+    {
+      "number": 9,
+      "name": "Core Diagnostics Module",
+      "category": "Class / Module",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "core.diagnostics is optional and does not become a universal Error Model; dependency closure analysis determines which contracts require diagnostics versus specialized error handling."
+    },
+    {
+      "number": 10,
+      "name": "Minimal Prefect Integration Dependency Policy",
+      "category": "Feature / Dependency Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Minimal Prefect Integration direct/transitive dependency policy; the 106-package environment snapshot is not treated as the minimal Integration dependency closure; minimal transitive lock remains a release gate."
+    },
+    {
+      "number": 11,
+      "name": "Installation Profiles and Environment Isolation",
+      "category": "Feature / Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Installation profiles and environment isolation guarantees ensure Core-only installation works without Prefect; build backend dependencies remain isolated from runtime dependencies."
+    },
+    {
+      "number": 12,
+      "name": "Dependency Closure",
+      "category": "Feature / Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Dependency closure and release gates: dependency graph is acyclic and all forbidden dependency directions remain prohibited; every runtime/build/development dependency has one explicit owner."
+    },
+    {
+      "number": 13,
+      "name": "Single-Distribution Optional-Extra Packaging",
+      "category": "Feature / Packaging Decision",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Replaces unresolved distribution arrangement with one distribution and optional Prefect extra for the initial release; preserves the Core-only installation/import guarantee."
+    },
+    {
+      "number": 14,
+      "name": "Setuptools Build Backend",
+      "category": "Feature / Build Policy",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Record setuptools==84.2.1 / setuptools.build_meta as isolated build-system dependency; build backend dependencies remain isolated from runtime dependencies."
+    },
+    {
+      "number": 15,
+      "name": "Prefect Transitive Lock Release Gate",
+      "category": "Feature / Release Gate",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "The exact Prefect transitive lock and clean isolated build verification remain explicit release gates; Prefect 3.9.2 preserved as optional runtime extra."
+    },
+    {
+      "number": 16,
+      "name": "Dependency Graph Acyclicity",
+      "category": "Feature / Constraint",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Dependency graph is acyclic and all forbidden dependency directions remain prohibited across Core, optional Supporting Patterns, Prefect Integration, consumers, and SMRB development environment."
+    },
+    {
+      "number": 17,
+      "name": "Public API Readiness Gaps Resolved by Waves 1-4",
+      "category": "Feature / Change Control",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Update Public API readiness gaps resolved by Waves 1-4 while retaining production integration/failure qualification gates; exact public import/export names detailed in 16.00_Public_API_Architecture.json."
+    },
+    {
+      "number": 18,
+      "name": "Dependency Owner and Module Lists",
+      "category": "Feature / Change Control",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Update dependency owner/module lists and dependency graph with core.identities and core.diagnostics; records required reconciliation changes to Dependency_and_Public_API_Architecture.json, Framework_Module_Boundary_Model.json, and Filesystem_Architecture.json."
+    },
+    {
+      "number": 19,
+      "name": "Wave 6 Implementation Gate",
+      "category": "Feature / Change Control",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Do not create pyproject.toml or install new project build dependencies until all Wave 6 artifacts and governing-artifact reconciliation are accepted; next step: design 15,00_Packaging.json."
+    },
+    {
+      "number": 20,
+      "name": "Dependency Graph Nodes and Edges",
+      "category": "Feature / Graph Model",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "description": "Models dependency ownership and allowed/forbidden dependency directions across Core, optional Supporting Patterns, Prefect Integration, consumers, and SMRB development environment as a directed acyclic graph."
+    }
+  ]
+}
+

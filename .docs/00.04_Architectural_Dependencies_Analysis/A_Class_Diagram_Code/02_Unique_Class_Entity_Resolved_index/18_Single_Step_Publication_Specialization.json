@@ -1,0 +1,10 @@
+{
+  "serialNumber": 18,
+  "name": "Single Step Publication Specialization",
+  "category": "Class / Contract",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/11,00_Publication.json",
+  "description": "Per-Step concrete policy/implementation contract defining mandatory no-fail transfer proof, Recovery Owner, identity generation, status retention, and end-to-end publication traces.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

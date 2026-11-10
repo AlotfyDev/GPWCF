@@ -1,0 +1,41 @@
+{
+  "taskId": "11_Core_Identities_Diagnostics",
+  "serialNumber": 11,
+  "target": "Core Identities & Diagnostics",
+  "category": "Core Module",
+  "description": "Implement core.identities narrow dependency-free module for nominal identity value types (PipelineInvocationIdentity, StageIdentity, StepIdentity, SPUIdentity, InvocationIdentity). Implement core.diagnostics optional Diagnostic value contract (narrow, typed, descriptive, optional) deliberately distinct from Error Model, Failure taxonomy, execution outcome, control-flow policy. Diagnostics descriptive only, never substitute for Error/Failure/Exception/Outcome.",
+  "implementationClasses": [
+    "core.identities",
+    "PipelineInvocationIdentity",
+    "StageIdentity",
+    "StepIdentity",
+    "SPUIdentity",
+    "InvocationIdentity",
+    "core.diagnostics",
+    "Diagnostic"
+  ],
+  "relatedDiagrams": {
+    "class": "03_Diagrams_Codes_Files/11_Core_Identities_Diagnostics.dot",
+    "association": "C_Association_Diagram_Code/11_Core_Identities_Diagnostics_Associations.puml",
+    "dependency": "D_Architectural_Dependency_Diagram_Code/01_Package_Module_Dependency_Graph.dot"
+  },
+  "dependencies": [],
+  "acceptanceCriteria": [
+    "core.identities is dependency-free module for nominal identity value types only",
+    "Identity types: PipelineInvocationIdentity, StageIdentity, StepIdentity, SPUIdentity, InvocationIdentity",
+    "core.diagnostics optional Diagnostic value contract implemented",
+    "Diagnostic distinct from Error Occurrence, Failure, Exception, Domain Outcome",
+    "Diagnostics descriptive only; never substitute for error/failure/outcome semantics",
+    "Dependency closure determines which contracts require diagnostics vs specialized error handling"
+  ],
+  "definitionOfDone": [
+    "Identity type unit tests",
+    "Diagnostic contract tests",
+    "Architecture test: diagnostics not universal Error Model",
+    "Dependency-free verification for core.identities"
+  ],
+  "priority": "medium",
+  "status": "pending",
+  "estimatedEffort": "low",
+  "testStrategy": "Identity unit tests; diagnostic contract tests; architecture tests"
+}

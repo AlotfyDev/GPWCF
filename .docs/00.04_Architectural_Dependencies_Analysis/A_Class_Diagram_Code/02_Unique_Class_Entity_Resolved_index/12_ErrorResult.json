@@ -1,0 +1,10 @@
+{
+  "serialNumber": 12,
+  "name": "ErrorResult",
+  "category": "Class / Entity",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/10.00_Error_Handling.json",
+  "description": "Source Error Occurrence result type, kept separate from the Error Handling Unit's per-operation results and from ErrorHandlerResult; Error Model ownership remains with the concrete Step/consumer.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

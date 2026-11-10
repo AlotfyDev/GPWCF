@@ -1,0 +1,63 @@
+{
+  "documentType": "PrefectIntegrationOpenDecisionRegister",
+  "documentVersion": "1.0.0",
+  "status": "open-items-for-subsequent-phases",
+  "decisions": [
+    {
+      "id": "PREF-OD-00-01",
+      "question": "What concrete callable/class shape will the GPWCF Stage facade expose to Prefect?",
+      "owner": "GPWCF integration design",
+      "phase": "PHASE-02/03",
+      "impact": "Determines the stable Stage-to-Prefect binding boundary.",
+      "status": "open"
+    },
+    {
+      "id": "PREF-OD-00-02",
+      "question": "Will the production Step.execute implementation be synchronous or asynchronous, and how will its exact StepExecutionResult be mapped across Prefect Flow result serialization?",
+      "owner": "Concrete Step specialization",
+      "phase": "PHASE-02/04",
+      "impact": "The generic contract does not prescribe sync/async implementation.",
+      "status": "open"
+    },
+    {
+      "id": "PREF-OD-00-03",
+      "question": "Which concrete Step instances and SPU roles are derived from each selected Generator Stage Model?",
+      "owner": "Reference consumer specialization",
+      "phase": "PHASE-03/04",
+      "impact": "Objective and execution_step counts cannot be treated as Step/SPU counts.",
+      "status": "open"
+    },
+    {
+      "id": "PREF-OD-00-04",
+      "question": "Which concrete Step specializations require concurrent sibling Step Subflows, and what exact Prefect topology will satisfy them?",
+      "owner": "Stage specialization and Prefect integration",
+      "phase": "PHASE-03/04",
+      "impact": "The local qualification observed serialized sibling Step Subflows while Stage sibling Flows and Step-internal SPU Tasks overlapped.",
+      "status": "open"
+    },
+    {
+      "id": "PREF-OD-00-05",
+      "question": "What exact Prefect result persistence/serialization configuration is required for production Stage/Step results and artifact references?",
+      "owner": "Prefect integration",
+      "phase": "PHASE-02/06",
+      "impact": "Must preserve typed results without moving large domain artifacts into Prefect orchestration storage.",
+      "status": "open"
+    },
+    {
+      "id": "PREF-OD-00-06",
+      "question": "Can the captured installed environment be reconstructed cleanly from the generated lock, and which packages are actually required by the GPWCF integration package?",
+      "owner": "Dependency architecture",
+      "phase": "PHASE-02",
+      "impact": "The current lock is an environment snapshot, not a minimized production dependency set.",
+      "status": "open"
+    },
+    {
+      "id": "PREF-OD-00-07",
+      "question": "Are all direct and transitive third-party licenses acceptable for the intended GPWCF distribution?",
+      "owner": "Release/dependency review",
+      "phase": "PHASE-02/08",
+      "impact": "Prefect metadata reports Apache-2.0, but the full installed environment requires package-by-package license review.",
+      "status": "open"
+    }
+  ]
+}

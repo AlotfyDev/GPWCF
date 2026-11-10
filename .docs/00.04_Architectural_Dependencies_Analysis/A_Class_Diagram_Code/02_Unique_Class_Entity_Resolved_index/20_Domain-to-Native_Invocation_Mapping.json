@@ -1,0 +1,10 @@
+{
+  "serialNumber": 20,
+  "name": "Domain-to-Native Invocation Mapping",
+  "category": "Feature / Mapping",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+  "description": "Mapping of Stage, Step, SPU, and Supporting Pattern invocations to native Flow/Task runs; defines how each GPWCF invocation boundary corresponds to a Prefect-native execution construct while preserving parent/child correlation.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,221 @@
+{
+  "indexId": "stage-level-domain-features-entities-classes-components-index",
+  "indexVersion": "1.0.0",
+  "sourceDirectory": ".docs/00.00_Primary_Architecture/Stage_Level",
+  "sourceFileCount": 3,
+  "totalRecords": 30,
+  "description": "Index of all relevant features, classes, entities, components, and contracts defined in the GPWCF Primary Architecture Stage Level domain documents. Links are relative to this index file location.",
+  "records": [
+    {
+      "number": 1,
+      "name": "Stage Entity / Aggregate Root",
+      "category": "Class / Entity",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+      "description": "A bounded orchestration component that exposes a Stage-level interface to its consuming workflow and internally coordinates the Step Instances required by that Stage. Architectural level: stage, parent level: pipeline, child level: stage-step."
+    },
+    {
+      "number": 2,
+      "name": "Stage Template and Concrete Stage Instance",
+      "category": "Class / Entity",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+      "description": "Reusable structural template defining Stage responsibilities and relationships, and its concrete instantiation. Not limited to the thirteen Generator processing stages; applies to any concrete Stage Instance conforming to the reusable Stage contract."
+    },
+    {
+      "number": 3,
+      "name": "Stage Responsibilities",
+      "category": "Feature / Responsibility",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+      "description": "Expose Stage contract to consuming workflow; own composition of Step Instances; coordinate Step invocation through Stage-facing callable contracts; define Stage-specific execution structure, dependencies, transitions, flow-decision semantics; manage Stage-specific flow semantics and final Stage-specific Flow Result; publish Stage outputs and execution status; define and register Stage-owned error type definitions; create StageError occurrences for Stage-owned errors."
+    },
+    {
+      "number": 4,
+      "name": "Stage Facade",
+      "category": "Class / Component",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+      "description": "Provides the Stage-level boundary and interface through which the Pipeline invokes and receives results from the Stage. Presents the Stage execution contract without exposing internal Step composition; accepts Stage-level inputs and returns Stage-level outputs and status defined by the concrete Stage specialization."
+    },
+    {
+      "number": 5,
+      "name": "StageComposition",
+      "category": "Class / Component",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+      "description": "Owns semantic composition and flow rules of Step Instances belonging to the Stage; coordinates their contract-level participation and result collection while allowing an external Workflow Framework to execute the corresponding native Parent Workflow graph. Maintains Stage-specific Step set, coordinates invocation through public Step contracts, respects Stage-specific dependencies and execution constraints."
+    },
+    {
+      "number": 6,
+      "name": "StageCallable (Wave 1 Artifact 1)",
+      "category": "Architectural Design / Feature",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+      "description": "Wave 1 detailed design (artifact 1) defining the framework-owned, workflow-runtime-independent callable boundary of a GPWCF Stage. Makes a concrete Stage invocable as one bounded functional unit by a consuming workflow or native external workflow element while preserving Stage ownership of internal Step composition and Stage-specific flow semantics."
+    },
+    {
+      "number": 7,
+      "name": "StageCallableContract",
+      "category": "Class / Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+      "description": "The public invocation boundary of the Stage Aggregate; does not transfer Stage responsibilities to caller or external runtime. Defines semantic meaning, minimum invocation information, input/execution-context/output/flow-result/outcome typing boundaries, and invocation acceptance/completion/result/exception distinctions."
+    },
+    {
+      "number": 8,
+      "name": "StageInvocation",
+      "category": "Class / Entity",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+      "description": "Typed invocation envelope carrying minimum information required to invoke a concrete Stage. Separates Stage identity, Stage invocation identity, caller correlation identity, and external runtime identities as distinct conceptual values."
+    },
+    {
+      "number": 9,
+      "name": "Stage Input / Output Typing Boundary",
+      "category": "Feature / Contract Rule",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+      "description": "Stage input accepted from consuming workflow and output returned to consuming workflow are each typed per concrete Stage specialization. No universal schema for concrete Stage inputs, outputs, Stage Flow Results, or Stage-specific outcome classifications is imposed."
+    },
+    {
+      "number": 10,
+      "name": "Stage Execution Context",
+      "category": "Feature / Contract Rule",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+      "description": "Execution context passed to a Stage invocation as part of the callable boundary, distinct from the input value itself; owned by the Stage contract and not prescribed universally."
+    },
+    {
+      "number": 11,
+      "name": "Stage Flow Result",
+      "category": "Class / Entity",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+      "description": "The result of the Stage's internal Step-execution flow. Independent of any individual StepExecutionResult; its detailed structure and composition policy are Stage-specific. Distinct from Stage outputs and Stage execution status exposed through the Stage facade."
+    },
+    {
+      "number": 12,
+      "name": "StageResult (Wave 1 Artifact 2)",
+      "category": "Architectural Design / Feature",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/02.00_Stage_Result.json",
+      "description": "Wave 1 detailed design (artifact 2) defining a generic Stage invocation result envelope enabling caller and external workflow integration to retrieve and correlate a Stage result while preserving Stage-specific output, Stage Flow Result, and Stage domain outcome as distinct typed values."
+    },
+    {
+      "number": 13,
+      "name": "StageResult Contract",
+      "category": "Class / Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/02.00_Stage_Result.json",
+      "description": "Runtime-independent Stage result contract owned by core.stage. Defines semantic boundary and ownership of StageResult; generic envelope fields for identity and correlation; separate typed slots for Stage outputs, Stage Flow Result, and Stage domain outcome."
+    },
+    {
+      "number": 14,
+      "name": "StageResult Envelope Fields",
+      "category": "Element / Property",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/02.00_Stage_Result.json",
+      "description": "Generic envelope fields required to identify and correlate a returned Stage invocation result. Contains minimum identity and correlation data needed to attribute a returned result to one accepted Stage invocation."
+    },
+    {
+      "number": 15,
+      "name": "Stage Outputs Slot",
+      "category": "Element / Property",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/02.00_Stage_Result.json",
+      "description": "Separately typed slot within StageResult for Stage outputs produced by the Stage's internal execution. Distinct from Stage Flow Result and Stage domain outcome."
+    },
+    {
+      "number": 16,
+      "name": "Stage Domain Outcome Slot",
+      "category": "Element / Property",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/02.00_Stage_Result.json",
+      "description": "Separately typed slot within StageResult for Stage-specific domain outcome classification. Distinct from Stage outputs and Stage Flow Result; not a universal success/failure Boolean or mandatory outcome enumeration."
+    },
+    {
+      "number": 17,
+      "name": "Stage Result Construction and Preservation",
+      "category": "Feature / Contract Rule",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/02.00_Stage_Result.json",
+      "description": "Result construction, identity consistency, custody, immutability, and preservation invariants govern StageResult. A returned StageResult is distinct from a thrown invocation exception and from an external workflow runtime State."
+    },
+    {
+      "number": 18,
+      "name": "Stage Error Type Definition Registration",
+      "category": "Feature / Responsibility",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+      "description": "The concrete Stage owns specialized StageErrorTypeDefinition types and definitions for its Stage-level error domain. The Stage registers its StageErrorTypeDefinition instances through the StageErrorTypeDefinitionRegistry Instance assigned to it by the Pipeline; the Pipeline retains exclusive ownership of that Registry Instance."
+    },
+    {
+      "number": 19,
+      "name": "StageError Occurrence",
+      "category": "Class / Entity",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+      "description": "A Stage-owned component creates a StageError[TErrorOccurrenceContext] occurrence when an error arises within that component's Stage-owned responsibility. Stage Composition may create occurrences for errors arising within its own responsibility but is not the exclusive occurrence producer."
+    },
+    {
+      "number": 20,
+      "name": "Stage Error Responsibilities",
+      "category": "Feature / Responsibility",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+      "description": "Definition ownership, registration, occurrence creation, flow consumption, and exception separation govern Stage-level error handling. Thrown exceptions remain distinct from StageError occurrences unless an explicit Stage-owned contract defines a conversion; no automatic conversion is implied."
+    },
+    {
+      "number": 21,
+      "name": "Stage Callable Invocation Acceptance Boundary",
+      "category": "Feature / Boundary",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+      "description": "Invocation acceptance, completion, returned-result, and thrown-exception distinctions define the Stage callable boundary. Each distinction is semantically separate; an exception preventing result return is not a returned StageResult."
+    },
+    {
+      "number": 22,
+      "name": "Stage Callable Functional Binding Obligations",
+      "category": "Feature / Pattern Binding",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+      "description": "Functional binding obligations imposed on an external workflow integration for realizing the Stage callable boundary through a native external workflow element. Binding does not transfer domain semantic ownership to the external runtime."
+    },
+    {
+      "number": 23,
+      "name": "Stage Callable vs Stage Aggregate Relationship",
+      "category": "Feature / Relationship",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+      "description": "The Stage callable contract is the public invocation boundary of the Stage Aggregate. The Stage Aggregate owns Step membership, Stage Composition, flow semantics, transition meanings, and Stage Flow Result assembly; the callable boundary does not transfer those responsibilities."
+    },
+    {
+      "number": 24,
+      "name": "Stage Callable Stage-Facing Public API",
+      "category": "Feature / API Boundary",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+      "description": "Stage-facing public API obligations and conformance requirements define how callers interact with the Stage through its public boundary. Core baseline uses standard library only and does not own Prefect as a Core dependency."
+    },
+    {
+      "number": 25,
+      "name": "Stage Callable Exclusions",
+      "category": "Feature / Explicit Non-Goal",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+      "description": "Excludes Pipeline Root Entity, scheduler, dispatcher, worker manager, workflow graph executor, universal adapter, plugin manager, runtime registry, internal Stage Step topology, universal failure/retry/timeout/cancellation/recovery policy, and Prefect types/imports/Flow/Deployment objects/State values/native identifiers in Core."
+    },
+    {
+      "number": 26,
+      "name": "Stage Result vs Prefect State Separation",
+      "category": "Feature / Conceptual Distinction",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/02.00_Stage_Result.json",
+      "description": "External workflow runtime State is operational execution evidence; it is not a GPWCF StageResult, Stage Flow Result, Stage output, or Stage domain outcome. Prefect State, Flow Run ID, Task Run ID, Deployment ID, worker identity, or any other native operational field remains outside the Core StageResult contract."
+    },
+    {
+      "number": 27,
+      "name": "StageResult Prefect Persistence and Retrieval",
+      "category": "Feature / Integration Requirement",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/02.00_Stage_Result.json",
+      "description": "Requirements for Prefect result persistence and retrieval without making Prefect a Core dependency. Serialization and persistence are assigned to the selected integration without introducing a Core serializer registry."
+    },
+    {
+      "number": 28,
+      "name": "Stage Callable vs StageResult vs StepExecutionResult Separation",
+      "category": "Feature / Conceptual Distinction",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/02.00_Stage_Result.json",
+      "description": "StepExecutionResult describes one Step invocation that returned a result; it is not a Stage Flow Result and is not a StageResult. StageResult is the result of one Stage invocation returned to its caller; distinct from StepExecutionResult."
+    },
+    {
+      "number": 29,
+      "name": "Stage Callable Traceability Sources",
+      "category": "Feature / Relationship",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+      "description": "Traceability links to Stage_Level_Architecture.json (Stage bounded orchestration, Stage owns Step composition, Stage Flow Result independent of StepExecutionResult), Step_Contract.json (Stage invokes Step through public contract), Identity.json (GPWCF supplies Stage behavior, not Pipeline orchestration), ADR-GPWCF-PREFECT-001.json (Prefect owns native execution, GPWCF retains contracts), PHASE-02 topology/acceptance records (Stage as native Prefect Parent Flow/Deployment)."
+    },
+    {
+      "number": 30,
+      "name": "Stage Callable Implementation Gate",
+      "category": "Feature / Change Control",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+      "description": "Wave 1 detailed design proposal; becomes implementation constraint only after architecture review and explicit acceptance. Does not modify Stage_Level_Architecture.json, Step_Contract.json, Identity.json, or any specialized contract. Next step: design 02.00_Stage_Result.json (already complete)."
+    }
+  ]
+}
+

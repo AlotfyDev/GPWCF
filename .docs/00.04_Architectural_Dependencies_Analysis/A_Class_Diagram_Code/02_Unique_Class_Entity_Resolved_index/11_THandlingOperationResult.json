@@ -1,0 +1,10 @@
+{
+  "serialNumber": 11,
+  "name": "THandlingOperationResult",
+  "category": "Class / Generic Type",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/10.00_Error_Handling.json",
+  "description": "Per-operation result model produced by the Error Handling Unit; explicitly typed to match existing contract generic parameters, distinct from ErrorResult and ErrorHandlerResult.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,68 @@
+[
+  {
+    "stageIdentity": "STAGE-A",
+    "deploymentFlowRunId": "56a01033-d588-436e-9eb9-6aedfc4597ed",
+    "deploymentParentTaskRunId": "cd23546c-d0ec-4598-94d2-c83112a23e7b",
+    "nativeWorkerName": "gpwcf-stage-worker-01",
+    "nativeWorkPoolName": "gpwcf-phase02-stage-qualified-pool",
+    "checks": {
+      "stageFlowRunIdentityMatchesDeploymentRun": true,
+      "stageNativeParentMatchesDeploymentParentTask": true,
+      "stageRunsOnExpectedProcessWorkerPool": true,
+      "rootAndDomainInvocationCorrelationPreserved": true,
+      "stepParentCorrelationPreserved": true,
+      "stepBoundaryAndSpuNestingPreserved": true,
+      "siblingStagesAssignedToDistinctWorkers": true
+    },
+    "stepParentObservations": [
+      {
+        "stepIdentity": "STAGE-A.step-b",
+        "stepFlowRunId": "fe457242-4f12-4ee2-9642-61f1b7124219",
+        "syntheticParentTaskRunId": "62c34091-3a45-4bbb-97b2-035025d201b8",
+        "stepDispatchTaskRunId": "01a1bca2-d64d-749b-97d8-198f52917a37",
+        "syntheticParentLinksStepDispatchTask": true
+      },
+      {
+        "stepIdentity": "STAGE-A.step-a",
+        "stepFlowRunId": "941d1534-7247-4118-8017-7caf8d22f32b",
+        "syntheticParentTaskRunId": "72532004-cc80-4d8c-8dbf-8515fa13052a",
+        "stepDispatchTaskRunId": "01a1bca2-d64b-7c07-a2c0-c6b9b080c56a",
+        "syntheticParentLinksStepDispatchTask": true
+      }
+    ],
+    "passed": true
+  },
+  {
+    "stageIdentity": "STAGE-B",
+    "deploymentFlowRunId": "de3996ae-987a-41d7-bdc8-7138820de655",
+    "deploymentParentTaskRunId": "f111669a-b05e-4940-a17a-10b7ae7453e0",
+    "nativeWorkerName": "gpwcf-stage-worker-02",
+    "nativeWorkPoolName": "gpwcf-phase02-stage-qualified-pool",
+    "checks": {
+      "stageFlowRunIdentityMatchesDeploymentRun": true,
+      "stageNativeParentMatchesDeploymentParentTask": true,
+      "stageRunsOnExpectedProcessWorkerPool": true,
+      "rootAndDomainInvocationCorrelationPreserved": true,
+      "stepParentCorrelationPreserved": true,
+      "stepBoundaryAndSpuNestingPreserved": true,
+      "siblingStagesAssignedToDistinctWorkers": true
+    },
+    "stepParentObservations": [
+      {
+        "stepIdentity": "STAGE-B.step-b",
+        "stepFlowRunId": "aab3eec0-8403-47b1-a47c-7c66a212f15d",
+        "syntheticParentTaskRunId": "76313ab6-c760-469a-9800-86697236c831",
+        "stepDispatchTaskRunId": "01a1bca2-dc54-7647-8c78-1622c4d35921",
+        "syntheticParentLinksStepDispatchTask": true
+      },
+      {
+        "stepIdentity": "STAGE-B.step-a",
+        "stepFlowRunId": "62a3d983-4635-40d4-ac0b-053baf9b9cbe",
+        "syntheticParentTaskRunId": "811db6b1-5151-4203-ba8c-5f558da46f30",
+        "stepDispatchTaskRunId": "01a1bca2-dc4e-73f0-9d0c-f098662aa8ff",
+        "syntheticParentLinksStepDispatchTask": true
+      }
+    ],
+    "passed": true
+  }
+]

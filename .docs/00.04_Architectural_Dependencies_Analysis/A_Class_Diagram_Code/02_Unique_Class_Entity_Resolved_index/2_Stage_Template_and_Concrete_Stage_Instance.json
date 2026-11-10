@@ -1,0 +1,10 @@
+{
+  "serialNumber": 2,
+  "name": "Stage Template and Concrete Stage Instance",
+  "category": "Class / Entity",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+  "description": "Reusable structural template defining Stage responsibilities and relationships, and its concrete instantiation. Not limited to the thirteen Generator processing stages; applies to any concrete Stage Instance conforming to the reusable Stage contract.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

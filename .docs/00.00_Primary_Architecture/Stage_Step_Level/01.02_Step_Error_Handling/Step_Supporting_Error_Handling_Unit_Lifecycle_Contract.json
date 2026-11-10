@@ -1,0 +1,230 @@
+{
+  "documentId": "pipeline.step-supporting-error-handling-unit.lifecycle.contract",
+  "documentVersion": "0.1.1",
+  "status": "design-baseline",
+  "title": "Step Supporting Error Handling Unit Lifecycle Contract",
+  "scope": {
+    "architecturalLevel": "stage-step",
+    "component": "StepSupportingErrorHandlingUnitLifecycle",
+    "owningLevel": "StepComposition",
+    "purpose": "Define lifecycle responsibilities and boundaries for Error Handling Unit instances, including provisioning, preparation, readiness, admission, invocation eligibility, quiescence, reuse, release, and independent retention of operation results.",
+    "appliesTo": "Each concrete Step specialization that provisions, acquires, admits, reuses, or releases Error Handling Unit instances."
+  },
+  "lifecyclePrinciples": {
+    "separation": [
+      "Unit instance lifetime is distinct from each Association lifetime.",
+      "Unit instance lifetime is distinct from each invocation and each handling operation attempt/execution.",
+      "Unit instance lifetime is distinct from the lifetime of Publisher capabilities supplied for individual invocations.",
+      "Unit instance lifetime is distinct from the retention lifetime of accepted operation entries and ErrorHandlerResult aggregates.",
+      "Ending the last Association does not automatically release the Unit instance.",
+      "Retaining operation results does not require retaining the runtime Unit instance."
+    ],
+    "authority": "Step Composition owns lifecycle decisions and coordinates lifecycle transitions. The concrete Unit implementation performs its own initialization, operation-specific preparation, shutdown, and resource-release mechanics.",
+    "specialization": "The common contract defines obligations and conceptual milestones only; it does not impose one universal state machine, pool, factory, scheduler, or resource-management implementation."
+  },
+  "lifecycleMilestones": [
+    {
+      "name": "ProvisionedOrAcquired",
+      "meaning": "A Unit instance has been created or obtained and has a stable errorHandlingUnitIdentity."
+    },
+    {
+      "name": "Prepared",
+      "meaning": "Specialization-required configuration, dependencies, credentials/capabilities, and operation resources have been prepared."
+    },
+    {
+      "name": "Ready",
+      "meaning": "The Unit satisfies its declared technical readiness conditions."
+    },
+    {
+      "name": "Admitted",
+      "meaning": "Step Composition has authorized the Unit for use within the owning Step."
+    },
+    {
+      "name": "AvailableOrInUse",
+      "meaning": "The Unit is eligible for invocation or is currently executing one or more authorized invocations/operations."
+    },
+    {
+      "name": "Quiescing",
+      "meaning": "Step Composition has stopped authorizing new invocations and is coordinating completion/cancellation of active work and result custody."
+    },
+    {
+      "name": "RetainedForReuse",
+      "meaning": "The same runtime instance remains available for possible future use under the Step's reset, isolation, and readiness rules."
+    },
+    {
+      "name": "Released",
+      "meaning": "Release has completed successfully and the instance is no longer eligible for invocation or association."
+    }
+  ],
+  "milestoneSemantics": {
+    "conceptualOnly": true,
+    "rules": [
+      "Milestones are conceptual lifecycle descriptions, not a mandatory enum or linear state machine.",
+      "A specialization may omit, combine, repeat, or refine milestones.",
+      "The concrete Step defines transition ordering and conditions.",
+      "A Unit may be admitted and available without an active Association if the Step permits it.",
+      "Released means successful completion of release; failed or indeterminate release remains unresolved and must not be labelled Released."
+    ]
+  },
+  "lifecycleAuthority": {
+    "stepComposition": [
+      "Decides whether the Unit is provisioned, acquired, admitted, made available, reused, quiesced, or released.",
+      "Determines whether the Unit is eligible for new invocations and which associations may authorize them.",
+      "Coordinates association termination, invocation closure, and operation-result custody before release.",
+      "Defines reset, isolation, reuse, concurrency, and release policies for the concrete Step."
+    ],
+    "unitImplementation": [
+      "Performs technical preparation and reports readiness.",
+      "Implements operation execution resource setup and shutdown where applicable.",
+      "Stops accepting new work after authorization is withdrawn.",
+      "Reports quiescence and release outcomes through the specialized lifecycle boundary.",
+      "Releases resources it owns according to the Step specialization."
+    ],
+    "associationTarget": [
+      "May expose or withdraw target-specific access capabilities under its own contract.",
+      "Does not acquire lifecycle authority over the Unit merely by being an association target."
+    ],
+    "publisherAndComposition": [
+      "The Step-specific Error Handling Composition owns invocation-scoped Publisher capabilities and accepted-entry retention.",
+      "Publisher lifetime and accepted-entry retention are governed by their own contracts; releasing a Unit does not release or invalidate entries already accepted by the Composition.",
+      "The Unit does not own the Publisher merely because it receives an invocation-scoped capability."
+    ]
+  },
+  "admissionAndInvocationEligibility": {
+    "rules": [
+      "Technical readiness is distinct from Step Composition admission.",
+      "An instance may be associated only under the concrete Step's lifecycle and Association preconditions.",
+      "Association establishment does not itself authorize an invocation until the Step's activation/admission conditions are satisfied.",
+      "Step Composition must authorize each invocation against a currently valid Association and eligible Unit instance.",
+      "The Unit must not accept new invocations after Step Composition withdraws authorization.",
+      "The concrete Step defines whether a Unit may serve multiple associations or concurrent invocations and what isolation is required."
+    ]
+  },
+  "invocationAndOperationLifetime": {
+    "rules": [
+      "Each invocation has a lifetime distinct from the Unit instance and is correlated with one selected Association.",
+      "Each operation attempt and actual operation execution has an identity and lifetime distinct from the enclosing invocation.",
+      "The concrete Step defines whether invocations are synchronous, asynchronous, concurrent, reentrant, cancellable, or serialized.",
+      "The concrete Step defines whether the Unit is stateless, stateful, reusable, single-use, or externally backed.",
+      "A completed invocation does not imply that the Unit instance must be released.",
+      "An invocation-scoped Publisher capability may be closed after its closure conditions are met; this does not close the Unit instance."
+    ]
+  },
+  "quiescenceAndRelease": {
+    "preReleaseConditions": [
+      "Step Composition has stopped authorizing new invocations for the Unit.",
+      "All Associations that could authorize new invocations have been ended or rendered unusable under the Association Contract.",
+      "Active invocations, handling operations, callbacks, and asynchronous work have completed, been cancelled, or been explicitly reconciled.",
+      "Every granted PublicationReservation is Consumed or Released, or any unresolved reservation/result has been transferred to the named Recovery Owner under a verifiable custody protocol.",
+      "Every produced-but-unaccepted THandlingOperationResult remains recoverable under Unit custody or an explicitly designated Recovery Owner.",
+      "Accepted operation entries are retained by the Step-specific Error Handling Composition and remain independent of Unit lifetime.",
+      "Unit-owned target handles, access capabilities, callbacks, and operation resources have been detached or scheduled for safe release."
+    ],
+    "releaseRules": [
+      "Step Composition decides when release is appropriate and coordinates the release operation.",
+      "The Unit implementation performs release mechanics for resources it owns.",
+      "Successful release is recorded only after the implementation confirms completion.",
+      "Failed or indeterminate release remains unresolved and must not be treated as successful or made eligible for reuse without reconciliation.",
+      "Release does not erase accepted operation entries, ErrorHandlerResult aggregates, or historical provenance.",
+      "Release does not require retaining the Unit runtime instance merely because historical results refer to errorHandlingUnitIdentity."
+    ]
+  },
+  "reuse": {
+    "rules": [
+      "Reuse is permitted only when the concrete Step allows it and the instance satisfies readiness, reset, and isolation requirements.",
+      "The Step defines whether reuse requires reconfiguration, cleanup, or revalidation of external dependencies.",
+      "The same runtime instance retains errorHandlingUnitIdentity across reuse; a replacement instance receives a new identity.",
+      "New Associations and invocations receive new identities; prior operation provenance is never reused.",
+      "Reuse must not attribute pending operations or results from a prior invocation/association to a later one.",
+      "No universal object pool, reference count, lock, or lifecycle manager is mandated."
+    ]
+  },
+  "failureAndRecovery": {
+    "rules": [
+      "Provisioning, preparation, readiness, invocation, operation, quiescence, and release failures are distinct lifecycle/execution facts; they are not automatically operation results or Error Occurrences.",
+      "The concrete Step defines retry, replacement, quarantine, compensation, or escalation policy.",
+      "A failed or indeterminate release must not be represented as Released.",
+      "If operation-result custody is unresolved, the Unit must not be destroyed or released in a way that loses the only recoverable representation.",
+      "A Publisher status-query failure does not prove non-acceptance; the Step's publication recovery contract governs reconciliation.",
+      "Previously accepted operation entries remain valid after later Unit failure or release."
+    ]
+  },
+  "resultAndEvidenceIndependence": {
+    "rules": [
+      "Operation entries and their provenance may outlive the Unit instance and its Associations.",
+      "Publisher-accepted entries are retained by the Step-specific Error Handling Composition according to the Publisher and Step specialization contracts.",
+      "Recovery Owner records may outlive the Unit where custody has been explicitly transferred.",
+      "Retained result content must not depend on runtime handles or borrowed resources that are released with the Unit unless the Step explicitly preserves those resources for an independent reason.",
+      "Historical errorHandlingUnitIdentity, errorHandlingUnitAssociationIdentity, and invocation/operation identities remain interpretable after release.",
+      "Retention policy and ownership of ErrorHandlerResult are defined by the Step-specific Error Handling Composition and result contracts, not by the Unit's runtime lifetime."
+    ]
+  },
+  "specializationRequirements": {
+    "required": [
+      "Define provisioning/acquisition and identity assignment for errorHandlingUnitIdentity.",
+      "Define preparation and technical readiness criteria.",
+      "Define admission, association eligibility, and invocation authorization conditions.",
+      "Define the lifetime of Unit instances, invocations, operations, and invocation-scoped Publisher capabilities.",
+      "Define concurrency, reentrancy, cancellation, and isolation requirements where applicable.",
+      "Define quiescence conditions including active operations, asynchronous work, reservations, and pending result custody.",
+      "Name the Recovery Owner and define how produced-but-unaccepted results are transferred and reconciled.",
+      "Define reuse/reset requirements and replacement identity behavior.",
+      "Define release confirmation and failed/indeterminate release reconciliation.",
+      "Define result detachment and historical provenance retention independently of Unit lifetime.",
+      "Define lifecycle behavior when the owning Step instance itself is quiesced or released."
+    ],
+    "completionRule": "A concrete lifecycle specialization is complete when identity, readiness/admission, association eligibility, invocation/operation lifetime, Publisher interaction, quiescence, result custody, reuse, release, and historical provenance are explicit."
+  },
+  "explicitNonGoals": [
+    "No universal linear lifecycle state machine or mandatory lifecycle enum.",
+    "No mandatory object pool, factory, service locator, scheduler, reference counter, or global lifecycle manager.",
+    "No assumption that every Unit is permanently bound to one SPU.",
+    "No automatic release when the last Association ends or an invocation completes.",
+    "No release of accepted Publisher entries when the Unit is released.",
+    "No retention of runtime instances solely to preserve historical operation results.",
+    "No universal retry, replacement, fallback, or compensation policy."
+  ],
+  "references": [
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Contract.json",
+      "relationship": "Operation behavior, invocation, publication, custody, and provenance obligations."
+    },
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Association_Contract.json",
+      "relationship": "Association validity, dissociation, and historical target provenance."
+    },
+    {
+      "document": "ErrorHandlingUnit_Contract.json",
+      "relationship": "Detailed operation execution and reservation-backed result publication protocol."
+    },
+    {
+      "document": "OperationEntryPublisher_Contract.json",
+      "relationship": "Invocation-scoped publication capability and accepted-entry custody."
+    },
+    {
+      "document": "PublicationReservation_Contract.json",
+      "relationship": "Reservation lifecycle and outstanding-result constraints."
+    },
+    {
+      "document": "../00.00_Step/Step_Composition_Contract.json",
+      "relationship": "Step Composition lifecycle authority, supporting-unit coordination, and retained invocation evidence."
+    },
+    {
+      "document": "../00.00_Step/Step_Contract.json",
+      "relationship": "Owning Step boundary."
+    },
+    {
+      "document": "../01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "relationship": "Independent Step-level ErrorHandlerResult integration and preservation."
+    },
+    {
+      "document": "../../../Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+      "relationship": "Framework-level lifecycle coordination invariants refined by this specialized Lifecycle Contract; component-specific phases, resources, and custody remain authoritative."
+    }
+  ],
+  "frameworkCoordination": {
+    "commonContract": "../../../Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+    "conformance": "This contract specializes the shared Step Composition coordination invariants. Where the shared contract defines only conceptual identity roles or lifecycle distinctions, this document supplies the component-specific identity names, semantics, mechanics, and constraints.",
+    "precedence": "The common contract governs cross-cutting Step Composition coordination invariants. This specialized contract governs component-specific behavior and mechanics. Neither contract changes the component pattern?s distinct behavioral result semantics."
+  }
+}

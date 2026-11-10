@@ -1,0 +1,10 @@
+{
+  "serialNumber": 19,
+  "name": "Prefect Native Hierarchy Topology",
+  "category": "Feature / Topology",
+  "type": "Feature",
+  "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-01/PHASE-01_Topology_Decision_Record.json",
+  "description": "GPWCF-to-Prefect boundary mapping: Pipeline Root -> Native Flow, Stage -> Stage Parent Flow, Step -> Step Subflow, SPU -> Native Task. Uses invoke_stage and invoke_step dispatch Tasks as invocation mechanisms.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

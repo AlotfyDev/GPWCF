@@ -1,0 +1,41 @@
+@startuml
+title Step Associations
+skinparam monochrome true
+skinparam roundcorner 0
+
+class "Step[TInput,TOutput]" as Step <<Entity>> {
+  + execute(input: TInput): StepExecutionResult[TOutput]
+  TInput
+  TOutput
+}
+class "StepExecutionResult[TOutput]" as SRes <<Class>> {
+  processing artifact
+  optional validatorResult
+  optional errorResult
+  optional errorHandlerResult
+}
+class "OptionalResultContributions" as ORC <<Entity>> {
+  validatorResult slot
+  errorResult slot
+  errorHandlerResult slot
+}
+class "StepComposition" as SC <<Component>> {
+  + coordinates SPUs & supporting units
+  + applies Step flow decisions
+  + preserves invocation-scoped results
+}
+class "Stage" as Stage <<Entity>> {
+  + owns Step membership
+  + Stage-facing callable boundary
+}
+
+Stage .> SC : owns & coordinates
+SC .> Step : invokes through public contract
+Step --> SRes : produces
+SRes .> ORC : carries optional contributions
+Stage --> SRes : receives Step-level result
+
+note right of Step : Stage does NOT invoke SPUs/supporting units directly
+Step owns internal composition
+
+@enduml

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 22,
+  "name": "Stage Callable Functional Binding Obligations",
+  "category": "Feature / Pattern Binding",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+  "description": "Functional binding obligations imposed on an external workflow integration for realizing the Stage callable boundary through a native external workflow element. Binding does not transfer domain semantic ownership to the external runtime.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 24,
+  "name": "StageErrorTypeDefinition[TErrorContent, THandlingAction]",
+  "category": "Class / Generic Type",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+  "description": "Stage-level error type definition owned by one concrete Stage; distinct programmatic type from SPUErrorTypeDefinition (neither is alias or subtype of the other).",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

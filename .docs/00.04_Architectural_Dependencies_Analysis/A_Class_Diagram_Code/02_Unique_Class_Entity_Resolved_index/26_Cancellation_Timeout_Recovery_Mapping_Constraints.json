@@ -1,0 +1,10 @@
+{
+  "serialNumber": 26,
+  "name": "Cancellation/Timeout/Recovery Mapping Constraints",
+  "category": "Feature / Mapping Constraint",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+  "description": "Mapping constraints for cancellation, timeout, retry, worker loss, recovery, and lifecycle: no universal retry/cancellation/timeout/compensation/recovery policy; unqualified failure/cancellation/timeout/retry/worker-loss/recovery behavior remains open.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

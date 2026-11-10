@@ -1,0 +1,10 @@
+{
+  "serialNumber": 49,
+  "name": "Step Error Handling Contract",
+  "category": "Class / Component",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Contract.json",
+  "description": "Step-owned optional Supporting Unit callable (Error Handling Unit) that executes authorized handling operations against target occurrences/resources and produces THandlingOperationResult values until the publication acceptance/custody transfer point; retains specialized behavioral, result, association, lifecycle, identity, and custody semantics without a universal Supporting Unit abstraction.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

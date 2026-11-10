@@ -1,0 +1,614 @@
+{
+  "documentType": "GPWCFDetailedArchitectureDesign",
+  "documentId": "gpwcf.architecture-closure.wave5-prefect-integration-binding",
+  "documentVersion": "1.0.0",
+  "status": "draft-for-architecture-review",
+  "designSequence": {
+    "wave": 5,
+    "waveName": "Prefect Integration Binding and Operational Mapping",
+    "artifactNumber": 1,
+    "predecessorArtifacts": [
+      "../Wave!_Stage_Callable_Stage Result_Pipeline Invocation/01.00_Stage_Callable.json",
+      "../Wave!_Stage_Callable_Stage Result_Pipeline Invocation/02.00_Stage_Result.json",
+      "../Wave!_Stage_Callable_Stage Result_Pipeline Invocation/03.00_Pipeline_Invocation.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/04.00_Step_Callable.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/05.00_Step_Execution_Result.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/06.00_Optional_Result_Contributions.json",
+      "../Wave3_SPU_Supporting_Pattern_Functional_Binding/07.00_SPU.json",
+      "../Wave3_SPU_Supporting_Pattern_Functional_Binding/08.00_Supporting_Pattern_Functional_Binding.json",
+      "../Wave4_Generic_Diagnostics_Error_Handling_Publication/09.00_Generic_Diagnostics.json",
+      "../Wave4_Generic_Diagnostics_Error_Handling_Publication/10.00_Error_Handling.json",
+      "../Wave4_Generic_Diagnostics_Error_Handling_Publication/11,00_Publication.json",
+      ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-00/ADR-GPWCF-PREFECT-001.json",
+      ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-01/PHASE-01_Topology_Decision_Record.json",
+      ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Topology_Decision_Record.json"
+    ],
+    "nextArtifact": "13.00_Operational_Mapping.json"
+  },
+  "purpose": "Define the Prefect 3.9.2 integration boundary that binds GPWCF's runtime-independent Stage, Step, SPU, and selected Supporting Pattern contracts to Prefect-native Flows, Deployments, Subflows, and Tasks while preserving domain ownership, identities, results, and operational evidence.",
+  "scope": {
+    "included": [
+      "The integration package's responsibility, ownership, and dependency boundary.",
+      "The native Prefect realization of Pipeline Root, Stage, Step, SPU, and selected Supporting Pattern execution.",
+      "Stage Flow/Deployment binding and the accepted run_deployment(..., as_subflow=True) profile.",
+      "Step Subflow and SPU/Supporting Pattern Task binding.",
+      "Invocation translation, domain/native identity correlation, and typed result preservation.",
+      "Stage result persistence/retrieval obligations.",
+      "Configuration ownership and integration Public API boundary.",
+      "The exact PHASE-01/02 evidence and qualification limits."
+    ],
+    "excluded": [
+      "Reconsideration of Prefect adoption; Prefect 3.9.2 is already accepted as the initial pinned external runtime.",
+      "A GPWCF Pipeline Root Entity, Root Aggregate, or generic pipeline orchestration runtime.",
+      "A universal workflow adapter, plugin manager, runtime registry, scheduler, dispatcher, worker manager, or deployment manager.",
+      "A generic business workflow definition or consumer Stage/Step implementation.",
+      "A universal serializer, result codec registry, Publisher service, event bus, or recovery manager.",
+      "Unqualified failure, cancellation, timeout, retry, worker-loss, recovery, multi-host, or high-scale behavior."
+    ]
+  },
+  "governingDecision": {
+    "runtime": "Prefect",
+    "version": "3.9.2",
+    "decisionStatus": "accepted",
+    "decisionRecord": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-00/ADR-GPWCF-PREFECT-001.json",
+    "interpretation": "This design implements the already accepted Prefect integration target. PHASE-01 and PHASE-02 qualify specific integration patterns and deployment profiles; they are not adoption-selection experiments.",
+    "coreIndependence": "Prefect is an optional external runtime dependency of integrations.prefect. Core Stage, Step, SPU, identity, result, and optional Supporting Pattern contracts remain importable without Prefect."
+  },
+  "integrationOwnership": {
+    "gpwcfCoreOwns": [
+      "Stage/Step/SPU/Supporting Pattern domain contracts and identities.",
+      "Stage and Step Aggregate responsibilities and Composition semantics.",
+      "Typed domain invocation and result contracts.",
+      "Permitted functional binding obligations and relationship constraints.",
+      "Domain lifecycle, result custody, and specialized exception/outcome meanings."
+    ],
+    "prefectIntegrationOwns": [
+      "Prefect Flow, Deployment, Subflow, Task, TaskRunner, and runtime API interaction.",
+      "Translation of GPWCF invocation contracts to native Prefect parameters/context.",
+      "Native execution identity capture and correlation records.",
+      "Mapping of domain result retrieval and Prefect operational State as separate values.",
+      "Prefect-specific result persistence configuration and deployment binding configuration.",
+      "Prefect-native parent/child execution correlation and supported runtime diagnostics."
+    ],
+    "consumerOwns": [
+      "Pipeline Root Flow and root invocation lifecycle.",
+      "Pipeline topology, Stage selection, and business execution policy.",
+      "Concrete Stage/Step/SPU/Supporting Pattern implementations and specialized input/output/result types.",
+      "Deployment names, work-pool/worker topology, runtime configuration, secrets, and code distribution.",
+      "Concrete serialization compatibility for consumer payload types.",
+      "Step-specific Publisher/Reservation implementation and Recovery Owner."
+    ],
+    "noOwnershipTransfer": "A Prefect Flow/Deployment/Task is the native execution element bound to a GPWCF function; it does not become the domain Entity or acquire the Entity/Aggregate's semantic ownership."
+  },
+  "nativeHierarchyMapping": [
+    {
+      "gpwcfLevel": "Pipeline Root",
+      "domainOwner": "Consumer",
+      "prefectElement": "Consumer-owned Prefect Root Flow",
+      "binding": "The Root Flow owns the pipeline invocation and dispatches Stage Deployments/Flows through consumer-defined dispatch Tasks.",
+      "contractBoundary": "PipelineInvocationIdentity is an opaque consumer-owned correlation value carried through StageInvocation/StageResult. No GPWCF Root Entity or Root Callable is created.",
+      "qualification": "The PHASE-02 Root Flow deployment-dispatch pattern was qualified in the same-host two-Process-Worker profile."
+    },
+    {
+      "gpwcfLevel": "Stage",
+      "domainOwner": "Concrete Stage Aggregate",
+      "prefectElement": "Native Prefect Stage Parent Flow, optionally exposed as a Deployment",
+      "binding": "A Prefect Stage Flow wrapper invokes the concrete StageCallable.invoke(StageInvocation) and returns its StageResult.",
+      "deploymentProfile": "The accepted PHASE-02 profile invokes Stage Deployments through run_deployment(..., as_subflow=True) from a Root-owned dispatch Task.",
+      "resultRule": "The Stage domain StageResult is persisted/retrieved separately from Prefect State. The Stage Aggregate remains the owner of Stage Composition and Stage Flow Result.",
+      "qualification": "Same-host two-worker Stage Deployment binding was qualified for fixture Stages; production GPWCF Stage callable binding remains unqualified."
+    },
+    {
+      "gpwcfLevel": "Step",
+      "domainOwner": "Concrete Step Aggregate",
+      "prefectElement": "Native Prefect Step Subflow inside the owning Stage Parent Flow",
+      "binding": "A Stage-owned dispatch Task invokes the Step-specific Prefect Flow/Subflow wrapper, which calls StepCallable.execute(StepInvocation) and returns StepExecutionResult.",
+      "boundaryRule": "Stage invokes only the Step public callable contract. Step Composition remains internal to Step and coordinates SPUs/selected Supporting Units.",
+      "qualification": "PHASE-01/02 exercised fixture Step Subflows and native parent linkage; the proposed StepInvocation signature and production GPWCF Step binding remain unimplemented/unqualified."
+    },
+    {
+      "gpwcfLevel": "SPU",
+      "domainOwner": "Concrete SPU implementation selected by Step Composition",
+      "prefectElement": "Native Prefect Task inside the owning Step Subworkflow",
+      "binding": "An integration-owned Task wrapper invokes the SPU's runtime-independent execute(input) operation and returns the exact SPUExecutionResult.",
+      "correlation": "Step Composition and the integration preserve SPUIdentity/SPUInvocationIdentity and the owning StepInvocationIdentity separately from Prefect Task Run ID.",
+      "qualification": "Fixture SPU Task fan-out/fan-in and correlation were exercised; production SPU class binding remains unqualified."
+    },
+    {
+      "gpwcfLevel": "Validation Supporting Pattern",
+      "domainOwner": "Selected Validator Unit specialization and Step Composition",
+      "prefectElement": "Prefect Task for a bounded Validator Unit invocation",
+      "binding": "Task wrapper invokes the exact Validator Unit callable and returns its specialized Validation Result. Step Composition aggregates accepted results into StepValidatorResult.",
+      "qualification": "Production Validator Unit binding was not qualified."
+    },
+    {
+      "gpwcfLevel": "Error Handling Supporting Pattern",
+      "domainOwner": "Selected Error Handling Unit and Step-specific Error Handling Composition",
+      "prefectElement": "Prefect Task for a bounded Unit invocation/operation where appropriate",
+      "binding": "Task wrapper invokes the specialized Unit with its invocation-bound Publisher capability. Reservation, atomic publication acceptance, ErrorHandlerResult aggregation, and Recovery Owner custody remain specialized domain protocol facts.",
+      "qualification": "Publisher/Reservation capability transport and production Error Handling binding were not qualified."
+    },
+    {
+      "gpwcfLevel": "Observation Supporting Pattern",
+      "domainOwner": "Selected Observation Unit specialization and Step Composition",
+      "prefectElement": "Task for bounded observations; specialized callback/event, scheduled/deployed, or long-lived execution mechanism for other activity shapes",
+      "binding": "Select the native construct according to the Observation Unit's actual activity lifetime/cardinality; do not force every observation into one Task.",
+      "qualification": "Production callback, sampling, subscription, and Observation Unit binding were not qualified."
+    }
+  ],
+  "bindingArchitecture": {
+    "package": "integrations.prefect",
+    "publicApi": "gpwcf.public_api.integrations.prefect",
+    "packageResponsibility": "Implement Prefect-specific binding and translation around Core public contracts. It is not a generic adapter framework.",
+    "proposedSubpackages": [
+      {
+        "path": "integrations/prefect/bindings/stage",
+        "responsibility": "Stage Flow/Deployment binding and StageCallable invocation wrapper."
+      },
+      {
+        "path": "integrations/prefect/bindings/step",
+        "responsibility": "Step Subflow binding and StepCallable invocation wrapper."
+      },
+      {
+        "path": "integrations/prefect/bindings/spu",
+        "responsibility": "SPU Task binding and invocation/result correlation wrapper."
+      },
+      {
+        "path": "integrations/prefect/bindings/supporting_patterns",
+        "responsibility": "Pattern-specific Validator, Error Handling, and Observation binding modules; optional submodules are imported only when selected."
+      },
+      {
+        "path": "integrations/prefect/invocation",
+        "responsibility": "Translate typed GPWCF invocation values to Prefect Flow/Task parameters without changing domain semantics."
+      },
+      {
+        "path": "integrations/prefect/correlation",
+        "responsibility": "Correlate domain identities with native Deployment/Flow Run/Task Run records while keeping the namespaces distinct."
+      },
+      {
+        "path": "integrations/prefect/results",
+        "responsibility": "Persist/retrieve domain result values and expose operational result retrieval evidence; no universal serializer registry."
+      },
+      {
+        "path": "integrations/prefect/configuration",
+        "responsibility": "Typed Prefect integration configuration for API, work pools, deployments, result persistence, and supported runtime options."
+      }
+    ],
+    "notIntroduced": [
+      "integrations/prefect/runtime_engine",
+      "integrations/prefect/scheduler",
+      "integrations/prefect/worker_manager",
+      "integrations/prefect/plugin_manager",
+      "integrations/prefect/global_registry",
+      "integrations/prefect/universal_adapter"
+    ],
+    "compositionRule": "Binding wrappers are specific to the GPWCF contract they realize. They do not infer arbitrary functions or dynamically discover plugins."
+  },
+  "stageBindingProfile": {
+    "defaultQualifiedProfile": "DeploymentBackedStage",
+    "deploymentInvocation": {
+      "rootDispatch": "Consumer-owned Root Flow invokes a named Stage Deployment through run_deployment(..., as_subflow=True) from a Root-owned dispatch Task.",
+      "stageFlowRun": "Prefect creates a Stage Deployment Flow Run.",
+      "syntheticInvocationTask": "Prefect 3.9.2 creates a synthetic deployment invocation Task Run. The Stage Flow Run parent_task_run_id refers to this synthetic Task Run; the synthetic Task Run's parent metadata correlates it to the Root dispatch Task Run.",
+      "parentLinkageRule": "The integration must preserve the observed indirect parent chain. It must not assume the Stage Flow Run is a direct child of the user-authored Root dispatch Task Run.",
+      "nativeMetadataCaution": "The exact native linkage fields are Prefect operational metadata. Treat the PHASE-02 task_inputs['__parents__'] observation as qualification evidence, not as a GPWCF domain field or an independently stable Core contract."
+    },
+    "stageFlowBindingAlternative": {
+      "profile": "InProcessStageFlow",
+      "description": "A Root Flow may call a Stage Flow object through a native Prefect Flow wrapper when deployment-backed isolation is not required.",
+      "evidence": "PHASE-01 exercised Root Flow -> Stage Parent Flow -> Step Subflow -> SPU Tasks.",
+      "qualificationLimit": "Sibling Stage Flow overlap occurred in three of four repeated runs and was not deterministic. Do not claim deterministic Stage concurrency for this profile."
+    },
+    "deploymentResultPolicy": {
+      "persistResult": true,
+      "persistByDefault": false,
+      "environmentSetting": "PREFECT_RESULTS_PERSIST_BY_DEFAULT=false",
+      "explicitRule": "The Stage deployment wrapper explicitly enables persist_result=True where Root-side retrieval requires a persisted StageResult.",
+      "rootRetrieval": [
+        "Wait for the Stage Deployment Flow Run to reach a terminal Prefect State.",
+        "Inspect the native State as operational evidence.",
+        "Retrieve the persisted StageResult through the configured result storage mechanism.",
+        "Validate the StageResult's domain identities/correlation against the original StageInvocation.",
+        "Keep the StageResult and Prefect State as separate values in the Root's result/operational records."
+      ],
+      "storageRule": "The actual result storage location and serializer are deployment configuration, not a hardcoded GPWCF Core path."
+    }
+  },
+  "stepAndSpuBindingRules": {
+    "stepSubflow": [
+      "The Stage Parent Flow invokes the Step through a Stage-owned native dispatch Task.",
+      "The Step Subflow wrapper calls the public StepCallable with the complete StepInvocation value.",
+      "The Step Subflow returns StepExecutionResult as the domain result.",
+      "The Step Flow Run and synthetic child-subflow Task Run are Prefect operational records, not StepInvocationIdentity.",
+      "Step sibling Subflow concurrency is not guaranteed by the PHASE-01 evidence; the concrete Step and integration profile must define/qualify it."
+    ],
+    "spuTask": [
+      "The Step Subflow invokes SPU Tasks only through Step Composition.",
+      "Each bounded SPU invocation is represented by a Prefect Task wrapper.",
+      "The Task wrapper invokes the SPU's own execute(input) callable and returns its exact SPUExecutionResult.",
+      "Step Composition associates each result with SPUIdentity and SPUInvocationIdentity in its internal StepCompositionFlowResult.",
+      "Task Run IDs and Task State are stored separately as operational evidence.",
+      "Fan-out/fan-in is enabled only when the concrete Step's topology and concurrency contract permit it."
+    ],
+    "supportingPatternBinding": [
+      "Validation bounded calls use pattern-specific Task wrappers.",
+      "Error Handling uses bounded Task wrappers only where the specialized invocation/operation shape permits; the Publisher capability and atomic acceptance contract remain separate.",
+      "Observation chooses Task, callback/event, scheduled/deployed, or long-lived execution according to its specialized activity contract.",
+      "The integration does not create a common SupportingUnit adapter or mandatory import of all pattern packages."
+    ]
+  },
+  "invocationTranslation": {
+    "principle": "The integration maps the complete typed Core invocation contract to native Prefect parameters and context while preserving all domain identity/correlation values unchanged.",
+    "stage": {
+      "input": "StageInvocation[TStageInput]",
+      "output": "StageResult[TStageOutput, TStageFlowResult, TStageOutcome]",
+      "requiredPreservation": [
+        "StageIdentity",
+        "StageInvocationIdentity",
+        "PipelineInvocationIdentity when supplied",
+        "ParentInvocationIdentity when supplied",
+        "TStageInput"
+      ]
+    },
+    "step": {
+      "input": "StepInvocation[TInput]",
+      "output": "StepExecutionResult[TOutput, TValidatorResult, TErrorResult, TErrorHandlerResult]",
+      "requiredPreservation": [
+        "StepIdentity",
+        "StepInvocationIdentity",
+        "owning StageIdentity",
+        "parent StageInvocationIdentity",
+        "PipelineInvocationIdentity when supplied",
+        "TInput"
+      ]
+    },
+    "spu": {
+      "input": "Concrete SPU TInput plus integration-owned correlation metadata",
+      "output": "SPUExecutionResult[TOutput, TSPUErrorOccurrences, TSPUValidatorResult]",
+      "requiredPreservation": [
+        "SPUIdentity",
+        "SPUInvocationIdentity",
+        "owning StepIdentity",
+        "StepInvocationIdentity",
+        "PipelineInvocationIdentity when supplied",
+        "SPU TInput"
+      ]
+    },
+    "noImplicitTransformation": [
+      "Do not alter business input/output values through hidden normalization.",
+      "Do not cast native Prefect IDs into domain identity types.",
+      "Do not collapse specialized result payloads into dict[str, object] or generic State.",
+      "Do not silently omit optional result contributions or observation/publication evidence."
+    ]
+  },
+  "publisherCapabilityBinding": {
+    "domainOwner": "Step-specific Error Handling Composition.",
+    "integrationResponsibility": "Bind the exact invocation-scoped OperationEntryPublisher capability to the Error Handling Unit Task without changing the Publisher's reservation/atomic-acceptance semantics.",
+    "supportedBindingChoices": [
+      "In-process capability object/closure when the selected TaskRunner executes within the same address space and the capability is not subjected to unsupported parameter serialization.",
+      "Explicit process-local invocation handle resolved within the owning worker process without a global registry.",
+      "A separately designed interprocess capability only when the Unit executes outside the Publisher's process."
+    ],
+    "mandatoryProof": [
+      "The binding preserves Publisher, Unit, Association, target, invocation, attempt, operation, and reservation identities.",
+      "The capability cannot be used outside its exact invocation/Association scope.",
+      "Task completion is not treated as PublicationAccepted.",
+      "A task exception after a possibly accepted publish triggers status reconciliation and Recovery Owner custody.",
+      "No unsupported serialization of a live Publisher object occurs.",
+      "Cross-process/host capability transport is separately qualified before use."
+    ],
+    "qualificationStatus": "No production Publisher capability transport was implemented or qualified in PHASE-01/02."
+  },
+  "resultPersistenceAndSerialization": {
+    "coreRule": "Core domain results are typed values and do not prescribe Prefect serializers or storage.",
+    "integrationRule": "The Prefect Integration persists/retrieves results when the selected native hierarchy crosses process boundaries and the caller needs the domain result.",
+    "payloadRule": "The concrete consumer must establish that TStageOutput, TStageFlowResult, TStageOutcome, Step result payloads, SPU result payloads, and optional contributions are supported by the chosen persistence mechanism.",
+    "optionalSlotRule": "The Step OptionalResultSlot discriminator must preserve Absent versus Present(None) during serialization.",
+    "noRegistry": "No dynamic codec registry or universal result serializer is introduced.",
+    "persistenceConfiguration": "Stage persist_result is explicit where needed; global PREFECT_RESULTS_PERSIST_BY_DEFAULT remains false in the qualified profile.",
+    "failureRule": "If persistence or retrieval fails, report an integration/operational result-retrieval failure and preserve the native execution evidence. Do not substitute Prefect State for the missing domain result or fabricate a partial domain result."
+  },
+  "identityAndOperationalCorrelation": {
+    "domainIdentityNamespace": [
+      "PipelineInvocationIdentity",
+      "StageIdentity",
+      "StageInvocationIdentity",
+      "StepIdentity",
+      "StepInvocationIdentity",
+      "SPUIdentity",
+      "SPUInvocationIdentity",
+      "Supporting Unit identities",
+      "Association/target identities",
+      "Error Handling operation/reservation/entry identities"
+    ],
+    "nativePrefectIdentityNamespace": [
+      "Deployment ID",
+      "Flow Run ID",
+      "Task Run ID",
+      "Work Pool/Worker identifiers",
+      "Prefect State type/name"
+    ],
+    "rules": [
+      "Domain identities are created/owned by their GPWCF or consumer authority and remain stable across native execution records.",
+      "Prefect IDs are created/owned by Prefect and identify native operational records.",
+      "A mapping record may associate domain invocation identity with native run/task IDs; it must not make the values interchangeable.",
+      "One domain invocation may have multiple native operational records because of synthetic invocation tasks, nested flows, or explicit retries; the mapping must preserve that cardinality.",
+      "A Prefect parent/child edge does not create a GPWCF Association or Composition relationship.",
+      "Native operational identity retention and domain identity retirement follow separate contracts."
+    ]
+  },
+  "configurationAndEnvironment": {
+    "runtimeBaseline": {
+      "operatingSystem": "Windows x64",
+      "python": "CPython 3.15.1 x64",
+      "prefect": "3.9.2",
+      "apiServer": "SQLite-backed Prefect API server, one API-server worker in the qualified profile",
+      "workPool": "Process Work Pool",
+      "workers": 2,
+      "workerFlowRunLimit": 1
+    },
+    "configurationOwnership": "Consumer/deployment owns API URL, work pool, deployment names, worker topology, concurrency limits, result storage, secrets, and code distribution. The Integration provides typed configuration surfaces but does not hardcode a deployment environment.",
+    "prefectDependency": {
+      "directRuntimeRequirement": "prefect==3.9.2",
+      "owner": "integrations.prefect",
+      "coreDependency": "None",
+      "transitiveClosure": "Minimal Prefect integration dependency closure remains to be verified in Wave 6.",
+      "environmentSnapshotCaution": "The 106-package Prefect environment snapshot is evidence of one installed environment, not proof that all 106 packages are required by GPWCF integration."
+    },
+    "notHardcoded": [
+      "Prefect API endpoint.",
+      "Work Pool name.",
+      "Deployment names.",
+      "Worker IDs/names.",
+      "Result storage path.",
+      "Concurrency limits.",
+      "Credentials or secrets."
+    ]
+  },
+  "qualificationEvidence": {
+    "phase01": {
+      "topology": "Root Flow -> Stage Parent Flow -> Step Subflow -> SPU Tasks.",
+      "executionProfile": "Windows x64, CPython 3.15.1 x64, Prefect 3.9.2, SQLite API server with one worker; Root, Stage, and Step each used ThreadPoolTaskRunner(max_workers=4).",
+      "evidence": [
+        "Root Flow completed 4/4 repeated runs.",
+        "Sibling Stage Flow overlap occurred 3/4 times and was not deterministic.",
+        "Sibling Step Subflow overlap occurred in 0/8 measured pairs; no Step concurrency guarantee is inferred.",
+        "SPU Task fan-out/fan-in overlap occurred in 16/16 measured Step invocations.",
+        "Step returned StepExecutionResult assembled from two distinct SPUExecutionResult values.",
+        "Prefect operational State remained separate from GPWCF domain results."
+      ],
+      "notQualified": [
+        "Production GPWCF Stage/Step/SPU binding.",
+        "Supporting Pattern production binding.",
+        "Failure/cancellation/timeout/retry/recovery."
+      ]
+    },
+    "phase02": {
+      "topology": "Consumer Root Flow -> Root dispatch Task -> Stage Deployment invocation -> Stage Parent Flow -> Step Subflow -> SPU Tasks.",
+      "executionProfile": "Windows x64, CPython 3.15.1 x64, Prefect 3.9.2, API at http://127.0.0.1:4210/api, SQLite API server with one worker, Process Work Pool, two Process Workers each with flow-run limit 1.",
+      "deployments": [
+        "gpwcf-stage-a/stage-a-worker",
+        "gpwcf-stage-b/stage-b-worker"
+      ],
+      "evidence": [
+        "Root Flow Runs completed 5/5.",
+        "Stage Deployment Flow Runs completed 10/10.",
+        "Root-to-Stage synthetic-parent linkage verified 10/10.",
+        "Stage-to-Step synthetic-parent linkage verified 20/20.",
+        "Forty SPU Task Runs were correlated to their owning Step Flow Runs.",
+        "Sibling Stage overlap occurred 5/5 runs.",
+        "Sibling Stages were assigned to distinct workers 5/5 runs.",
+        "Ten Stage domain results were persisted and retrieved by the Root.",
+        "All accepted native hierarchy checks passed."
+      ],
+      "overlapDurationsSeconds": {
+        "minimum": 7.455,
+        "maximum": 14.029,
+        "average": 9.785,
+        "samples": [
+          7.455,
+          8.147,
+          14.029,
+          10.842,
+          8.453
+        ]
+      },
+      "notQualified": [
+        "Multi-host code distribution and result storage.",
+        "More than two concurrent sibling Stages or autoscaling.",
+        "Production GPWCF Stage/Step/SPU/Supporting Pattern functional binding.",
+        "Step sibling Subflow concurrency.",
+        "Failure, cancellation, timeout, retry, worker loss, recovery, and safe settlement.",
+        "Throughput/resource sizing."
+      ]
+    }
+  },
+  "dependencyRules": {
+    "allowed": [
+      "integrations.prefect depends inward on gpwcf.public_api.core and the selected optional pattern public contracts.",
+      "integrations.prefect directly depends on Prefect 3.9.2 and its verified minimal transitive closure.",
+      "Consumer deployment code depends on gpwcf.public_api.core and optionally gpwcf.public_api.integrations.prefect."
+    ],
+    "forbidden": [
+      "Core modules must not import Prefect.",
+      "Core Public API must not import integrations.prefect.",
+      "The Prefect Integration must not own or redefine domain identities, result schemas, Stage/Step composition, or consumer business policy.",
+      "No generic scheduler, worker manager, deployment manager, plugin loader, or runtime registry is introduced.",
+      "No Generator-specific contracts or dependencies are imported by the generic integration package."
+    ]
+  },
+  "publicApiRequirements": {
+    "core": {
+      "surface": "gpwcf.public_api.core",
+      "prefectFree": true,
+      "purpose": "Stable runtime-independent consumer API for Stage, Step, SPU, identities, results, and selected optional pattern contracts."
+    },
+    "prefect": {
+      "surface": "gpwcf.public_api.integrations.prefect",
+      "purpose": "Separate opt-in consumer API for Prefect-specific binding, invocation, correlation, result retrieval, and typed configuration.",
+      "exposurePolicy": "Expose only stable consumer-facing binding/configuration contracts. Keep native wrapper functions, synthetic-task inspection helpers, and operational internals private.",
+      "exactExports": "Finalize exact public symbols and import paths in Wave 6 Dependency/Packaging/Public API Architecture."
+    }
+  },
+  "requiredGoverningContractChanges": [
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Framework_Module_Boundary_Model.json",
+      "change": "Clarify the Prefect Integration module's inward dependencies on Core Public API and its direct Prefect 3.9.2 dependency; preserve the no-Core-to-Prefect rule.",
+      "reason": "The detailed binding model specifies the concrete module boundary and optional runtime dependency.",
+      "changeType": "integration-module-clarification",
+      "approval": "Required during governing-artifact reconciliation."
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Filesystem_Architecture.json",
+      "change": "Align the integration package tree to the pattern-specific binding, invocation, correlation, result, and configuration allocations in this document.",
+      "reason": "Ensures every native binding responsibility has one package owner without adding a generic adapter/runtime subsystem.",
+      "changeType": "filesystem-allocation-alignment",
+      "approval": "Required during governing-artifact reconciliation."
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Dependency_and_Public_API_Architecture.json",
+      "change": "Preserve Prefect 3.9.2 as the accepted optional integration dependency and defer the exact minimal transitive closure and distribution packaging choice to Wave 6.",
+      "reason": "The binding design depends on the accepted version but PHASE-02's 106-package environment is not a minimal dependency proof.",
+      "changeType": "dependency-and-api-alignment",
+      "approval": "Required during governing-artifact reconciliation."
+    }
+  ],
+  "conformanceRequirements": [
+    {
+      "id": "PREFECT-BIND-001",
+      "requirement": "The integration targets accepted Prefect 3.9.2; adoption is not reopened by this design."
+    },
+    {
+      "id": "PREFECT-BIND-002",
+      "requirement": "Core Stage/Step/SPU/Supporting Pattern contracts and Core Public API import without Prefect installed."
+    },
+    {
+      "id": "PREFECT-BIND-003",
+      "requirement": "The consumer owns the Root Flow; GPWCF introduces no generic Pipeline Root Entity or Root Runtime."
+    },
+    {
+      "id": "PREFECT-BIND-004",
+      "requirement": "Stage callable binding preserves StageInvocation and returns StageResult as a domain value."
+    },
+    {
+      "id": "PREFECT-BIND-005",
+      "requirement": "The accepted deployment profile uses run_deployment(..., as_subflow=True) and preserves the synthetic invocation Task parent chain."
+    },
+    {
+      "id": "PREFECT-BIND-006",
+      "requirement": "Step Subflow binding invokes StepCallable through its public contract; Stage never bypasses Step to call SPUs."
+    },
+    {
+      "id": "PREFECT-BIND-007",
+      "requirement": "SPUs are bound as native Tasks inside their owning Step Subflows by default."
+    },
+    {
+      "id": "PREFECT-BIND-008",
+      "requirement": "Supporting Pattern bindings remain pattern-specific and preserve specialized cardinality, result, event, association, lifecycle, and custody semantics."
+    },
+    {
+      "id": "PREFECT-BIND-009",
+      "requirement": "Domain identities and native Prefect identifiers remain distinct and are correlated without casting or aliasing."
+    },
+    {
+      "id": "PREFECT-BIND-010",
+      "requirement": "Domain results and Prefect operational State remain separate; a Completed Prefect State does not imply successful domain outcome."
+    },
+    {
+      "id": "PREFECT-BIND-011",
+      "requirement": "Stage result persistence is explicit where cross-process retrieval is required; global persist-by-default remains disabled in the qualified profile."
+    },
+    {
+      "id": "PREFECT-BIND-012",
+      "requirement": "The integration does not assume unsupported serialization of live Publisher capabilities across process boundaries."
+    },
+    {
+      "id": "PREFECT-BIND-013",
+      "requirement": "No universal adapter, scheduler, worker manager, plugin manager, deployment manager, or runtime registry is introduced."
+    },
+    {
+      "id": "PREFECT-BIND-014",
+      "requirement": "All performance/concurrency/deployment claims remain within PHASE-01/02 evidence boundaries."
+    },
+    {
+      "id": "PREFECT-BIND-015",
+      "requirement": "Failure, cancellation, timeout, retry, worker-loss, recovery, multi-host, and production GPWCF binding remain unqualified until separately implemented and tested."
+    }
+  ],
+  "acceptanceCriteria": [
+    "The integration boundary binds the accepted GPWCF contracts to Prefect-native elements without moving domain ownership into Prefect.",
+    "The Root remains consumer-owned; Stage, Step, and SPU hierarchy is preserved.",
+    "The qualified deployment-backed Stage profile is represented accurately, including synthetic parent linkage and persisted Stage result retrieval.",
+    "The Step Subflow and SPU Task bindings follow the accepted native hierarchy.",
+    "Supporting Pattern binding remains specialized and does not force all patterns into one Task form.",
+    "Core imports and installs without Prefect.",
+    "Prefect dependency ownership and the minimal transitive closure remain explicit and are finalized in Wave 6.",
+    "Domain identity/result and Prefect operational identity/State are separate.",
+    "All claims are traceable to PHASE-01/02 and do not exceed the qualification evidence.",
+    "No source contract or production source package is modified by this artifact."
+  ],
+  "traceability": [
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-00/ADR-GPWCF-PREFECT-001.json",
+      "supports": [
+        "Prefect 3.9.2 is the accepted initial pinned external workflow runtime."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-01/PHASE-01_Topology_Decision_Record.json",
+      "supports": [
+        "Root Flow -> Stage Parent Flow -> Step Subflow -> SPU Task hierarchy.",
+        "Root/Stage/Step ThreadPoolTaskRunner profile and fixture topology.",
+        "Native Stage/Step/SPU execution boundaries."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-01/PHASE-01_Acceptance_Results.json",
+      "supports": [
+        "Repeated Root completion, nondeterministic Stage sibling overlap, serialized Step sibling subflows, and SPU Task fan-out/fan-in evidence."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Topology_Decision_Record.json",
+      "supports": [
+        "Process Work Pool, two Process Workers, Stage Deployment invocation with run_deployment(..., as_subflow=True), synthetic parent linkage, and explicit Stage result persistence."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Acceptance_Results.json",
+      "supports": [
+        "Five-run repeatability, Stage overlap/worker assignment, Step/SPU hierarchy correlation, and persisted Stage domain result retrieval."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Open_Integration_Questions.json",
+      "supports": [
+        "Multi-host code/result distribution, higher Stage concurrency, production binding, failure/recovery, API server scaling, and Windows asyncio teardown observations remain open."
+      ]
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/05.00_Detailed_Design_Waves/Wave!_Stage_Callable_Stage Result_Pipeline Invocation/01.00_Stage_Callable.json",
+      "supports": [
+        "Runtime-independent StageCallable and StageInvocation boundary."
+      ]
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/05.00_Detailed_Design_Waves/Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/04.00_Step_Callable.json",
+      "supports": [
+        "Typed StepInvocation and Stage-facing Step callable boundary."
+      ]
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/05.00_Detailed_Design_Waves/Wave3_SPU_Supporting_Pattern_Functional_Binding/08.00_Supporting_Pattern_Functional_Binding.json",
+      "supports": [
+        "Pattern-specific binding and operational/custody distinctions."
+      ]
+    }
+  ],
+  "changeControl": {
+    "authority": "Wave 5 detailed design proposal. It becomes an implementation constraint only after architecture review and explicit acceptance.",
+    "sourceContractPolicy": "This artifact does not modify Prefect PoC evidence, Core contracts, or specialized consumer contracts.",
+    "implementationGate": "Do not implement the production Prefect binding until Wave 5 artifacts and the Wave 6 dependency/packaging/Public API design are reviewed and accepted.",
+    "nextStep": "Design 13.00_Operational_Mapping.json to define the explicit mapping between domain outcomes/results/lifecycle facts and Prefect operational State/identities without semantic conflation."
+  }
+}

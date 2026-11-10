@@ -1,0 +1,51 @@
+{
+  "taskId": "10_Dependency_Packaging_Public_API",
+  "serialNumber": 10,
+  "target": "Dependency / Packaging / Public API",
+  "category": "Packaging / Policy",
+  "description": "Implement dependency ownership/direction graph (acyclic, forbidden directions prohibited), single GPWCF distribution with optional Prefect extra, Core-only installation guarantee, setuptools==84.2.1 build backend isolated from runtime, minimal Prefect transitive lock release gate, Core Public API vs Prefect Integration Public API separation, and Public API Conformance Suite.",
+  "implementationClasses": [
+    "Core",
+    "Prefect Integration Package",
+    "Core Public API",
+    "Integration Public API",
+    "gpwcf Distribution",
+    "Setuptools Build Backend",
+    "Installation Profiles",
+    "Dependency Owner and Module Lists",
+    "Public API Conformance Suite"
+  ],
+  "relatedDiagrams": {
+    "class": "03_Diagrams_Codes_Files/10_Dependency_Packaging_Public_API.dot",
+    "association": "C_Association_Diagram_Code/10_Dependency_Packaging_Public_API_Associations.puml",
+    "dependency": "D_Architectural_Dependency_Diagram_Code/01_Package_Module_Dependency_Graph.dot",
+    "dependency2": "D_Architectural_Dependency_Diagram_Code/03_Dependency_Direction_Rules.dot",
+    "dependency3": "D_Architectural_Dependency_Diagram_Code/05_Build_vs_Runtime_Dependency.dot",
+    "dependency4": "D_Architectural_Dependency_Diagram_Code/06_Core_vs_Prefect_Integration_Boundary.dot"
+  },
+  "dependencies": [
+    "09_Prefect_Integration"
+  ],
+  "acceptanceCriteria": [
+    "Dependency graph acyclic; forbidden dependency directions prohibited",
+    "Single distribution with optional Prefect extra for initial release",
+    "Core installs/imports without Prefect; no indirect Prefect installation",
+    "setuptools build backend isolated from runtime dependencies",
+    "Minimal Prefect transitive lock release gate defined",
+    "Core Public API and Prefect Integration Public API separable",
+    "No Prefect types leak into Core API",
+    "Public API Conformance Suite (tests/core/, tests/public_api/..., tests/architecture/)",
+    "Dependency owner/module lists documented"
+  ],
+  "definitionOfDone": [
+    "Dependency graph tests (acyclicity, forbidden directions)",
+    "Core-only installation test",
+    "Build backend isolation test",
+    "Public API conformance suite passes",
+    "Prefect opt-in extra installation test"
+  ],
+  "priority": "high",
+  "status": "pending",
+  "estimatedEffort": "high",
+  "testStrategy": "Dependency graph tests; installation tests; build isolation tests; Public API conformance suite"
+}

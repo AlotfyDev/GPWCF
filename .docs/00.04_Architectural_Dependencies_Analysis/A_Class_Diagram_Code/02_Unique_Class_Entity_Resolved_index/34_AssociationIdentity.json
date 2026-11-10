@@ -1,0 +1,10 @@
+{
+  "serialNumber": 34,
+  "name": "AssociationIdentity",
+  "category": "Entity / Concept",
+  "type": "Entity",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+  "description": "The identity of the association relationship itself, distinct from the component instance identity and target identity; identifies exactly one component-instance-to-target relationship within one owning Step instance.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

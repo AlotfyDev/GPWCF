@@ -1,0 +1,10 @@
+{
+  "serialNumber": 16,
+  "name": "Public Symbol Curation",
+  "category": "Feature / API Policy",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Public symbols and imports are explicit, curated, versioned, and tested; no wildcard re-exports; internal modules kept outside public_api packages.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

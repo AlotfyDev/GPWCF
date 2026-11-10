@@ -1,0 +1,10 @@
+{
+  "serialNumber": 4,
+  "name": "PEP 517/518 Build-System Declaration",
+  "category": "Feature / Build Policy",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "Build-system declaration following PEP 517/518; declares build backend and isolated build requirements separate from runtime dependencies.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}

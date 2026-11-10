@@ -1,0 +1,10 @@
+{
+  "serialNumber": 27,
+  "name": "Error Type Definition",
+  "category": "Entity / Concept",
+  "type": "Entity",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+  "description": "Conceptual entity describing a specialized kind of error that may occur within its owning SPU or Stage; registered before being referenced by occurrences; not itself an Error Occurrence.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

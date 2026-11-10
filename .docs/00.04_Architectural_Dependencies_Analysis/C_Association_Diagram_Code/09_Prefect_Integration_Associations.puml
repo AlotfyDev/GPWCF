@@ -1,0 +1,45 @@
+@startuml
+title Prefect Integration Associations
+skinparam monochrome true
+skinparam roundcorner 0
+
+class "Pipeline Root Flow" as PRF <<Entity>> {
+  Pipeline Flow Run Id
+}
+class "Stage Parent Flow/Deployment" as SF <<Entity>> {
+  Stage Flow Run Id
+  parent_task_run_id
+}
+class "Step Subflow" as SS <<Entity>> {
+  Step Flow Run Id
+}
+class "SPU Task" as ST <<Entity>> {
+  SPU Task Run Id
+}
+class "GPWCF Domain Identity" as DI <<Entity>> {
+  Pipeline / Stage / Step / SPU / invocation
+}
+class "Prefect Operational Identity" as PI <<Entity>> {
+  Flow Run / Task Run / Deployment IDs
+}
+class "Prefect Integration Package" as PIP <<Component>> {
+  integration boundary
+  Prefect as opt-in dependency
+}
+class "StageResult" as SRes <<Class>> {
+  persisted via persist_result=True
+}
+
+PRF .> SF : parent linkage (synthetic)
+SF .> SS : parent linkage
+SS .> ST : Task Run correlation
+DI . PI : domain <> operational namespaces
+ST --> SRes : SPUExecutionResult (not Prefect State)
+PIP .> SF : binds Stage to deployment
+PIP .> SS : binds Step to subflow
+PIP .> ST : binds SPU to Task
+
+note right of PI : Neither namespace substitutes for the other
+noStateInference / noDomainInference
+
+@enduml

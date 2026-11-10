@@ -1,0 +1,10 @@
+{
+  "serialNumber": 7,
+  "name": "Step Composition",
+  "category": "Class / Component",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+  "description": "The Step-owned internal composition boundary responsible for coordinating pluggable processing and supporting components required by one concrete Step. Architectural level: stage-step, owning level: Step. Not a separately allocated runtime object or universal engine.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,451 @@
+{
+  "documentType": "GPWCFDetailedArchitectureDesign",
+  "documentId": "gpwcf.architecture-closure.wave1.stage-result",
+  "documentVersion": "1.0.0",
+  "status": "draft-for-architecture-review",
+  "designSequence": {
+    "wave": 1,
+    "waveName": "Stage Callable, Stage Result, Pipeline Invocation",
+    "artifactNumber": 2,
+    "predecessorArtifacts": [
+      "01.00_Stage_Callable.json",
+      ".docs/Architecture/Stage_Level/Stage_Level_Architecture.json",
+      ".docs/03.00_GPWCF_Structure_Architecture/Framework_Module_Boundary_Model.json",
+      ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/02.00_Determined_Gaps_And_Candidate_Architectural_Solutions/F-06_Stage_Flow_Result.md"
+    ],
+    "nextArtifact": "03.00_Pipeline_Invocation.json"
+  },
+  "purpose": "Define a generic Stage invocation result envelope that enables a caller and an external workflow integration to retrieve and correlate a Stage result while preserving the Stage-specific output, Stage Flow Result, and Stage domain outcome as distinct typed values.",
+  "scope": {
+    "included": [
+      "The semantic boundary and ownership of StageResult.",
+      "The generic envelope fields required to identify and correlate a returned Stage invocation result.",
+      "The separate typed slots for Stage outputs, Stage Flow Result, and Stage-specific domain outcome.",
+      "Result construction, identity consistency, custody, immutability, and preservation invariants.",
+      "The distinction between a returned StageResult, a thrown invocation exception, and an external workflow runtime State.",
+      "The requirements for Prefect result persistence and retrieval without making Prefect a Core dependency."
+    ],
+    "excluded": [
+      "A universal schema for Stage-specific outputs, Stage Flow Results, or Stage outcome classifications.",
+      "A generic FlowResult shared by Pipeline, Stage, Step, and SPU.",
+      "A universal success/failure Boolean or mandatory outcome enumeration.",
+      "A generic diagnostics/error/failure schema; this is designed in Wave 4 subject to its own ownership and dependency decisions.",
+      "A universal Stage settlement or lifecycle result model.",
+      "A universal serialization format, codec registry, or artifact storage service.",
+      "Prefect State, Flow Run ID, Task Run ID, Deployment ID, worker identity, or any other native operational field in the Core result."
+    ]
+  },
+  "governingSourceConstraints": {
+    "stageFlowResult": "The Stage-Level Architecture defines Flow Result as the result of the Stage's internal Step-execution flow. It is independent of any individual StepExecutionResult, and its detailed structure and composition policy are Stage-specific.",
+    "stageOutputsAndStatus": "The Stage-Level Architecture explicitly distinguishes the Stage Flow Result from the Stage outputs and Stage execution status exposed through the Stage facade. Their exact relationship is defined by the owning Stage contract.",
+    "stepResultSeparation": "StepExecutionResult describes one Step invocation that returned a result. It is not a Stage Flow Result and is not a StageResult.",
+    "exceptionSeparation": "A Step invocation exception that prevents StepExecutionResult from being returned remains an exception fact in the Stage-specific flow history; it must not be fabricated as StepExecutionResult.",
+    "runtimeSeparation": "External workflow runtime State is operational execution evidence. It is not a GPWCF StageResult, Stage Flow Result, Stage output, or Stage domain outcome."
+  },
+  "architecturalOptions": [
+    {
+      "optionId": "STAGE-RESULT-A",
+      "name": "RuntimeStateAsResult",
+      "description": "Use Prefect State or another workflow runtime's terminal state as the Stage result.",
+      "advantages": [
+        "Convenient access to runtime completion information."
+      ],
+      "disadvantages": [
+        "Couples Core to the selected runtime.",
+        "Cannot express Stage-specific flow history and business outputs faithfully.",
+        "Conflates operational execution state with domain semantics.",
+        "Cannot preserve Stage outcomes that differ from runtime success/failure."
+      ],
+      "disposition": "rejected"
+    },
+    {
+      "optionId": "STAGE-RESULT-B",
+      "name": "SingleUndifferentiatedPayload",
+      "description": "Return one Stage-specific payload object and leave the relationship between outputs, flow result, and outcome implicit.",
+      "advantages": [
+        "Minimal generic envelope."
+      ],
+      "disadvantages": [
+        "Does not enforce the semantic separation required by Stage-Level Architecture.",
+        "Makes integration and consumers depend on undocumented payload conventions.",
+        "Allows flow history, published outputs, and domain outcome to be accidentally conflated."
+      ],
+      "disposition": "rejected"
+    },
+    {
+      "optionId": "STAGE-RESULT-C",
+      "name": "StageResultWithThreeTypedDomainSlots",
+      "description": "Return a Core-owned generic envelope with distinct typed Stage outputs, Stage Flow Result, and Stage-specific outcome slots, plus domain invocation identity and correlation.",
+      "advantages": [
+        "Provides a stable common invocation-result boundary.",
+        "Preserves Stage-specific schemas without imposing a universal Flow Result.",
+        "Makes outputs, flow history, and domain outcome independently addressable and type-checkable.",
+        "Keeps Prefect operational State outside Core.",
+        "Allows the same Core result contract to support in-process invocation and deployment-backed retrieval."
+      ],
+      "disadvantages": [
+        "Uses three generic type parameters and requires a clear consumer specialization contract.",
+        "Requires the integration to define a transport/persistence strategy for concrete payload types."
+      ],
+      "disposition": "recommended"
+    },
+    {
+      "optionId": "STAGE-RESULT-D",
+      "name": "StageSpecificResultOnly",
+      "description": "Let every concrete Stage define an entirely unrelated return object and provide no common result envelope.",
+      "advantages": [
+        "Maximum freedom for individual Stage implementations."
+      ],
+      "disadvantages": [
+        "Weakens generic invocation and result retrieval.",
+        "Forces integrations to understand consumer-specific result structures merely to correlate invocations.",
+        "Duplicates common identity/correlation handling across Stage specializations."
+      ],
+      "disposition": "not-selected"
+    }
+  ],
+  "selectedDesign": {
+    "decision": "Adopt a generic StageResult envelope with three distinct type parameters for Stage outputs, Stage Flow Result, and Stage-specific domain outcome.",
+    "contractName": "StageResult",
+    "logicalOwnership": "core.stage",
+    "canonicalPackage": "core.stage.results",
+    "publicApiSurface": "gpwcf.public_api.core",
+    "conceptualType": "StageResult[TStageOutput, TStageFlowResult, TStageOutcome]",
+    "genericParameterSemantics": {
+      "TStageOutput": {
+        "meaning": "The consumer-defined output value or output contract published by the Stage to its caller.",
+        "owner": "Concrete Stage specialization and consuming application.",
+        "required": true,
+        "constraint": "The Core envelope does not prescribe fields or business meaning for this value."
+      },
+      "TStageFlowResult": {
+        "meaning": "The Stage-owned representation of the internal Step-execution flow and its Stage-specific interpretation.",
+        "owner": "Stage Aggregate and Stage Composition.",
+        "required": true,
+        "constraint": "The type may retain StepExecutionResult values, invocation exception facts, transition decisions, StageError occurrences, and other Stage-relevant flow facts according to the concrete Stage contract. No common schema is imposed."
+      },
+      "TStageOutcome": {
+        "meaning": "The concrete Stage's domain-level outcome/status classification for the invocation.",
+        "owner": "Concrete Stage specialization.",
+        "required": true,
+        "constraint": "No universal Boolean or fixed success/failure enum is imposed. The specialization defines the states and their meaning, including partial, inconclusive, controlled termination, or other domain outcomes where applicable."
+      }
+    },
+    "envelopeFields": [
+      {
+        "field": "stage_identity",
+        "semanticType": "StageIdentity",
+        "required": true,
+        "immutable": true,
+        "meaning": "Identifies the Stage domain instance that produced this result.",
+        "invariant": "Must equal the Stage identity carried by the corresponding StageInvocation."
+      },
+      {
+        "field": "stage_invocation_identity",
+        "semanticType": "StageInvocationIdentity",
+        "required": true,
+        "immutable": true,
+        "meaning": "Identifies the exact Stage invocation that produced this result.",
+        "invariant": "Must equal the Stage invocation identity carried by the corresponding StageInvocation. It is the primary domain correlation key for this result."
+      },
+      {
+        "field": "pipeline_invocation_identity",
+        "semanticType": "PipelineInvocationIdentity",
+        "required": false,
+        "immutable": true,
+        "meaning": "Opaque correlation identity of the consumer-owned pipeline invocation, copied from the Stage invocation context when supplied.",
+        "invariant": "Must not be synthesized by the Stage or confused with a Prefect Flow Run ID. Ownership and representation are resolved in 03.00_Pipeline_Invocation.json."
+      },
+      {
+        "field": "parent_invocation_identity",
+        "semanticType": "ParentInvocationIdentity",
+        "required": false,
+        "immutable": true,
+        "meaning": "Opaque correlation identity of the immediate caller invocation when supplied.",
+        "invariant": "Must preserve the exact caller-provided domain correlation value and must not be replaced by a native Prefect parent Task Run ID."
+      },
+      {
+        "field": "outputs",
+        "semanticType": "TStageOutput",
+        "required": true,
+        "immutable": "Envelope reference is immutable; payload immutability/custody is defined by the concrete output contract.",
+        "meaning": "The Stage outputs published to the consuming workflow.",
+        "invariant": "Must remain semantically distinct from stage_flow_result and stage_outcome."
+      },
+      {
+        "field": "stage_flow_result",
+        "semanticType": "TStageFlowResult",
+        "required": true,
+        "immutable": "Envelope reference is immutable; payload immutability/custody is defined by the concrete Stage Flow Result contract.",
+        "meaning": "The Stage-specific result of the internal Step-execution flow.",
+        "invariant": "Must be assembled under Stage Aggregate ownership and must not be replaced by StepExecutionResult, Prefect State, or Stage outputs."
+      },
+      {
+        "field": "stage_outcome",
+        "semanticType": "TStageOutcome",
+        "required": true,
+        "immutable": "Envelope reference is immutable; outcome value semantics are defined by the concrete Stage contract.",
+        "meaning": "The Stage-specific domain interpretation/status of the invocation.",
+        "invariant": "Must be interpreted according to the concrete Stage outcome contract. Core must not infer success or failure from truthiness, exception absence, or Prefect State."
+      }
+    ],
+    "deliberatelyOmittedFields": [
+      {
+        "field": "is_success",
+        "reason": "A universal Boolean would erase Stage-specific outcome distinctions and invite consumers to infer policy from a generic flag."
+      },
+      {
+        "field": "completion_state",
+        "reason": "A returned StageResult already proves that the callable reached its defined result-return boundary. An invocation that does not return a result is represented by its exception/operational outcome, not by a fabricated result with a generic completion flag."
+      },
+      {
+        "field": "settlement",
+        "reason": "No generic Stage settlement contract has been established. Stage-specific flow or lifecycle facts remain in the Stage-owned result contract where required."
+      },
+      {
+        "field": "diagnostics",
+        "reason": "Generic Diagnostics ownership and dependency scope are designed separately in Wave 4. The StageResult contract must not pre-emptively depend on an unapproved shared diagnostics module."
+      },
+      {
+        "field": "prefect_state",
+        "reason": "Prefect State is external operational evidence and must remain in the Prefect integration result/observation mapping."
+      },
+      {
+        "field": "prefect_flow_run_id",
+        "reason": "Native operational identities belong to the integration boundary and must not become Stage domain result fields."
+      },
+      {
+        "field": "created_at",
+        "reason": "A timestamp is not required to establish the generic Stage result semantics. If a concrete Stage or integration needs timing evidence, it must be added to an explicitly owned operational or specialized contract."
+      },
+      {
+        "field": "serialized_payload",
+        "reason": "Serialization is a transport concern and must not be confused with the typed in-memory domain result."
+      }
+    ],
+    "constructionAndValidation": {
+      "constructionOwner": "The Stage Aggregate/Stage Composition constructs the StageResult after determining the Stage-specific flow result, outputs, and outcome.",
+      "constructionRule": "A StageResult is constructed only when the Stage invocation reaches its Stage-defined result boundary and all required result slots have values valid under the concrete Stage specialization.",
+      "identityConsistency": [
+        "stage_identity must match the StageInvocation.stage_identity.",
+        "stage_invocation_identity must match the StageInvocation.stage_invocation_identity.",
+        "pipeline_invocation_identity must match the invocation correlation value when one was supplied; otherwise it remains absent.",
+        "parent_invocation_identity must match the invocation correlation value when one was supplied; otherwise it remains absent."
+      ],
+      "payloadValidation": [
+        "The concrete Stage specialization owns validation of TStageOutput.",
+        "The concrete Stage specialization owns validation and semantic interpretation of TStageFlowResult.",
+        "The concrete Stage specialization owns validation and semantic interpretation of TStageOutcome.",
+        "Core envelope validation checks generic identity/correlation invariants only; it does not inspect consumer payload internals."
+      ],
+      "noImplicitDerivation": [
+        "The Stage outcome must not be inferred from the presence or absence of StepExecutionResult values.",
+        "The Stage outcome must not be inferred from Prefect State.",
+        "Stage outputs must not be reconstructed from the Stage Flow Result unless the concrete Stage contract explicitly defines that relationship.",
+        "The Stage Flow Result must not be reconstructed from outputs."
+      ]
+    },
+    "returnedResultAndExceptionSemantics": {
+      "returnedResult": "A StageResult represents a Stage invocation that returned through the Stage callable contract. The result does not itself assert that the Stage domain outcome is successful.",
+      "thrownInvocationException": "If an exception prevents the Stage callable from returning a StageResult, no StageResult is fabricated. The exception remains a separate invocation fact and is handled by the caller/integration according to explicit contracts.",
+      "stageSpecificFailureRepresentation": "A Stage may return a StageResult whose TStageOutcome represents an unsuccessful, partial, inconclusive, or controlled-termination domain outcome, provided that the Stage-specific contract defines that outcome and the Stage invocation reaches its result boundary.",
+      "stepExceptionRepresentation": "The Stage Flow Result may record Step invocation exceptions separately from returned StepExecutionResult values, in accordance with Stage_Level_Architecture.json.",
+      "noAutomaticErrorConversion": "A thrown exception is not automatically converted to StageError, generic Failure, or a StageOutcome value."
+    },
+    "immutabilityAndCustody": {
+      "envelope": "The StageResult envelope is immutable after construction. Its identity and correlation fields cannot be changed after publication.",
+      "genericPayloads": "The Core envelope cannot enforce deep immutability of arbitrary generic payload types. Each concrete Stage output and Stage Flow Result contract must define whether its payload is immutable, copied, or transferred into caller custody.",
+      "publication": "Once returned, the StageResult and all payloads required by the consumer's result contract must remain valid and interpretable for the declared retention period.",
+      "no_hidden_shared_mutation": "The Stage must not mutate a published result payload in a way that changes the meaning of a result already observed or persisted by the caller."
+    },
+    "serializationAndTransport": {
+      "coreRule": "StageResult is a typed domain value. Core does not require JSON, pickle, cloudpickle, or any other universal serialization format.",
+      "integrationResponsibility": "An external integration that transports a StageResult across a process or deployment boundary must establish a supported serialization/persistence strategy for the concrete TStageOutput, TStageFlowResult, and TStageOutcome types.",
+      "prefectProfile": "The PHASE-02 qualified profile used Prefect result persistence and retrieval for fixture Stage domain results. This proves the tested fixture transport path only; it does not prove that every consumer payload type is serializable or that a universal codec exists.",
+      "failureRule": "If the selected integration cannot persist or retrieve a concrete StageResult, it must report the transport/persistence failure as an integration/operational failure. It must not silently drop fields, substitute Prefect State, or fabricate a partial StageResult.",
+      "noRegistry": "No dynamic result codec registry or universal serializer manager is introduced by this contract."
+    }
+  },
+  "prefectOperationalMapping": {
+    "runtime": "Prefect 3.9.2 (accepted initial external workflow runtime)",
+    "domainResultMapping": "The Stage Flow/Deployment returns StageResult as the domain result. The integration persists and retrieves that result where deployment execution crosses a process boundary.",
+    "operationalStateMapping": "Prefect State remains separately observable. A Prefect COMPLETED state may coexist with a StageResult whose StageOutcome is domain-unsuccessful; this is not a contradiction because the two values describe different dimensions.",
+    "exceptionMapping": "A Prefect FAILED/CANCELLED/CRASHED or other operational terminal state does not, by itself, prove the exact Stage domain outcome. If no StageResult was returned, the integration reports that no domain result was obtained and preserves the native operational evidence.",
+    "identityMapping": [
+      "StageIdentity remains a GPWCF domain identity.",
+      "StageInvocationIdentity remains a GPWCF domain invocation identity.",
+      "PipelineInvocationIdentity and ParentInvocationIdentity remain domain correlation values when supplied.",
+      "Prefect Deployment ID, Flow Run ID, Task Run ID, and worker identity remain Prefect operational identifiers."
+    ],
+    "qualifiedEvidence": {
+      "phase02": [
+        "Ten Stage domain results were persisted and retrieved by the Root across five accepted qualification runs.",
+        "The Stage Flow Run and its Deployment identity were recorded separately from Stage domain identity and invocation identity.",
+        "Prefect State was retained separately from the returned domain result."
+      ],
+      "qualificationLimits": [
+        "Production GPWCF StageResult class binding was not tested.",
+        "Consumer-specific result serialization compatibility was not exhaustively tested.",
+        "Multi-host result storage was not qualified.",
+        "Failure, cancellation, timeout, retry, worker-loss, and recovery result semantics were not qualified."
+      ]
+    }
+  },
+  "dependencyAndPackageAllocation": {
+    "logicalModule": "MOD-CORE-STAGE",
+    "physicalPackage": "core.stage.results",
+    "coreDependencies": [
+      "StageIdentity and StageInvocationIdentity contracts.",
+      "Stage invocation/correlation contracts defined by core.stage."
+    ],
+    "forbiddenDependencies": [
+      "integrations.prefect",
+      "prefect",
+      "consumer-specific Stage result types",
+      "Generator Common Error Model",
+      "core.processing_units.spu as a direct dependency",
+      "a universal core.results package",
+      "an unapproved core.shared_contracts diagnostics package"
+    ],
+    "publicApi": "gpwcf.public_api.core exports the supported StageResult generic contract and its public typing surface.",
+    "implementationGuidance": [
+      "The result envelope should be a small immutable generic value object or equivalent typed contract implementation.",
+      "Use explicit generic parameters; do not replace them with Any, dict[str, object], or a runtime result registry.",
+      "Do not force import of optional Supporting Pattern result types into StageResult.",
+      "Do not require a concrete Stage Flow Result type to inherit from a GPWCF universal base class."
+    ]
+  },
+  "conformanceRequirements": [
+    {
+      "id": "STAGE-RESULT-001",
+      "requirement": "Every returned StageResult carries the StageIdentity and StageInvocationIdentity of the invocation that produced it."
+    },
+    {
+      "id": "STAGE-RESULT-002",
+      "requirement": "Stage outputs, Stage Flow Result, and Stage-specific outcome are separate typed slots."
+    },
+    {
+      "id": "STAGE-RESULT-003",
+      "requirement": "TStageFlowResult remains Stage-owned and Stage-specific; Core imposes no universal Flow Result schema."
+    },
+    {
+      "id": "STAGE-RESULT-004",
+      "requirement": "Stage Flow Result is distinct from StepExecutionResult and is not a subtype or alias of it."
+    },
+    {
+      "id": "STAGE-RESULT-005",
+      "requirement": "A returned StageResult does not imply successful Stage domain outcome."
+    },
+    {
+      "id": "STAGE-RESULT-006",
+      "requirement": "A thrown Stage invocation exception does not produce a fabricated StageResult."
+    },
+    {
+      "id": "STAGE-RESULT-007",
+      "requirement": "Prefect State and native Prefect identifiers are not fields or dependencies of the Core StageResult contract."
+    },
+    {
+      "id": "STAGE-RESULT-008",
+      "requirement": "Core does not impose a universal serialization format or dynamic result codec registry."
+    },
+    {
+      "id": "STAGE-RESULT-009",
+      "requirement": "The Core StageResult contract imports and operates without Prefect installed."
+    },
+    {
+      "id": "STAGE-RESULT-010",
+      "requirement": "A Prefect integration preserves the returned StageResult as a domain value and records operational State independently."
+    },
+    {
+      "id": "STAGE-RESULT-011",
+      "requirement": "The StageResult envelope preserves optional pipeline and parent correlation values exactly when supplied."
+    }
+  ],
+  "decisionsAndRationales": [
+    {
+      "decisionId": "D-STAGE-RESULT-01",
+      "decision": "Use one generic StageResult envelope with separate output, flow-result, and outcome type parameters.",
+      "rationale": "This is the narrowest common result contract that preserves the three distinct Stage-level meanings required by the existing architecture."
+    },
+    {
+      "decisionId": "D-STAGE-RESULT-02",
+      "decision": "Do not include a universal completion flag.",
+      "rationale": "A StageResult exists only after the callable reaches its result-return boundary. A non-returning invocation is represented separately as an exception/operational fact."
+    },
+    {
+      "decisionId": "D-STAGE-RESULT-03",
+      "decision": "Do not include generic settlement or diagnostics fields in this version.",
+      "rationale": "No generic Stage settlement contract is established, and the Generic Diagnostics contract is a separate Wave 4 design decision. Adding these fields now would create premature coupling."
+    },
+    {
+      "decisionId": "D-STAGE-RESULT-04",
+      "decision": "Keep transport serialization outside the Core result contract.",
+      "rationale": "The Core result must remain usable in-process and independent of Prefect. Cross-process persistence is an integration responsibility."
+    },
+    {
+      "decisionId": "D-STAGE-RESULT-05",
+      "decision": "Preserve pipeline and parent correlation as optional opaque values.",
+      "rationale": "A Stage may be invoked by a consuming workflow without GPWCF owning a generic Pipeline Root or requiring every caller to define the same hierarchy."
+    }
+  ],
+  "traceability": [
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Level_Architecture.json",
+      "supports": [
+        "Flow Result is the result of the Stage's internal Step-execution flow.",
+        "Flow Result is independent of individual StepExecutionResult values.",
+        "The detailed Flow Result structure and composition policy are Stage-specific.",
+        "Flow Result is distinct from Stage outputs and Stage execution status.",
+        "Invocation exceptions are represented separately from returned StepExecutionResult values."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "supports": [
+        "StepExecutionResult is the result of one Step invocation.",
+        "Stage invokes Step through its public Stage-facing callable contract.",
+        "No universal Stage/Step result schema or success Boolean is imposed by the specialized contracts."
+      ]
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/05.00_Detailed_Design_Waves/Wave!_Stage_Callable_Stage Result_Pipeline Invocation/01.00_Stage_Callable.json",
+      "supports": [
+        "StageCallable returns a typed StageResult.",
+        "Stage outputs, Stage Flow Result, and Stage outcome remain distinct.",
+        "Domain identity and correlation are distinct from native workflow runtime identity."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Topology_Decision_Record.json",
+      "supports": [
+        "Prefect State and the persisted Stage domain result are separate.",
+        "Stage domain identity and invocation identity are distinct from Prefect Deployment, Flow Run, and Task Run IDs.",
+        "The same-host two-worker profile retrieved persisted Stage domain results; multi-host storage remains unqualified."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Acceptance_Results.json",
+      "supports": [
+        "Ten of ten fixture Stage domain results were retrieved by the Root.",
+        "Production GPWCF result binding and failure/cancellation/recovery semantics remain unqualified."
+      ]
+    }
+  ],
+  "acceptanceCriteria": [
+    "The StageResult contract is runtime-independent and owned by core.stage.",
+    "Stage outputs, Stage Flow Result, and Stage-specific domain outcome are independently typed and semantically distinct.",
+    "The result envelope contains the minimum identity and correlation data required to attribute a returned result.",
+    "The result contract does not create a universal FlowResult schema or a universal success/failure policy.",
+    "Thrown invocation exceptions remain distinct from returned StageResult values.",
+    "Prefect State and Prefect native IDs remain outside the Core StageResult contract.",
+    "Serialization and persistence are assigned to the selected integration without introducing a Core serializer registry.",
+    "The design is consistent with Stage_Level_Architecture.json and the StageCallable design in artifact 01.",
+    "No specialized source contract or production source package is modified."
+  ],
+  "changeControl": {
+    "authority": "Wave 1 detailed design proposal. It becomes an implementation constraint only after architecture review and explicit acceptance.",
+    "sourceContractPolicy": "This artifact does not modify Stage_Level_Architecture.json, Step_Contract.json, StepExecutionResult_Contract.json, or any specialized result contract.",
+    "implementationGate": "Do not implement StageResult source classes until Wave 1 and the overall Architecture Closure Design are reviewed and accepted.",
+    "nextStep": "Design 03.00_Pipeline_Invocation.json. The next artifact must define only the minimal consumer-owned invocation/correlation contract required to complete Stage invocation and result attribution; it must not create a GPWCF Pipeline Root Entity or orchestration runtime."
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "pipelineInvocationIdentity": "b8baba60-0e56-4320-a5e3-200c90480ae3",
+  "stageCount": 2,
+  "stages": [
+    {
+      "stageIdentity": "STAGE-A",
+      "stageInvocationIdentity": "d0a45b34-1ec9-4672-b7ef-dfb4d5530709",
+      "stepResultCount": 2,
+      "stepResults": [
+        {
+          "processing_artifact": {
+            "normalized": {
+              "normalizedValue": "stage-a-alpha",
+              "source": " STAGE-A-ALPHA "
+            },
+            "measurement": {
+              "characterCount": 15
+            }
+          },
+          "validator_result": null,
+          "error_result": null,
+          "error_handler_result": null
+        },
+        {
+          "processing_artifact": {
+            "normalized": {
+              "normalizedValue": "stage-a-beta",
+              "source": " STAGE-A-BETA "
+            },
+            "measurement": {
+              "characterCount": 14
+            }
+          },
+          "validator_result": null,
+          "error_result": null,
+          "error_handler_result": null
+        }
+      ]
+    },
+    {
+      "stageIdentity": "STAGE-B",
+      "stageInvocationIdentity": "442ec42d-4845-4f37-b699-6fe5006a131e",
+      "stepResultCount": 2,
+      "stepResults": [
+        {
+          "processing_artifact": {
+            "normalized": {
+              "normalizedValue": "stage-b-alpha",
+              "source": " STAGE-B-ALPHA "
+            },
+            "measurement": {
+              "characterCount": 15
+            }
+          },
+          "validator_result": null,
+          "error_result": null,
+          "error_handler_result": null
+        },
+        {
+          "processing_artifact": {
+            "normalized": {
+              "normalizedValue": "stage-b-beta",
+              "source": " STAGE-B-BETA "
+            },
+            "measurement": {
+              "characterCount": 14
+            }
+          },
+          "validator_result": null,
+          "error_result": null,
+          "error_handler_result": null
+        }
+      ]
+    }
+  ]
+}

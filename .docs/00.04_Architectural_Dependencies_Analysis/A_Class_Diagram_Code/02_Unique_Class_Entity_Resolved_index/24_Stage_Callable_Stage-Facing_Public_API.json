@@ -1,0 +1,10 @@
+{
+  "serialNumber": 24,
+  "name": "Stage Callable Stage-Facing Public API",
+  "category": "Feature / API Boundary",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+  "description": "Stage-facing public API obligations and conformance requirements define how callers interact with the Stage through its public boundary. Core baseline uses standard library only and does not own Prefect as a Core dependency.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

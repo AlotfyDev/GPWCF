@@ -1,0 +1,11 @@
+digraph "12_Uncategorized" {
+  rankdir=TB;
+  node [shape=record, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=8];
+  label="12 Uncategorized Class Diagram";
+  labelloc=t;
+
+  "Public_Symbol_Curation" [label="{Public Symbol Curation|Feature / API Policy}", tooltip="Public symbols and imports are explicit, curated, versioned, and tested; no wildcard re-exports; internal modules kept outside public_api packages."];
+  "Error_Occurrence" [label="{Error Occurrence|Entity / Concept}", tooltip="Conceptual entity representing one actual occurrence of an error; references the registered Error Type Definition that identifies its kind and carries occurrence-specific information without duplicati"];
+
+}

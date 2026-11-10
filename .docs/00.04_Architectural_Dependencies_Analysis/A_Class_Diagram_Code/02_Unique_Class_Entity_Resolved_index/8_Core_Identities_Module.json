@@ -1,0 +1,10 @@
+{
+  "serialNumber": 8,
+  "name": "Core Identities Module",
+  "category": "Class / Module",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "core.identities is a narrow dependency-free module for nominal identity value types only; justified as part of Wave 6 dependency architecture.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

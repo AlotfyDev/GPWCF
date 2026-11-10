@@ -1,0 +1,10 @@
+{
+  "serialNumber": 55,
+  "name": "Reference Consumer (SMRB.PayloadDescriptionGenerator)",
+  "category": "Entity / Reference",
+  "type": "Entity",
+  "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/Prefect_Adoption_And_Integration_Architecture_v1.0.json",
+  "description": "Reference consumer for target-specific integration design and end-to-end acceptance; 13 specified stages (STG-01 through STG-13). Stage Model objectives and execution_steps are not presumed to be GPWCF Steps or SPUs.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,24 @@
+@startuml
+title Validator Unit Sequence - Validation Result Production
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+skinparam roundcorner 0
+
+participant "Step Composition" as SC
+participant "SPU Validator Unit (SPUVU)" as VU
+participant "SPUValidatorResult" as VR
+participant "SPUExecutionResult[TOutput]" as SER
+
+SC -> VU : invoke validation under Association
+VU -> VU : validate(target scope, input)
+VU --> VR : produce SPUValidatorResult
+VR --> VU : return validation conclusion
+VU --> SC : SPUValidatorResult (optional)
+
+note right of SC : Validation conclusions remain domain results,
+NOT automatic invocation failures
+SPUValidatorResult carried independently
+in SPUExecutionResult optional slot
+Validator Unit has own behavioral/result contract
+
+@enduml

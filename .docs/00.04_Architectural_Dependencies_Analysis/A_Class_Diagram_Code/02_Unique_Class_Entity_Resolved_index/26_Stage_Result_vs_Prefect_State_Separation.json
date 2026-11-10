@@ -1,0 +1,10 @@
+{
+  "serialNumber": 26,
+  "name": "Stage Result vs Prefect State Separation",
+  "category": "Feature / Conceptual Distinction",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/02.00_Stage_Result.json",
+  "description": "External workflow runtime State is operational execution evidence; it is not a GPWCF StageResult, Stage Flow Result, Stage output, or Stage domain outcome. Prefect State, Flow Run ID, Task Run ID, Deployment ID, worker identity, or any other native operational field remains outside the Core StageResult contract.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,12 @@
+digraph "11_Core_Identities_Diagnostics" {
+  rankdir=TB;
+  node [shape=record, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=8];
+  label="11 Core Identities Diagnostics Class Diagram";
+  labelloc=t;
+
+  "Optional_Import_Guarantees" [label="{Optional Import Guarantees|Feature / API Policy|Diagnostic}", tooltip="Optional import guarantees defined for Supporting Patterns and Diagnostics; consumers that do not select optional patterns incur no mandatory import; internal module paths have no consumer compatibili"];
+  "Generic_Diagnostic_Contract_core_diagnostics" [label="{Generic Diagnostic Contract (core.diagnostics)|Class / Contract|Diagnostic}", tooltip="Wave 4 detailed design (artifact 1) defining a narrow, typed, descriptive, and optional Diagnostic value contract, deliberately kept distinct from a universal Error Model, Failure taxonomy, execution "];
+  "Diagnostic_Semantic_Distinction" [label="{Diagnostic Semantic Distinction|Feature / Concept|Diagnostic}", tooltip="The deliberate semantic distinction among Diagnostic, Error Occurrence, Failure, Exception, and domain Outcome; diagnostics are descriptive only and never a substitute for Error, Failure, Exception, o"];
+
+}

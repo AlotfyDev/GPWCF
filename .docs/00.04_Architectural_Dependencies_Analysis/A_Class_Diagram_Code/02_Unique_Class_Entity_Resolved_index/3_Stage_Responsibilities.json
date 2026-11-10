@@ -1,0 +1,10 @@
+{
+  "serialNumber": 3,
+  "name": "Stage Responsibilities",
+  "category": "Feature / Responsibility",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+  "description": "Expose Stage contract to consuming workflow; own composition of Step Instances; coordinate Step invocation through Stage-facing callable contracts; define Stage-specific execution structure, dependencies, transitions, flow-decision semantics; manage Stage-specific flow semantics and final Stage-specific Flow Result; publish Stage outputs and execution status; define and register Stage-owned error type definitions; create StageError occurrences for Stage-owned errors.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

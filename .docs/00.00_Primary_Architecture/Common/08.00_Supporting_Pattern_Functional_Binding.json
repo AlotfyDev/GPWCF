@@ -1,0 +1,441 @@
+{
+  "documentType": "GPWCFDetailedArchitectureDesign",
+  "documentId": "gpwcf.architecture-closure.wave3.supporting-pattern-functional-binding",
+  "documentVersion": "1.0.0",
+  "status": "draft-for-architecture-review",
+  "designSequence": {
+    "wave": 3,
+    "waveName": "SPU and Supporting Pattern Functional Binding",
+    "artifactNumber": 2,
+    "predecessorArtifacts": [
+      "07.00_SPU.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/05.00_Step_Execution_Result.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/06.00_Optional_Result_Contributions.json",
+      ".docs/Architecture/Common/Supporting_Patterns_Integration_Review.md",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json"
+    ]
+  },
+  "purpose": "Define how each optional Supporting Pattern is functionally bound to Prefect without flattening distinct behavior, result, association, lifecycle, identity, and custody contracts into a universal Supporting Unit abstraction.",
+  "scope": {
+    "included": [
+      "The functional binding boundary between Step Composition and selected Supporting Pattern capabilities.",
+      "Pattern-specific Prefect native execution realization for Validation, Error Handling, and Observation.",
+      "The distinction between executable pattern behavior and semantic/coordination contracts.",
+      "Identity, association, invocation, result, event, and custody preservation across native execution.",
+      "The relationship between Supporting Pattern results and StepExecutionResult optional contributions.",
+      "The relationship between Prefect operational State and pattern-specific domain results/publication acceptance.",
+      "Optional dependency and Public API constraints."
+    ],
+    "excluded": [
+      "A universal SupportingUnit base class, interface, result type, or execution context.",
+      "A generic plugin manager, loader, registry, runtime adapter, scheduler, or central mediator.",
+      "A universal native Task mapping for every Supporting Pattern behavior.",
+      "A universal Association or Lifecycle implementation.",
+      "A common result schema for Validation, Error Handling, and Observation.",
+      "A mandatory central event bus, logger, collector, database, or publisher.",
+      "A generic Error Model or automatic exception-to-error conversion."
+    ]
+  },
+  "governingArchitecture": {
+    "functionalBindingObjective": "Bind each selected GPWCF-defined executable function to a suitable native Prefect executable element while preserving its specialized callable, input/output/result, identity, exception, event, lifecycle, and custody contract.",
+    "ownership": "The concrete Step and its Step Composition select which Supporting Pattern capabilities participate, define their Step-specific intent/timing/target scope, coordinate their invocation, and decide how their results affect Step flow and StepExecutionResult.",
+    "specializedContractAuthority": "Each pattern retains its own Behavioral, Association, and Lifecycle contracts. Functional binding does not generalize or replace those contracts.",
+    "runtimeAuthority": "Prefect executes the selected native executable elements and provides operational run/task records. It does not redefine the meaning of validation, observation, error handling, publication acceptance, or Step flow decisions.",
+    "relationshipMechanism": "Association is used only where the selected specialized contract requires an explicit relationship to a Step-owned target scope. Functional binding is the objective; Association is one possible relationship mechanism and is not a universal precondition for every bound function.",
+    "noUniversalSupportingUnit": "The three patterns differ in purpose, invocation cardinality, output semantics, activity lifetime, and custody. They must remain separate packages and specialized public contracts."
+  },
+  "patternComparison": [
+    {
+      "pattern": "Validation",
+      "behavior": "Evaluate an explicitly scoped subject and produce a specialization-defined validation outcome/evidence.",
+      "invocationCardinality": "One structured Validator Unit Validation Result per normally completed invocation under the common contract.",
+      "outputSemantics": "A validation conclusion/evidence value; a negative conclusion is still a normal domain result.",
+      "defaultNativeRealization": "Prefect Task for one bounded validator invocation.",
+      "stepResultRelationship": "Step Composition aggregates accepted results into StepValidatorResult and includes it in OptionalResultContributions.validator_result when applicable."
+    },
+    {
+      "pattern": "Error Handling",
+      "behavior": "Execute one or more specialized handling operations against authorized error occurrence targets.",
+      "invocationCardinality": "One unit invocation may execute zero, one, or multiple operations; each actual operation has its own attempt/execution identity and result/entry.",
+      "outputSemantics": "Operation-specific result and publication entry; publication acceptance and recovery custody are explicit protocol outcomes.",
+      "defaultNativeRealization": "Prefect Task for a bounded Error Handling Unit invocation or operation execution, with the specialized Publisher/Reservation contract preserved separately.",
+      "stepResultRelationship": "Step-specific Error Handling Composition aggregates accepted operation entries into ErrorHandlerResult and Step Composition includes it in OptionalResultContributions.error_handler_result."
+    },
+    {
+      "pattern": "Observation",
+      "behavior": "Observe, measure, capture, or record facts within a specialized target/source scope.",
+      "invocationCardinality": "One activity may emit zero, one, or multiple records; activity may be a call, callback, event, sampling cycle, or subscription.",
+      "outputSemantics": "Factual observation records and provenance; not a validation verdict or Step flow decision.",
+      "defaultNativeRealization": "Use a Prefect Task only for a bounded observation activity. Event-driven, callback, periodic, or long-lived subscription behavior requires a matching specialized native mechanism and qualification.",
+      "stepResultRelationship": "Observation records remain outside OptionalResultContributions and StepExecutionResult by default; a concrete Step may define a separate explicit application-specific integration."
+    },
+    {
+      "pattern": "Step Error Model",
+      "behavior": "Defines error vocabulary, occurrence representation, ErrorResult structure, and aggregation semantics.",
+      "invocationCardinality": "Not an executable unit by default; it is a semantic contract applied by SPUs and Step Composition.",
+      "outputSemantics": "Defines how occurrences are represented/aggregated; it does not itself execute handling operations.",
+      "defaultNativeRealization": "No native Prefect Task. The model constrains the Step's native graph and result assembly semantics.",
+      "stepResultRelationship": "Its ErrorResult specialization may populate OptionalResultContributions.error_result when the concrete Step selects that model."
+    }
+  ],
+  "functionalBindingModel": {
+    "logicalFlow": [
+      "Concrete Step selects the optional pattern capabilities and target scopes required by its responsibility.",
+      "Step Composition authorizes each invocation/activity under the selected specialized contract.",
+      "The Prefect Integration binding translates that exact specialized invocation into a suitable native executable element or event/activity mechanism.",
+      "The native element executes the specialized unit/function and returns or emits its exact specialized result/record.",
+      "The integration preserves domain identities, parent Step context, native operational identifiers, and acceptance/custody evidence separately.",
+      "Step Composition consumes the returned domain result or accepted record under the concrete Step's flow and result rules."
+    ],
+    "bindingUnit": "The binding unit is the actual specialized executable function/activity defined by the pattern contract, not a universal Supporting Unit object.",
+    "bindingCardinality": "One native element may represent one bounded invocation or a specialized activity. The mapping is pattern-specific and must preserve the pattern's declared zero/one/many result and lifetime semantics.",
+    "noBehaviorAbsorption": "The Prefect Task wrapper or event mechanism does not take ownership of the pattern's behavior semantics, result meaning, association decisions, or lifecycle policy.",
+    "noCentralMediator": "Step Composition remains the coordination owner. No central Supporting Pattern gateway or mediator is introduced."
+  },
+  "validationBinding": {
+    "contract": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Contract.json",
+    "domainCallable": "The concrete Validator Unit's specialized validation operation and result contract.",
+    "nativeRealization": {
+      "default": "A Prefect Task wrapper invokes one bounded Validator Unit invocation inside the owning Step Subworkflow.",
+      "wrapperRole": "Pass the exact validation input, target context, association identity, association target identity, validator identity, and validator invocation identity required by the specialization; return the exact Validator Unit Validation Result.",
+      "resultRule": "A normally completed invocation produces one structured Validator Unit Validation Result. The Step-specific StepValidatorResult aggregation remains owned by Step Composition.",
+      "negativeOutcomeRule": "A validation outcome that expresses rejection, invalidity, non-compliance, or another negative domain conclusion is a normal validation result, not automatically a Prefect Task failure.",
+      "exceptionRule": "An invocation that throws or terminates abnormally does not fabricate a validation result."
+    },
+    "identityAndAssociation": [
+      "Preserve StepIdentity and StepInvocationIdentity.",
+      "Preserve validatorUnitIdentity and validatorInvocationIdentity.",
+      "Preserve validatorUnitAssociationIdentity and associationTargetIdentity for an association-bound invocation.",
+      "Do not substitute Prefect Task Run ID for validatorInvocationIdentity.",
+      "Step Composition selects and authorizes the exact association; the Validator Unit does not create or change it."
+    ],
+    "resultCustody": [
+      "The Validator Unit owns construction of its specialized result until the defined handoff.",
+      "Step Composition becomes responsible for custody after successful acceptance.",
+      "A later failure does not revoke an already accepted validation result.",
+      "The integration must preserve result provenance and not rewrite a negative validation conclusion as task failure."
+    ],
+    "aggregation": "Step Composition aggregates accepted Validator Unit Validation Results into the concrete StepValidatorResult. That aggregate is the TValidatorResult contribution carried by OptionalResultContributions.validator_result.",
+    "nonGoals": [
+      "No universal validation schema or Boolean pass/fail contract.",
+      "No mandatory Validator Unit for every Step.",
+      "No universal validation ordering or scheduler.",
+      "No automatic conversion of validation outcomes into SPUError or StepError."
+    ]
+  },
+  "errorHandlingBinding": {
+    "contracts": [
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlingUnit_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlerResult_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/PublicationReservation_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/OperationEntryPublisher_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json"
+    ],
+    "domainCallable": "The concrete Error Handling Unit executes its specialized operation(s) and produces operation-specific result entries under the owning Step's error-handling specialization.",
+    "nativeRealization": {
+      "default": "A Prefect Task wrapper may execute one bounded Error Handling Unit invocation or one explicitly bounded handling operation, according to the concrete specialization.",
+      "noForcedCardinality": "Do not assume one Error Handling Unit invocation equals exactly one operation. A specialization may execute zero, one, or multiple operations and must preserve each operation's identity and result separately.",
+      "publisherRole": "OperationEntryPublisher and PublicationReservation remain specialized protocol capabilities. They are not automatically separate Prefect Tasks or a generic GPWCF publisher runtime.",
+      "bindingRule": "The integration supplies or binds the concrete Publisher/Reservation capability required by the specialization. Its atomic acceptance semantics remain authoritative and are not replaced by Prefect Task completion."
+    },
+    "operationProtocolInvariants": [
+      "Each handling operation attempt has a distinct handlingOperationAttemptIdentity before reservation.",
+      "The operation obtains PublicationReservation before execution.",
+      "handlingOperationIdentity is assigned only after reservation grant and before operation execution.",
+      "The operation produces its complete specialized result/entry under the exact reservation binding.",
+      "The complete entry is published through the invocation-bound OperationEntryPublisher.",
+      "Atomic Publisher acceptance is the publication acceptance point; calling publish or receiving a Prefect Task COMPLETED state is not equivalent to that acceptance.",
+      "Rejected or indeterminate publication remains subject to the specialized reconciliation and Recovery Owner procedure.",
+      "The Error Handling Unit retains the produced result until the Publisher's acceptance point or an explicit custody transfer under the specialization."
+    ],
+    "identityAndTargetPreservation": [
+      "Preserve Step and Step invocation identity.",
+      "Preserve Error Handling Unit identity, association identity, target scope, invocation identity, operation attempt identity, and handling operation identity.",
+      "Preserve the exact target SPUError occurrence reference using producerSPUIdentity plus occurrenceIdentity where the Step Error Model requires it.",
+      "Do not substitute Prefect Task Run ID for any operation, occurrence, association, or unit identity.",
+      "Do not allow Error Handling Units to mutate, own, or subsume ErrorResult merely because they reference its occurrences."
+    ],
+    "resultAggregation": "The Step-specific Error Handling Composition aggregates accepted operation entries into ErrorHandlerResult. Step Composition integrates the resulting value into OptionalResultContributions.error_handler_result. ErrorHandlerResult remains distinct from ErrorResult.",
+    "operationalStateSeparation": "Prefect Task/Flow State records the operational execution of the wrapper. Publication reservation, acceptance, rejection, indeterminate status, and recovery custody remain specialized domain/protocol facts.",
+    "nonGoals": [
+      "No generic Error Handling Unit base class.",
+      "No generic publisher/transaction manager.",
+      "No universal operation taxonomy, recovery policy, or error resolution status.",
+      "No assumption that Prefect Task completion proves publication acceptance or error resolution."
+    ]
+  },
+  "observationBinding": {
+    "contract": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Contract.json",
+    "domainCapability": "A concrete Observation Unit observes or measures facts and emits one or more Observation Records under its specialized activity/association contract.",
+    "nativeRealizationOptions": [
+      {
+        "mode": "BoundedInvocation",
+        "nativeElement": "Prefect Task",
+        "when": "The specialized observation is a finite call that completes and returns or emits a bounded set of records.",
+        "constraint": "The Task wrapper preserves zero/one/many record semantics and record provenance."
+      },
+      {
+        "mode": "CallbackOrEventDriven",
+        "nativeElement": "A specialized callback/event hook or runtime event mechanism, optionally coordinated by a Prefect Flow/Task boundary.",
+        "when": "The specialization observes callbacks or events that are triggered by another executable operation.",
+        "constraint": "The integration must preserve source event identity, observation invocation identity, association target, record identity, and delivery custody."
+      },
+      {
+        "mode": "PeriodicSampling",
+        "nativeElement": "A specialized Prefect scheduled/deployed execution or bounded repeated Task activity where appropriate.",
+        "when": "The specialization defines periodic sampling or repeated observation cycles.",
+        "constraint": "Sampling cadence, overlap, ordering, backpressure, missed intervals, and cancellation must be explicitly specialized and qualified; no universal sampling service is introduced."
+      },
+      {
+        "mode": "LongLivedSubscription",
+        "nativeElement": "A specialized long-lived execution/deployment or externally hosted event/subscription mechanism integrated through an explicit contract.",
+        "when": "The observation activity remains active across multiple events or outlives one bounded Task invocation.",
+        "constraint": "A single Task is not assumed to represent the complete subscription lifetime. Activation, event delivery, quiescence, cancellation, and record custody require specialized design and runtime qualification."
+      }
+    ],
+    "bindingRule": "Select the native execution mechanism according to the concrete Observation Unit activity semantics. Do not force every Observation Unit into a single Prefect Task or a common event bus.",
+    "identityAndProvenance": [
+      "Preserve Step identity and Step invocation correlation.",
+      "Preserve observationUnitIdentity, observationUnitAssociationIdentity, associationTargetIdentity, observationInvocationIdentity, and each observationRecordIdentity.",
+      "Preserve sourceInvocationIdentity/sourceEventIdentity when the specialization defines it.",
+      "Keep native Prefect Task/Flow Run IDs separate from all observation domain identities.",
+      "An ended association remains historical provenance but cannot authorize new activities."
+    ],
+    "recordAndCustodyRules": [
+      "One observation activity may emit zero, one, or multiple records.",
+      "An observation record is a factual observation, not a validation judgment, business approval, error classification, or Step flow decision.",
+      "The concrete specialization defines the destination and exact record acceptance/handoff point.",
+      "A produced record remains under Observation Unit responsibility until accepted or explicitly transferred to a recovery owner.",
+      "Rejected or indeterminate record delivery requires specialized reconciliation; a Prefect Task COMPLETED state does not prove destination acceptance.",
+      "Records accepted before a later exception remain valid and are not revoked."
+    ],
+    "stepResultBoundary": "Observation Records remain outside OptionalResultContributions and StepExecutionResult by default. A concrete Step may define a separate explicit application-specific output integration without changing the common result contract.",
+    "nonGoals": [
+      "No mandatory Observation Unit for every Step or SPU.",
+      "No universal observation request/response type or result schema.",
+      "No central logger, event bus, collector, database, or observation manager.",
+      "No universal Task-only mapping for subscriptions, callbacks, or sampling."
+    ]
+  },
+  "semanticAndCoordinationContracts": {
+    "stepErrorModel": {
+      "nature": "Semantic contract, not an executable processing node by default.",
+      "binding": "No Prefect Task is created merely to represent the Error Model. The model constrains the meaning and aggregation of error occurrences/results in the Step's native graph.",
+      "ownership": "The concrete Step selects and specializes the Error Model; Step Composition performs the physical ErrorResult aggregation.",
+      "genericityBoundary": "The current Generator Common Error Model and dependent clauses remain outside baseline Core until Wave 4's genericity/dependency analysis and explicit approval."
+    },
+    "associationContracts": {
+      "nature": "Relationship and invocation-authorization contracts, not executable Supporting Pattern nodes.",
+      "binding": "Step Composition selects and establishes the association; the Prefect binding carries the exact association and target identities as invocation metadata where required.",
+      "constraint": "A native Task Run does not create, own, or prove the existence/validity of a domain Association."
+    },
+    "lifecycleContracts": {
+      "nature": "Instance readiness, admission, activation, quiescence, reuse, release, and evidence-retention obligations, not a universal executable unit.",
+      "binding": "Concrete lifecycle operations may be realized through specialized native Tasks/Flows where the specialized contract requires executable work. No common lifecycle Task is mandated.",
+      "constraint": "Prefect Flow/Task completion, cancellation, or disposal does not prove domain release confirmation or safe result custody."
+    }
+  },
+  "identityAndCorrelationRules": [
+    "Each selected Supporting Pattern retains its specialized identity names and uniqueness scopes.",
+    "StepIdentity and StepInvocationIdentity identify the owning Step and accepted Step invocation.",
+    "PipelineInvocationIdentity is propagated unchanged when supplied.",
+    "Pattern-specific unit, association, target, invocation/activity, record, operation-attempt, and operation identities remain distinct where applicable.",
+    "Prefect Deployment, Flow Run, Task Run, worker, and state identifiers remain native operational evidence.",
+    "A domain relationship or association is not inferred from a Prefect parent/child task edge.",
+    "A native Prefect task may be the execution element for a domain function without becoming that function's domain Entity."
+  ],
+  "dependencyRules": {
+    "allowed": [
+      "core.step may depend on a selected Supporting Pattern's specialized contract surface only when the concrete Step selects that capability.",
+      "integrations.prefect may depend inward on the selected specialized callable/result/event contracts it binds.",
+      "The consumer may depend on Core Public API and the optional Prefect Integration Public API.",
+      "The Prefect integration package may depend on the accepted Prefect runtime and its verified dependency closure."
+    ],
+    "forbidden": [
+      "Core Stage/Step/SPU modules must not import Prefect.",
+      "A Supporting Pattern must not import Step Composition implementation merely to participate in an association or functional binding.",
+      "One Supporting Pattern must not import another pattern's result contract unless an explicit specialized contract requires it.",
+      "The generic integration boundary must not import every optional pattern unconditionally.",
+      "No universal SupportingUnit base package, registry, manager, or adapter package is introduced.",
+      "The Generator Common Error Model must not become a baseline Core dependency through Error Handling binding."
+    ]
+  },
+  "publicApiRequirements": {
+    "coreSurface": "gpwcf.public_api.core",
+    "coreRule": "Each optional Supporting Pattern public contract is opt-in. Consumers that do not select a pattern must not need to import/install it.",
+    "prefectSurface": "gpwcf.public_api.integrations.prefect",
+    "integrationRule": "Expose pattern-specific Prefect binding facilities only where there is a stable consumer-facing configuration need. Keep internal wrapper/task functions private.",
+    "noUnifiedBase": "Do not expose a universal SupportingUnit or ExecutableUnit base contract."
+  },
+  "qualificationAndEvidence": {
+    "phase01": [
+      "The fixture Step Subflow executed SPU Tasks and preserved the Step/SPU result hierarchy.",
+      "The fixture used fan-out/fan-in; SPU Task overlap was measured in 16 of 16 Step invocations.",
+      "Production Validator, Error Handling, and Observation Unit bindings were not established by that qualification."
+    ],
+    "phase02": [
+      "Forty SPU Task Runs were correlated to their owning Step Flow Runs.",
+      "The qualified Stage deployment profile preserved the Stage-to-Step-to-SPU native hierarchy and domain result retrieval.",
+      "No production Supporting Unit binding was tested."
+    ],
+    "notQualified": [
+      "Production binding of any of the three Supporting Pattern types.",
+      "Error Handling Publisher/Reservation behavior across Prefect process boundaries.",
+      "Observation callback, event, periodic sampling, or long-lived subscription execution.",
+      "Pattern-specific cancellation, timeout, retry, worker-loss, recovery, and custody settlement.",
+      "Multi-host event/result storage and delivery.",
+      "Capacity/concurrency for pattern workloads beyond the tested fixture profile."
+    ],
+    "interpretation": "The design defines the binding boundary and native execution choices. It does not claim that production Supporting Pattern integration has been implemented or qualified."
+  },
+  "requiredGoverningContractChanges": [
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+      "change": "Add a conformance mapping requirement for each selected pattern: domain callable/activity -> native executable element -> exact result/event/acceptance contract -> identity/custody mapping.",
+      "reason": "Step Composition owns selection and semantic coordination; the Prefect integration realizes execution without absorbing pattern semantics.",
+      "changeType": "integration-conformance-clarification",
+      "approval": "Requires explicit architecture acceptance before source contract editing."
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Framework_Module_Boundary_Model.json",
+      "change": "Clarify that MOD-CORE-SUPPORT-VALIDATION, MOD-CORE-SUPPORT-ERROR-HANDLING, and MOD-CORE-SUPPORT-OBSERVATION remain optional and independent; add no common Supporting Unit runtime module.",
+      "reason": "The binding design preserves pattern-specific contracts and dependencies.",
+      "changeType": "module-boundary-alignment",
+      "approval": "Required during governing-artifact reconciliation."
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Filesystem_Architecture.json",
+      "change": "Keep separate optional pattern packages and allocate only pattern-specific Prefect binding modules under integrations.prefect; do not add a universal supporting_units/base.py or registry.",
+      "reason": "Native binding is pattern-specific and must preserve package optionality.",
+      "changeType": "filesystem-allocation-alignment",
+      "approval": "Required during governing-artifact reconciliation."
+    }
+  ],
+  "conformanceRequirements": [
+    {
+      "id": "SUPPORT-BIND-001",
+      "requirement": "Each selected Supporting Pattern is bound according to its own specialized callable/activity and result contract."
+    },
+    {
+      "id": "SUPPORT-BIND-002",
+      "requirement": "No universal SupportingUnit base, common result type, plugin manager, or runtime registry is introduced."
+    },
+    {
+      "id": "SUPPORT-BIND-003",
+      "requirement": "Validation bounded invocations may be bound to Prefect Tasks while preserving the exact Validator Unit Validation Result."
+    },
+    {
+      "id": "SUPPORT-BIND-004",
+      "requirement": "A negative validation conclusion is not automatically treated as Prefect task failure."
+    },
+    {
+      "id": "SUPPORT-BIND-005",
+      "requirement": "Error Handling operation reservation and atomic publication acceptance remain distinct from Prefect Task State."
+    },
+    {
+      "id": "SUPPORT-BIND-006",
+      "requirement": "Each Error Handling operation attempt/execution identity and target occurrence reference is preserved."
+    },
+    {
+      "id": "SUPPORT-BIND-007",
+      "requirement": "ErrorResult and ErrorHandlerResult remain distinct domain values."
+    },
+    {
+      "id": "SUPPORT-BIND-008",
+      "requirement": "Observation binding preserves zero/one/many record semantics and uses a native mechanism appropriate to bounded, event-driven, periodic, or long-lived behavior."
+    },
+    {
+      "id": "SUPPORT-BIND-009",
+      "requirement": "Observation Records remain outside common StepExecutionResult contributions unless a concrete Step explicitly defines otherwise."
+    },
+    {
+      "id": "SUPPORT-BIND-010",
+      "requirement": "Association and Lifecycle contracts remain coordination/semantic obligations and are not automatically represented as executable Tasks."
+    },
+    {
+      "id": "SUPPORT-BIND-011",
+      "requirement": "Domain identities and association/target identities remain distinct from Prefect native IDs and parent/child edges."
+    },
+    {
+      "id": "SUPPORT-BIND-012",
+      "requirement": "Core remains importable without Prefect and without optional Supporting Pattern packages that a consumer does not select."
+    },
+    {
+      "id": "SUPPORT-BIND-013",
+      "requirement": "No production binding or failure/recovery capability is claimed until it is separately implemented and qualified."
+    }
+  ],
+  "traceability": [
+    {
+      "source": ".docs/Architecture/Common/Supporting_Patterns_Integration_Review.md",
+      "supports": [
+        "Validation, Observation, and Error Handling behaviors remain specialized.",
+        "There is no common runtime unit abstraction.",
+        "Association and Lifecycle coordination are common Step Composition responsibilities, while technical mechanics remain pattern-specific.",
+        "Result/evidence custody mechanisms differ and must not be unified."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlingUnit_Contract.json",
+      "supports": [
+        "Error Handling Unit invocation and operation result semantics.",
+        "Reservation-backed operation identity, publication acceptance, and recovery/custody requirements."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/OperationEntryPublisher_Contract.json",
+      "supports": [
+        "Atomic acceptance and distinct publication status/reconciliation semantics."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Contract.json",
+      "supports": [
+        "Validator Unit Validation Result per normally completed invocation.",
+        "Negative validation conclusions are domain results, not automatic invocation failures.",
+        "Step Composition aggregates accepted results into StepValidatorResult."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Contract.json",
+      "supports": [
+        "Observation activity may be call, callback, sampling, or subscription.",
+        "One activity may emit zero, one, or multiple records.",
+        "Observation Records are independent of StepExecutionResult and preserve provenance/custody."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+      "supports": [
+        "Step Composition selects and coordinates Supporting Units and owns their flow/lifecycle/result integration.",
+        "Observation output is not automatically included in StepExecutionResult.",
+        "Specialized Publisher/Reservation and Recovery Owner semantics remain authoritative."
+      ]
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/05.00_Detailed_Design_Waves/Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/06.00_Optional_Result_Contributions.json",
+      "supports": [
+        "Only Validator, Error, and Error Handler aggregates form the baseline optional Step result bundle.",
+        "Observation output remains outside the common contribution bundle."
+      ]
+    }
+  ],
+  "acceptanceCriteria": [
+    "Each pattern retains its specialized behavior, result, identity, association, lifecycle, and custody contract.",
+    "Bounded Validator Unit calls are mapped to Tasks without conflating validation conclusions with operational failure.",
+    "Error Handling operation identity, reservation, atomic publication acceptance, and Recovery Owner custody remain distinct from Prefect Task State.",
+    "Observation mapping supports the pattern's actual activity cardinality/lifetime and does not force all observation into a single Task.",
+    "The Step Error Model, Association contracts, and Lifecycle contracts are not misrepresented as executable Supporting Units.",
+    "Optional pattern dependencies remain opt-in and are not imported by baseline Core.",
+    "No universal SupportingUnit base, result schema, plugin manager, or central mediator is introduced.",
+    "All domain identities and provenance remain distinct from Prefect operational identities.",
+    "The design claims only the fixture evidence established by PHASE-01/02 and leaves production/failure qualification explicit.",
+    "No specialized source contract or production source package is modified by this artifact."
+  ],
+  "changeControl": {
+    "authority": "Wave 3 detailed design proposal. It becomes an implementation constraint only after architecture review and explicit acceptance.",
+    "sourceContractPolicy": "This artifact does not modify the nine specialized Supporting Pattern contracts, Step_Composition_Contract.json, or any result/publication contract.",
+    "implementationGate": "Do not implement pattern-specific Prefect bindings until Wave 3 and the overall Architecture Closure Design are reviewed and accepted.",
+    "nextStep": "Wave 3 detailed design is complete at the artifact level. Validate both Wave 3 files together for specialized contract preservation, binding cardinality, identity/custody mapping, and optional dependency isolation before proceeding to Wave 4."
+  }
+}

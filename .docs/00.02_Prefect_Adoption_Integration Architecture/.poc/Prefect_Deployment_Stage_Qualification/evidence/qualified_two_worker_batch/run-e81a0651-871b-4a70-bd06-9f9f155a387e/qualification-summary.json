@@ -1,0 +1,199 @@
+{
+  "runId": "run-e81a0651-871b-4a70-bd06-9f9f155a387e",
+  "pipelineInvocationIdentity": "e81a0651-871b-4a70-bd06-9f9f155a387e",
+  "rootFlowRunId": "26ed4e6d-9d86-4af7-9073-f68c9fe4125c",
+  "stageResults": [
+    {
+      "stageIdentity": "STAGE-A",
+      "stageInvocationIdentity": "103c45c4-cfe8-4e3c-90d9-6c8c7008113d",
+      "deploymentName": "gpwcf-stage-a/stage-a-worker",
+      "deploymentFlowRunId": "300bfe8b-4da6-4af1-a0a6-9a24d97505b4",
+      "deploymentParentTaskRunId": "b74eeb5c-6e33-4dac-b248-479525c1ccc8",
+      "rootDispatchTaskRunId": "01a1bca1-495d-763c-9e22-3489b0a6b314",
+      "prefectStateName": "Completed",
+      "prefectStateType": "COMPLETED",
+      "domainResult": {
+        "stageIdentity": "STAGE-A",
+        "stageInvocationIdentity": "103c45c4-cfe8-4e3c-90d9-6c8c7008113d",
+        "pipelineInvocationIdentity": "e81a0651-871b-4a70-bd06-9f9f155a387e",
+        "nativeStageFlowRunId": "300bfe8b-4da6-4af1-a0a6-9a24d97505b4",
+        "rootFlowRunId": "26ed4e6d-9d86-4af7-9073-f68c9fe4125c",
+        "stepResultCount": 2,
+        "stepResults": [
+          {
+            "processing_artifact": {
+              "normalization": {
+                "normalized": "stage-a-alpha"
+              },
+              "measurement": {
+                "characterCount": 15
+              }
+            },
+            "validator_result": null,
+            "error_result": null,
+            "error_handler_result": null
+          },
+          {
+            "processing_artifact": {
+              "normalization": {
+                "normalized": "stage-a-beta"
+              },
+              "measurement": {
+                "characterCount": 14
+              }
+            },
+            "validator_result": null,
+            "error_result": null,
+            "error_handler_result": null
+          }
+        ]
+      }
+    },
+    {
+      "stageIdentity": "STAGE-B",
+      "stageInvocationIdentity": "8f20d7b7-2df5-44e6-af16-9361125f05a7",
+      "deploymentName": "gpwcf-stage-b/stage-b-worker",
+      "deploymentFlowRunId": "932ccb84-e78f-46a8-be86-3955f36b6b26",
+      "deploymentParentTaskRunId": "bd51af9f-8180-441a-a1ae-8157672ced0e",
+      "rootDispatchTaskRunId": "01a1bca1-4966-7786-b807-d4936442edcc",
+      "prefectStateName": "Completed",
+      "prefectStateType": "COMPLETED",
+      "domainResult": {
+        "stageIdentity": "STAGE-B",
+        "stageInvocationIdentity": "8f20d7b7-2df5-44e6-af16-9361125f05a7",
+        "pipelineInvocationIdentity": "e81a0651-871b-4a70-bd06-9f9f155a387e",
+        "nativeStageFlowRunId": "932ccb84-e78f-46a8-be86-3955f36b6b26",
+        "rootFlowRunId": "26ed4e6d-9d86-4af7-9073-f68c9fe4125c",
+        "stepResultCount": 2,
+        "stepResults": [
+          {
+            "processing_artifact": {
+              "normalization": {
+                "normalized": "stage-b-alpha"
+              },
+              "measurement": {
+                "characterCount": 15
+              }
+            },
+            "validator_result": null,
+            "error_result": null,
+            "error_handler_result": null
+          },
+          {
+            "processing_artifact": {
+              "normalization": {
+                "normalized": "stage-b-beta"
+              },
+              "measurement": {
+                "characterCount": 14
+              }
+            },
+            "validator_result": null,
+            "error_result": null,
+            "error_handler_result": null
+          }
+        ]
+      }
+    }
+  ],
+  "parentLinkObservations": [
+    {
+      "stageIdentity": "STAGE-A",
+      "deploymentParentTaskRunId": "b74eeb5c-6e33-4dac-b248-479525c1ccc8",
+      "rootDispatchTaskRunId": "01a1bca1-495d-763c-9e22-3489b0a6b314",
+      "syntheticParentTaskInputs": "{'stage_identity': [], 'stage_invocation_identity': [], 'pipeline_invocation_identity': [], 'root_flow_run_id': [], 'root_dispatch_task_run_id': [], 'trace_file': [], 'stage_delay_seconds': [], '__parents__': [TaskRunResult(input_type='task_run', id=UUID('01a1bca1-495d-763c-9e22-3489b0a6b314'))]}",
+      "syntheticParentLinksRootDispatchTask": true,
+      "passed": true
+    },
+    {
+      "stageIdentity": "STAGE-B",
+      "deploymentParentTaskRunId": "bd51af9f-8180-441a-a1ae-8157672ced0e",
+      "rootDispatchTaskRunId": "01a1bca1-4966-7786-b807-d4936442edcc",
+      "syntheticParentTaskInputs": "{'stage_identity': [], 'stage_invocation_identity': [], 'pipeline_invocation_identity': [], 'root_flow_run_id': [], 'root_dispatch_task_run_id': [], 'trace_file': [], 'stage_delay_seconds': [], '__parents__': [TaskRunResult(input_type='task_run', id=UUID('01a1bca1-4966-7786-b807-d4936442edcc'))]}",
+      "syntheticParentLinksRootDispatchTask": true,
+      "passed": true
+    }
+  ],
+  "nativeHierarchyCorrelations": [
+    {
+      "stageIdentity": "STAGE-A",
+      "deploymentFlowRunId": "300bfe8b-4da6-4af1-a0a6-9a24d97505b4",
+      "deploymentParentTaskRunId": "b74eeb5c-6e33-4dac-b248-479525c1ccc8",
+      "nativeWorkerName": "gpwcf-stage-worker-01",
+      "nativeWorkPoolName": "gpwcf-phase02-stage-qualified-pool",
+      "checks": {
+        "stageFlowRunIdentityMatchesDeploymentRun": true,
+        "stageNativeParentMatchesDeploymentParentTask": true,
+        "stageRunsOnExpectedProcessWorkerPool": true,
+        "rootAndDomainInvocationCorrelationPreserved": true,
+        "stepParentCorrelationPreserved": true,
+        "stepBoundaryAndSpuNestingPreserved": true,
+        "siblingStagesAssignedToDistinctWorkers": true
+      },
+      "stepParentObservations": [
+        {
+          "stepIdentity": "STAGE-A.step-b",
+          "stepFlowRunId": "1fdc6b2a-ec59-4e97-a55e-bed447439f7a",
+          "syntheticParentTaskRunId": "a17af40d-a9a4-41f5-9867-f29abd72b94a",
+          "stepDispatchTaskRunId": "01a1bca1-c106-7e09-b855-386d403a6e0c",
+          "syntheticParentLinksStepDispatchTask": true
+        },
+        {
+          "stepIdentity": "STAGE-A.step-a",
+          "stepFlowRunId": "0630cd71-8ba1-481e-bd97-5114e46abaa6",
+          "syntheticParentTaskRunId": "c7198deb-13a5-4b86-92a0-de8b5c31554a",
+          "stepDispatchTaskRunId": "01a1bca1-c103-78d8-a144-8c3e8aff9bcb",
+          "syntheticParentLinksStepDispatchTask": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "stageIdentity": "STAGE-B",
+      "deploymentFlowRunId": "932ccb84-e78f-46a8-be86-3955f36b6b26",
+      "deploymentParentTaskRunId": "bd51af9f-8180-441a-a1ae-8157672ced0e",
+      "nativeWorkerName": "gpwcf-stage-worker-02",
+      "nativeWorkPoolName": "gpwcf-phase02-stage-qualified-pool",
+      "checks": {
+        "stageFlowRunIdentityMatchesDeploymentRun": true,
+        "stageNativeParentMatchesDeploymentParentTask": true,
+        "stageRunsOnExpectedProcessWorkerPool": true,
+        "rootAndDomainInvocationCorrelationPreserved": true,
+        "stepParentCorrelationPreserved": true,
+        "stepBoundaryAndSpuNestingPreserved": true,
+        "siblingStagesAssignedToDistinctWorkers": true
+      },
+      "stepParentObservations": [
+        {
+          "stepIdentity": "STAGE-B.step-a",
+          "stepFlowRunId": "801e51ee-8322-43e5-a8db-c25137c38b80",
+          "syntheticParentTaskRunId": "8ef7e6b2-97e4-41fc-9d4f-31c7be97bb31",
+          "stepDispatchTaskRunId": "01a1bca1-a7af-7e9c-80a8-12e4188a3d62",
+          "syntheticParentLinksStepDispatchTask": true
+        },
+        {
+          "stepIdentity": "STAGE-B.step-b",
+          "stepFlowRunId": "9d2a7f18-36f8-4dcd-91c4-2a9c331ce141",
+          "syntheticParentTaskRunId": "a947acaa-cdc5-4087-aac7-cbbc05d60e1e",
+          "stepDispatchTaskRunId": "01a1bca1-a7b3-7819-8e16-a96ccd40b0f6",
+          "syntheticParentLinksStepDispatchTask": true
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "concurrency": {
+    "siblingStageFlowsOverlap": true,
+    "overlapSeconds": 7.454667,
+    "stageIntervals": {
+      "STAGE-A": [
+        "2026-11-08T19:27:49.636829+00:00",
+        "2026-11-08T19:28:05.209170+00:00"
+      ],
+      "STAGE-B": [
+        "2026-11-08T19:27:43.159846+00:00",
+        "2026-11-08T19:27:57.091496+00:00"
+      ]
+    }
+  }
+}

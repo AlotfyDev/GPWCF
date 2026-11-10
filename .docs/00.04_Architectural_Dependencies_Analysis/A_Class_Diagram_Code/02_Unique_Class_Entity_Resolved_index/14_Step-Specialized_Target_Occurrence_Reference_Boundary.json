@@ -1,0 +1,10 @@
+{
+  "serialNumber": 14,
+  "name": "Step-Specialized Target Occurrence Reference Boundary",
+  "category": "Feature / Boundary",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/10.00_Error_Handling.json",
+  "description": "Boundary defining how the Error Handling Unit references target occurrences/resources made available by the owning Step, keeping operation attempt/execution identities and Association/target provenance distinct.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

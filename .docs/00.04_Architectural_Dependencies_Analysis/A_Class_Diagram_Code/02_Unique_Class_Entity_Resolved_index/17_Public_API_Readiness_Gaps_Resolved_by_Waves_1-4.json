@@ -1,0 +1,10 @@
+{
+  "serialNumber": 17,
+  "name": "Public API Readiness Gaps Resolved by Waves 1-4",
+  "category": "Feature / Change Control",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "Update Public API readiness gaps resolved by Waves 1-4 while retaining production integration/failure qualification gates; exact public import/export names detailed in 16.00_Public_API_Architecture.json.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

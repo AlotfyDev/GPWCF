@@ -1,0 +1,39 @@
+@startuml
+title Validator Unit Associations
+skinparam monochrome true
+skinparam roundcorner 0
+
+class "SPU Validator Unit (SPUVU)" as VU <<Component>> {
+  + validate(target scope, input)
+  + produce SPUValidatorResult
+}
+class "SPUValidatorResult" as VR <<Class>> {
+  validation conclusion
+}
+class "Validator Unit Association" as VA <<Association>> {
+  validatorUnitIdentity
+  associationTargetIdentity
+  validatorUnitAssociationIdentity
+  stepInstanceIdentity
+}
+class "SPU / Step target scope" as TS <<Entity>> {
+  target scope kind
+  concrete target instance
+}
+class "Step Composition" as SC <<Component>> {
+  + establishes/maintains associations
+  + sole authority for changes/dissociation
+}
+
+VU .. VA : participates
+VA .. TS : targets exactly one scope
+VA .. SC : established by
+VU --> VR : produces result
+SC .> VU : selects & admits into composition
+SC .> TS : target belongs to owning Step
+
+note right of VA : Association = applicability only
+Not ownership, not invocation, not result
+One VU may have multiple associations to distinct targets
+
+@enduml

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 25,
+  "name": "Serialization Failure Semantics",
+  "category": "Feature / Mapping Constraint",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+  "description": "Serialization failure semantics for result persistence/retrieval: failures are operational failures, not domain outcomes; no universal serializer, codec registry, or artifact storage service is introduced.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

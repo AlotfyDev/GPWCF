@@ -1,0 +1,648 @@
+{
+  "documentType": "GPWCFDetailedArchitectureDesign",
+  "documentId": "gpwcf.architecture-closure.wave4.publication-architecture",
+  "documentVersion": "1.0.0",
+  "status": "draft-for-architecture-review",
+  "designSequence": {
+    "wave": 4,
+    "waveName": "Generic Diagnostics, Error Handling, and Publication",
+    "artifactNumber": 3,
+    "predecessorArtifacts": [
+      "09.00_Generic_Diagnostics.json",
+      "10.00_Error_Handling.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/PublicationReservation_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/OperationEntryPublisher_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json"
+    ]
+  },
+  "purpose": "Define the architecture of the reservation-backed OperationEntryPublisher protocol, its atomic acceptance/custody boundary, the mandatory per-Step specialization proof, and its Prefect integration boundary without selecting one universal storage, allocator, synchronization, or recovery implementation.",
+  "scope": {
+    "included": [
+      "The roles and ownership boundaries of OperationEntryPublisher and PublicationReservation.",
+      "Reservation lifecycle and the one-attempt/one-entry authorization rule.",
+      "Atomic acceptance and the equivalence between reservation consumption and complete-entry retention.",
+      "No-fail ownership transfer and complete-entry capacity reservation.",
+      "Idempotent retry, status reconciliation, release preconditions, and distinct failure outcomes.",
+      "Recovery Owner and ambiguous-acceptance escrow obligations.",
+      "Identity generation, uniqueness, retention, and expiry proof required from each Step specialization.",
+      "The Single Step Publication specialization's role as a per-Step concrete policy/implementation contract.",
+      "The binding of the publication capability to Prefect execution without equating Prefect Task State with publication acceptance."
+    ],
+    "excluded": [
+      "A universal in-memory queue, database, message broker, event bus, or persistence implementation.",
+      "A universal lock-free, lock-based, transactional, or distributed synchronization algorithm.",
+      "A generic Step Transaction Manager or global Publisher service.",
+      "A universal numeric reservation/status retention duration.",
+      "A universal Recovery Owner implementation or generic escrow storage service.",
+      "Any automatic retry, compensation, error resolution, or Step flow-control policy."
+    ]
+  },
+  "governingContracts": {
+    "operationEntryPublisher": {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/OperationEntryPublisher_Contract.json",
+      "role": "Step-specific Error Handling Composition-owned invocation-scoped capability that accepts and retains complete ErrorHandlingOperationEntry values.",
+      "authoritativeDelivery": "The Publisher is the only authoritative delivery path for operation entries. The Error Handling Unit does not return a competing collection."
+    },
+    "publicationReservation": {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/PublicationReservation_Contract.json",
+      "role": "Opaque, Publisher-issued capability that authorizes one complete entry for one specific handling operation attempt and secures the resources needed for the promised handoff."
+    },
+    "singleStepSpecialization": {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json",
+      "role": "Mandatory concrete per-Step specialization when the reservation-backed publication protocol is selected. It supplies the actual entry/result representation, no-fail transfer proof, Recovery Owner/procedure, identity generation, and status retention policy.",
+      "scope": "It specializes the abstract protocol for one concrete Step. It is not a framework-wide default Publisher implementation or global policy."
+    }
+  },
+  "architecturalOptions": [
+    {
+      "optionId": "PUB-A",
+      "name": "DirectAppendWithoutReservation",
+      "description": "Let the Error Handling Unit append completed operation results directly to a collection owned by Step Composition.",
+      "advantages": [
+        "Simple implementation for a single-threaded, non-failing collection."
+      ],
+      "disadvantages": [
+        "Does not secure capacity/resources before operation execution.",
+        "A dynamically sized entry may fail during allocation or transfer after the operation has already produced a result.",
+        "Does not define an atomic custody handoff or resolve ambiguous acceptance.",
+        "Cannot satisfy the existing Publisher/Reservation guarantees."
+      ],
+      "disposition": "rejected"
+    },
+    {
+      "optionId": "PUB-B",
+      "name": "UniversalCentralPublisherService",
+      "description": "Introduce a framework-wide Publisher service, global queue, or transaction manager shared by all Steps.",
+      "advantages": [
+        "Could centralize storage and publication APIs."
+      ],
+      "disadvantages": [
+        "Creates global ownership and lifecycle responsibilities not assigned to GPWCF.",
+        "Conflates Step-specific entry/result types and target scopes.",
+        "Introduces cross-Step contention, global identity, and recovery semantics without a generic contract.",
+        "Violates the invocation-scoped, Step-owned Publisher capability model."
+      ],
+      "disposition": "rejected"
+    },
+    {
+      "optionId": "PUB-C",
+      "name": "ReservationBackedStepOwnedPublisher",
+      "description": "Use an invocation-scoped Publisher owned by the concrete Step's Error Handling Composition. It grants a one-entry reservation before operation execution and atomically accepts the complete prepared entry.",
+      "advantages": [
+        "Makes capacity/resource commitment precede operation execution.",
+        "Defines one atomic acceptance and custody-transfer point.",
+        "Supports idempotent retry and authoritative status reconciliation.",
+        "Keeps concrete storage/transfer/recovery policy with the Step specialization.",
+        "Avoids a global Publisher or generic transaction manager."
+      ],
+      "disadvantages": [
+        "Requires a concrete no-fail transfer proof and Recovery Owner for each Step specialization.",
+        "Requires explicit retention/expiry and identity-generation policies."
+      ],
+      "disposition": "recommended-and-governed-by-existing-contracts"
+    }
+  ],
+  "selectedDesign": {
+    "decision": "Retain the existing reservation-backed, Step-owned OperationEntryPublisher protocol as the generic contract. Treat Single_Step_Publication_Specialization_Contract as a mandatory per-Step proof/implementation specialization whenever the protocol is selected.",
+    "ownership": {
+      "publisherOwner": "Step-specific Error Handling Composition.",
+      "publisherUser": "The Error Handling Unit for one exact invocation and Association.",
+      "reservationIssuer": "The concrete Publisher instance owned by the Step-specific Error Handling Composition.",
+      "reservationHolder": "The Error Handling Unit that obtained the grant, subject to the exact capability transfer rules of the Step specialization.",
+      "acceptedEntryCustodian": "Publisher/Step-specific Error Handling Composition after atomic acceptance.",
+      "preAcceptanceCustodian": "The Error Handling Unit or the explicitly designated Step Recovery Owner, according to the exact custody-transfer point.",
+      "recoveryOwner": "A named concrete Step-owned component/object defined by the Single Step Publication specialization; never an implicit local variable or the failed Publisher itself."
+    },
+    "publisherCapability": {
+      "type": "OperationEntryPublisher[THandlingOperationResult]",
+      "scope": "One Error Handling Unit invocation bound to one Step instance, Unit instance, Association, and association target.",
+      "bindingFields": [
+        "publisherIdentity",
+        "stepInstanceIdentity",
+        "errorHandlingInvocationIdentity",
+        "errorHandlingUnitIdentity",
+        "errorHandlingUnitAssociationIdentity",
+        "associationTargetIdentity"
+      ],
+      "lifetime": "The capability is valid only for the invocation/Association scope defined by the Step specialization. It must not be retained, transferred to another Unit/Association, or reused by a later invocation.",
+      "nonResponsibilities": [
+        "Does not select or execute handling operations.",
+        "Does not schedule or serialize operation execution.",
+        "Does not define Step flow policy.",
+        "Does not own the Error Handling Unit instance.",
+        "Does not own or mutate source Error Occurrences or ErrorResult.",
+        "Does not automatically resolve errors."
+      ]
+    },
+    "reservationContract": {
+      "type": "PublicationReservation[THandlingOperationResult]",
+      "meaning": "Opaque, Publisher-issued capability authorizing one complete entry for one specific handlingOperationAttemptIdentity.",
+      "requiredBindings": [
+        "publisherIdentity",
+        "stepInstanceIdentity",
+        "errorHandlingInvocationIdentity",
+        "errorHandlingUnitIdentity",
+        "errorHandlingUnitAssociationIdentity",
+        "associationTargetIdentity",
+        "handlingOperationAttemptIdentity",
+        "publicationReservationIdentity"
+      ],
+      "capacityGuarantee": "A successful grant secures the complete-entry retention capacity and all Publisher-controlled resources required for the promised final handoff. Reserving only a collection slot is insufficient when payload/entry construction or transfer may still allocate or fail.",
+      "oneEntryRule": "One reservation authorizes exactly one complete logical ErrorHandlingOperationEntry for its bound operation attempt.",
+      "capabilityRule": "The reservation is opaque and non-forgeable under the concrete Step representation. It cannot be used with another Publisher, invocation, Unit, Association, target, or operation attempt.",
+      "preExecutionRule": "The Error Handling Unit must obtain a valid grant before starting the corresponding handling operation.",
+      "noImplicitRelease": "Normal return, exception, cancellation, or invocation closure does not implicitly release a reservation."
+    },
+    "reservationLifecycle": {
+      "validStates": [
+        {
+          "state": "Reserved",
+          "meaning": "The Publisher has granted the reservation and secured its promised capacity/resources. No entry has yet been accepted."
+        },
+        {
+          "state": "Consumed",
+          "meaning": "The matching complete entry has been atomically accepted and retained by the Publisher/Composition."
+        },
+        {
+          "state": "Released",
+          "meaning": "The reservation has been released without accepting an entry; its reserved capacity/resources are no longer held."
+        }
+      ],
+      "stateTransitions": [
+        {
+          "from": "Unissued",
+          "to": "Reserved",
+          "cause": "A valid reserve request receives ReservationGrant."
+        },
+        {
+          "from": "Reserved",
+          "to": "Consumed",
+          "cause": "The matching complete entry is atomically accepted and retained."
+        },
+        {
+          "from": "Reserved",
+          "to": "Released",
+          "cause": "The Unit releases the unused reservation after establishing that no result is pending publication, or after an explicit permitted custody transfer."
+        }
+      ],
+      "terminality": "Consumed and Released are terminal reservation lifecycle states. A reservation cannot transition from Consumed to Released or from Released to Consumed.",
+      "queryOutcomesNotStates": [
+        "Unknown",
+        "Indeterminate",
+        "Unavailable",
+        "InvalidCapability",
+        "Expired"
+      ],
+      "queryOutcomeRule": "Unknown, Indeterminate, Unavailable, InvalidCapability, and Expired are status-query outcomes, not additional reservation lifecycle states. A failed status query must not be mapped to Reserved, Released, Rejected, or definitely-not-accepted.",
+      "retryRule": "Reserved permits retry of the same logical immutable entry under the same reservation, subject to the Step recovery policy. Consumed proves acceptance and prohibits a second distinct entry. Released proves no entry was accepted under that reservation."
+    },
+    "publicationOperations": {
+      "reserve": {
+        "conceptualSignature": "reserve(handlingOperationAttemptIdentity) -> ReservationGrant",
+        "preconditions": [
+          "Invocation is open for new reservations.",
+          "Caller is the Unit bound to this Publisher capability.",
+          "Attempt identity is new within its required scope.",
+          "Exact Unit/Association/target binding remains valid.",
+          "Publisher can secure all promised complete-entry resources."
+        ],
+        "rejection": "A normal rejection means no reservation was granted, no operation may begin under that attempt, and a later attempt requires a new handlingOperationAttemptIdentity."
+      },
+      "publish": {
+        "conceptualSignature": "publish(reservation: PublicationReservation[THandlingOperationResult], entry: ErrorHandlingOperationEntry[THandlingOperationResult]) -> PublicationAcknowledgement",
+        "preconditions": [
+          "Reservation is valid and Reserved, or the request is an idempotent retry of the same already accepted logical entry.",
+          "Entry handlingOperationAttemptIdentity matches the reservation.",
+          "Entry contains the actual handlingOperationIdentity assigned after grant and before execution.",
+          "Entry Step, Unit, Association, target, and invocation provenance exactly match the reservation binding.",
+          "Entry is fully prepared in the Step-specialized transfer representation before publish."
+        ],
+        "normalOutcomes": [
+          {
+            "outcome": "PublicationAccepted",
+            "meaning": "The complete entry is retained; reservation is Consumed; ownership transfers to Publisher/Composition."
+          },
+          {
+            "outcome": "PublicationRejection",
+            "meaning": "Preconditions are not satisfied; no new entry was accepted and no ownership transfer occurred."
+          },
+          {
+            "outcome": "PublisherContractViolation",
+            "meaning": "The Publisher breached a guarantee of a valid granted reservation or exposed an inconsistent acceptance state. It is not an ordinary rejection."
+          }
+        ],
+        "idempotency": "Repeating publish with the same reservation and same logical entry returns acknowledgement for the original acceptance without duplicate retention. Reusing a consumed reservation with different entry content is a conflict and must never be accepted.",
+        "noPartialAcceptance": "The Publisher must not expose partial entry content or consume the reservation without retaining the complete entry."
+      },
+      "getPublicationStatus": {
+        "conceptualSignature": "get_publication_status(reservation: PublicationReservation[THandlingOperationResult]) -> PublicationStatus",
+        "purpose": "Resolve ambiguous publish outcomes, including lost acknowledgements and exceptions after the request may have crossed the acceptance point.",
+        "rules": [
+          "Status lookup is scoped to the exact issuing Publisher and reservation.",
+          "Consumed means the matching entry was accepted; do not republish as a new logical entry.",
+          "Reserved means the entry was not accepted and the same reservation may be used for the same logical entry under the Step recovery policy.",
+          "Released means no entry was accepted; a produced pending result with Released is a contract violation.",
+          "Query failure/Unavailable/Indeterminate leaves acceptance knowledge unresolved; preserve the complete result and reservation evidence."
+        ]
+      },
+      "release": {
+        "conceptualSignature": "release(reservation: PublicationReservation[THandlingOperationResult]) -> ReleaseAcknowledgement",
+        "preconditions": [
+          "Reservation is valid and Reserved.",
+          "No operation result requiring publication is pending.",
+          "No prepared entry awaits acceptance.",
+          "If a result was produced, its complete custody has first been explicitly transferred to the named Recovery Owner/alternative owner under the Step specialization."
+        ],
+        "rule": "The Publisher does not infer release from normal return, exception, cancellation, or invocation closure."
+      }
+    },
+    "atomicAcceptance": {
+      "definition": "One indivisible logical Publisher transition in which the complete matching entry becomes retained and its reservation becomes Consumed.",
+      "linearizationPoint": "The exact logical instant at which both complete-entry retention and reservation consumption become externally true.",
+      "equivalence": "Reservation.Consumed if and only if the matching complete entry has been accepted and the Publisher/Composition has assumed retention responsibility.",
+      "beforeAcceptance": [
+        "Entry is not in the accepted-entry set.",
+        "Reservation remains Reserved.",
+        "Unit or Recovery Owner retains the complete recoverable result/entry.",
+        "No acknowledgement may claim acceptance."
+      ],
+      "afterAcceptance": [
+        "Complete entry is retained by Publisher/Composition.",
+        "Reservation is Consumed and cannot authorize a different entry.",
+        "Publisher/Composition owns retention responsibility.",
+        "Later Unit exception or loss of acknowledgement does not revoke acceptance."
+      ],
+      "implementationFreedom": "A concrete implementation may use locks, preallocated slots, owning handles, a durable store, or another mechanism. It must expose behavior equivalent to one atomic transition and satisfy the no-fail transfer proof.",
+      "noFailTransferRequirement": [
+        "All fallible result and entry construction occurs before publish.",
+        "The reserved resource covers the complete dynamically sized payload and all required metadata, not merely one collection slot.",
+        "The final transfer must not allocate, serialize, convert, clone, deep-copy, or invoke arbitrary user code.",
+        "The final ownership handoff must be guaranteed non-throwing by the concrete Step-specialized type/resource contract.",
+        "A preallocated owning entry envelope or pre-created owning handle may be used if its transfer is proven non-throwing.",
+        "A potentially throwing move is not considered safe without a concrete type-level guarantee."
+      ]
+    },
+    "custodyAndRecovery": {
+      "custodyPhases": [
+        {
+          "phase": "BeforeResultProduction",
+          "custodian": "Error Handling Unit owns its execution resources; no operation result exists."
+        },
+        {
+          "phase": "ResultProducedBeforeAcceptance",
+          "custodian": "Error Handling Unit retains the complete result and prepared entry."
+        },
+        {
+          "phase": "ExplicitRecoveryTransfer",
+          "custodian": "Named Step Recovery Owner accepts the complete result/entry through a verifiable transfer before Unit unwinding/release."
+        },
+        {
+          "phase": "AtomicAcceptance",
+          "custodian": "Publisher/Step-specific Composition assumes retention responsibility."
+        },
+        {
+          "phase": "AcceptanceIndeterminate",
+          "custodian": "Named Recovery Owner/escrow retains a complete recoverable representation while acceptance knowledge remains indeterminate; it is marked non-publishable and must not be aggregated as accepted."
+        },
+        {
+          "phase": "AfterAggregation",
+          "custodian": "Step-specific Error Handling Composition/aggregate owner retains the accepted entry through ErrorHandlerResult and StepExecutionResult retention."
+        }
+      ],
+      "mandatoryRecoveryOwner": "Every Step specialization using this protocol names a concrete Step-owned Recovery Owner, with identity, lifetime, storage/custody capability, and explicit transfer/reconciliation procedures. The failed Publisher itself is not the sole Recovery Owner for a Publisher Contract Violation.",
+      "ambiguousAcceptanceProcedure": [
+        "Freeze the affected attempt; do not execute a replacement operation for the same logical attempt.",
+        "Preserve the complete result and prepared entry under Unit custody or transfer them to the Recovery Owner before exception unwinding or resource release.",
+        "Query authoritative Publisher status when safely available.",
+        "If Consumed, reconcile the original accepted entry and do not publish a duplicate.",
+        "If Reserved and Publisher guarantees remain trustworthy, retry only the same immutable entry under the same reservation.",
+        "If Released while a produced result is pending, classify a Publisher Contract Violation and retain the result under the Recovery Owner.",
+        "If acceptance remains Indeterminate/Unavailable, retain the complete result in escrow, prohibit a second publication/operation attempt, and follow the Step-specific reconciliation/escalation policy.",
+        "The escrow is not an accepted ErrorHandlingOperationEntry and must not be counted in ErrorHandlerResult.",
+        "Record final custody as Publisher accepted, Recovery Owner retained, explicitly transferred, or unresolved/escalated."
+      ],
+      "publisherContractViolationMinimumEvidence": [
+        "Violation identity and stable producer-owned code/category.",
+        "Publisher, invocation, reservation, Unit, attempt, and operation identities when known.",
+        "The protocol phase and violated guarantee/invariant.",
+        "Acceptance knowledge: definitely-not-accepted, definitely-accepted, or indeterminate.",
+        "Current result custodian or explicit custody-unresolved state.",
+        "Recovery Owner/reference and recovery status.",
+        "Optional typed Diagnostic evidence; diagnostics do not replace any of the preceding facts."
+      ],
+      "prohibitedRecoveryShortcuts": [
+        "Discarding a result because publish threw or returned no acknowledgement.",
+        "Treating status-query failure as proof of non-acceptance.",
+        "Releasing a reservation while a result is pending without explicit custody transfer.",
+        "Starting a replacement operation attempt while acceptance is indeterminate.",
+        "Publishing the same logical result to an alternate sink without deduplication and explicit ownership/aggregation rules.",
+        "Aggregating an escrow record as if it were an accepted entry."
+      ]
+    },
+    "identityAndRetention": {
+      "requiredIdentities": [
+        "publisherIdentity",
+        "errorHandlingInvocationIdentity",
+        "errorHandlingUnitIdentity",
+        "errorHandlingUnitAssociationIdentity",
+        "associationTargetIdentity",
+        "handlingOperationAttemptIdentity",
+        "handlingOperationIdentity",
+        "publicationReservationIdentity",
+        "acceptedEntryIdentity",
+        "stepInstanceIdentity"
+      ],
+      "identityRules": [
+        "Every identity has a documented issuer, representation, uniqueness scope, stability, reuse/retirement, and replacement behavior.",
+        "handlingOperationAttemptIdentity is allocated before reserve and does not assert that operation execution started.",
+        "handlingOperationIdentity is allocated only after a valid reservation grant and before actual operation start.",
+        "A new actual execution receives a new handlingOperationIdentity.",
+        "An idempotent retry uses the same reservation and same immutable logical entry/acceptedEntryIdentity.",
+        "Identity values are not reused while any reservation, acknowledgement, status record, recovery record, accepted entry, or aggregate may still refer to them.",
+        "Publisher replacement receives a distinct publisherIdentity while prior records remain observable.",
+        "Native Prefect IDs are never substituted for any domain publication identity."
+      ],
+      "statusRetention": {
+        "owner": "Concrete Step specialization.",
+        "mustDefine": [
+          "Retention/expiry for Reserved, Consumed, and Released status records.",
+          "Minimum status-query/idempotent-retry horizon after Unit invocation closure.",
+          "Retention through ErrorHandlerResult collection and StepExecutionResult integration.",
+          "How the Step proves no retry/status observer remains before terminal record reclamation.",
+          "Whether tombstones remain to prevent stale identity reuse/duplicate acceptance.",
+          "Unresolved/indeterminate escrow retention and escalation horizon.",
+          "Late query and stale capability behavior after expiry."
+        ],
+        "minimumRules": [
+          "Do not remove status while acceptance is indeterminate or result custody is unresolved.",
+          "Consumed remains queryable until accepted-entry aggregation and all permitted retry observers are complete.",
+          "Released remains distinguishable from Unknown/Expired for the Step-defined late-request window.",
+          "Expired is never mapped to definitely-not-accepted.",
+          "Reclaimed identity values are not reused if stale references may still be observed."
+        ]
+      },
+      "noUniversalRetentionNumber": "No numeric retention duration is prescribed across all Steps. Each Single Step Publication specialization chooses and justifies its concrete retention policy."
+    },
+    "concurrencyAndOrdering": {
+      "reserveAtomicity": "Concurrent reserve calls must be coordinated so granted reservations cannot collectively exceed the concrete Publisher's available complete-entry retention capacity.",
+      "publishAtomicity": "Concurrent publish calls must preserve one-entry-per-reservation and the atomic acceptance invariant.",
+      "sameReservation": "Concurrent/repeated publish calls for one reservation and the same logical entry converge on one acceptance and one retained entry.",
+      "conflictingEntry": "A different entry under an already consumed reservation is rejected as conflict/contract violation and is never accepted.",
+      "ordering": "The Publisher guarantees the ordering explicitly stated by the concrete Step specialization. It does not impose semantic operation order or Step flow order.",
+      "sequenceNumber": "If the concrete Publisher exposes a publication sequence, its monotonicity, scope, overflow, restart, and persistence behavior are defined by that specialization.",
+      "concurrencyPolicy": "No universal lock, lock-free algorithm, queue, or concurrency count is mandated."
+    }
+  },
+  "singleStepPublicationSpecialization": {
+    "mandatoryWhenSelected": true,
+    "owner": "Each concrete Step specialization that uses the reservation-backed Error Handling publication protocol.",
+    "notAUniversalImplementation": "The specialization is a per-Step contract proving that the abstract protocol can be safely realized for the Step's actual THandlingOperationResult, entry type, concurrency, storage, and lifecycle. It is not a generic global Publisher implementation.",
+    "requiredProofSections": [
+      "Concrete THandlingOperationResult and complete ErrorHandlingOperationEntry representation.",
+      "Publisher identity and capability binding.",
+      "PublicationReservation concrete representation and one-entry capacity guarantee.",
+      "Reserve/publish/status/release result and exception types.",
+      "No-fail final ownership-transfer primitive and proof that all fallible work occurs before acceptance.",
+      "Recovery Owner identity, storage/lifetime, custody-transfer operation, and ambiguous-acceptance escrow.",
+      "Identity issuer/representation/uniqueness/stability/reuse/retirement for all protocol identities.",
+      "Publisher status retention/expiry and late-query behavior.",
+      "Concurrency, ordering, duplicate/conflict, and idempotent retry behavior.",
+      "End-to-end traces for all mandatory normal, rejection, exception, contract-violation, and indeterminate-acceptance branches.",
+      "ErrorHandlerResult collection and StepExecutionResult integration proof."
+    ],
+    "acceptanceRule": "A Step specialization is not qualified to use the publication protocol until every required proof section is concrete and all mandatory branches end in a known custodian or an explicitly represented unresolved/escalated state."
+  },
+  "prefectIntegrationBoundary": {
+    "selectedRuntime": "Prefect 3.9.2 (accepted initial external workflow runtime)",
+    "executionPlacement": "The Error Handling Unit invocation/operation may be wrapped in a Prefect Task inside the owning Step Subworkflow. The Publisher remains owned by the Step-specific Error Handling Composition.",
+    "capabilityBindingOptions": [
+      {
+        "option": "InProcessInvocationCapability",
+        "description": "Pass or close over an invocation-scoped Publisher capability when the Unit Task and owning Step Composition share the same process/address space and the Prefect task execution path does not require unsupported serialization of the capability.",
+        "qualification": "Must be proven for the selected TaskRunner and result-persistence profile; not assumed merely because tasks belong to the same Flow."
+      },
+      {
+        "option": "ExplicitProcessLocalHandle",
+        "description": "Pass a typed invocation-bound handle/reference that resolves to the exact Step-owned Publisher capability within the same worker process.",
+        "qualification": "Must not be backed by a global mutable registry or permit cross-invocation/Association lookup. Its lifecycle and resolution scope are explicit."
+      },
+      {
+        "option": "SpecializedInterprocessPublisherCapability",
+        "description": "Use an explicit IPC or service-backed capability only when the Unit operation executes in a different process/host from the owning Publisher.",
+        "qualification": "Requires a separately designed protocol preserving atomic acceptance, reservation, no-fail transfer or durable handoff, status reconciliation, identity, and recovery semantics. PHASE-02 does not qualify this mechanism."
+      }
+    ],
+    "integrationRules": [
+      "The Prefect Task Run ID is operational evidence and does not replace publisherIdentity, invocationIdentity, reservationIdentity, attemptIdentity, operationIdentity, or acceptedEntryIdentity.",
+      "Prefect Task COMPLETED does not prove publication acceptance.",
+      "Prefect Task FAILED/CANCELLED does not prove publication rejection or non-acceptance.",
+      "A returned PublicationAccepted acknowledgement proves the Publisher's atomic acceptance according to the specialized protocol, independent of the later Task State.",
+      "If the Task fails after publish may have crossed the acceptance point, the Step recovery procedure queries Publisher status and preserves custody.",
+      "The Prefect integration must not serialize an in-process capability object across a process boundary unless the concrete capability/serializer contract explicitly supports it.",
+      "No generic Publisher server, transaction service, or remote registry is introduced by the Prefect integration."
+    ],
+    "qualificationLimits": [
+      "PHASE-01/02 did not implement or qualify the production OperationEntryPublisher/PublicationReservation protocol.",
+      "No evidence establishes serialization/transport of Publisher capabilities across Prefect process workers.",
+      "No evidence establishes atomic acceptance, no-fail transfer, or escrow recovery under worker loss.",
+      "No multi-host Publisher/storage profile is qualified.",
+      "Production Error Handling Unit functional binding remains unqualified."
+    ]
+  },
+  "dependencyAndPackageAllocation": {
+    "logicalModule": "MOD-CORE-SUPPORT-EH",
+    "canonicalPackage": "core.supporting_patterns.error_handling.publication",
+    "contractTypes": [
+      "OperationEntryPublisher",
+      "PublicationReservation[THandlingOperationResult]",
+      "ReservationGrant",
+      "PublicationAcknowledgement",
+      "PublicationStatus",
+      "ReleaseAcknowledgement",
+      "PublisherContractViolation contract surface"
+    ],
+    "implementationOwnership": "Concrete Publisher/Reservation implementation and Recovery Owner are Step-specific specialization/deployment concerns; the generic contract package does not supply one universal implementation.",
+    "prefectAllocation": "Any Prefect capability wrapper or native Task binding is under integrations.prefect and depends inward on the generic and specialized publication contracts.",
+    "forbiddenPackages": [
+      "core.publication_runtime",
+      "core.transaction_manager",
+      "core.global_publisher",
+      "core.shared_contracts as a catch-all",
+      "a universal persistence/queue/event-bus service"
+    ]
+  },
+  "requiredGoverningContractChanges": [
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/OperationEntryPublisher_Contract.json",
+      "change": "No semantic change to the abstract protocol is proposed. Add an integration note that a Publisher capability may cross a Prefect Task boundary only through a proven in-process or specialized interprocess binding preserving invocation scope and atomic acceptance.",
+      "reason": "The current contract defines domain protocol semantics but does not prove how a capability is transported through the selected external runtime.",
+      "changeType": "integration-boundary-clarification",
+      "approval": "Requires architecture acceptance before source contract editing."
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json",
+      "change": "No semantic weakening or generic default is proposed. Ensure each concrete Step specialization completes all no-fail transfer, Recovery Owner/escrow, identity-generation, status-retention, and mandatory branch-trace proof sections before implementation qualification.",
+      "reason": "The specialization is the proof obligation that makes the abstract protocol implementable for actual result types and resources.",
+      "changeType": "conformance-proof-completion",
+      "approval": "Requires explicit Step-specific approval."
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Framework_Module_Boundary_Model.json",
+      "change": "Keep Publisher/Reservation protocol contracts within optional MOD-CORE-SUPPORT-EH; do not create a mandatory global publication module.",
+      "reason": "Publication is part of the selected optional Error Handling capability and is Step-owned.",
+      "changeType": "module-boundary-clarification",
+      "approval": "Required during governing-artifact reconciliation."
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Filesystem_Architecture.json",
+      "change": "Allocate publication protocol contracts under core.supporting_patterns.error_handling.publication and Prefect capability bindings under integrations.prefect.",
+      "reason": "Separates generic protocol contracts, Step-specific implementations, and runtime binding.",
+      "changeType": "filesystem-allocation-clarification",
+      "approval": "Required during governing-artifact reconciliation."
+    }
+  ],
+  "conformanceRequirements": [
+    {
+      "id": "PUB-001",
+      "requirement": "The Publisher is owned by the Step-specific Error Handling Composition and is invocation/Association scoped."
+    },
+    {
+      "id": "PUB-002",
+      "requirement": "A valid reservation is granted before the corresponding handling operation begins."
+    },
+    {
+      "id": "PUB-003",
+      "requirement": "One reservation authorizes one complete entry for one attempt identity only."
+    },
+    {
+      "id": "PUB-004",
+      "requirement": "A grant secures complete-entry capacity and all resources required for the promised handoff."
+    },
+    {
+      "id": "PUB-005",
+      "requirement": "The complete entry is prepared before publish and the final ownership transfer is proven non-throwing by the Step specialization."
+    },
+    {
+      "id": "PUB-006",
+      "requirement": "Atomic acceptance is one indivisible transition in which the complete entry is retained and the reservation becomes Consumed."
+    },
+    {
+      "id": "PUB-007",
+      "requirement": "Reservation.Consumed if and only if the matching complete entry has been accepted and retained."
+    },
+    {
+      "id": "PUB-008",
+      "requirement": "Same-reservation/same-entry retry is idempotent; same-reservation/different-entry reuse is never accepted."
+    },
+    {
+      "id": "PUB-009",
+      "requirement": "Status query outcomes such as Unknown, Indeterminate, Unavailable, InvalidCapability, and Expired are not reservation lifecycle states."
+    },
+    {
+      "id": "PUB-010",
+      "requirement": "Status-query failure does not prove non-acceptance and does not authorize result disposal or a replacement operation attempt."
+    },
+    {
+      "id": "PUB-011",
+      "requirement": "A reservation is released only when no result is pending or after explicit verifiable custody transfer under the Step specialization."
+    },
+    {
+      "id": "PUB-012",
+      "requirement": "Every Step using the protocol names a concrete Recovery Owner and defines ambiguous-acceptance escrow/reconciliation."
+    },
+    {
+      "id": "PUB-013",
+      "requirement": "Every publication identity has explicit issuer, representation, uniqueness, stability, reuse, and retirement rules."
+    },
+    {
+      "id": "PUB-014",
+      "requirement": "Publisher status retention supports all permitted retries, reconciliation, aggregation, and late queries."
+    },
+    {
+      "id": "PUB-015",
+      "requirement": "Prefect State and Task Run IDs remain operational evidence and do not substitute for publication acceptance or domain identities."
+    },
+    {
+      "id": "PUB-016",
+      "requirement": "No universal Publisher implementation, transaction manager, queue, database, or recovery service is introduced."
+    }
+  ],
+  "traceability": [
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/OperationEntryPublisher_Contract.json",
+      "supports": [
+        "Invocation-scoped Publisher ownership and binding.",
+        "Reservation before operation execution.",
+        "One reservation/one entry, idempotent retry, atomic acceptance, and status reconciliation.",
+        "Publisher Contract Violation distinct from PublicationRejection.",
+        "Accepted-entry retention and Publisher/Composition custody."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/PublicationReservation_Contract.json",
+      "supports": [
+        "Opaque reservation identity, capacity guarantee, one-attempt binding, and Reserved/Consumed/Released lifecycle.",
+        "Query outcomes distinct from lifecycle states.",
+        "Release preconditions and no implicit release."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json",
+      "supports": [
+        "Mandatory per-Step no-fail transfer proof.",
+        "Explicit Recovery Owner and ambiguous-acceptance escrow.",
+        "Identity generation and status retention obligations.",
+        "Mandatory end-to-end protocol branch traces."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlingUnit_Contract.json",
+      "supports": [
+        "The Unit publishes each produced operation result through the invocation-bound Publisher.",
+        "The Unit does not return a competing collection of entries.",
+        "The Unit retains the result before acceptance and Publisher owns it after acceptance."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Lifecycle_Contract.json",
+      "supports": [
+        "Quiescence requires all reservations/results to be consumed, released, or transferred to Recovery Owner.",
+        "Accepted entries remain independent of Unit lifetime."
+      ]
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/05.00_Detailed_Design_Waves/Wave4_Generic_Diagnostics_Error_Handling_Publication/10.00_Error_Handling.json",
+      "supports": [
+        "Error Handling remains optional and Step-owned.",
+        "Publication is a specialized capability and does not imply error resolution.",
+        "ErrorHandlerResult aggregates accepted entries only."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Topology_Decision_Record.json",
+      "supports": [
+        "The qualified deployment profile uses separate Stage Process Workers and Step/SPU execution within the Stage worker context.",
+        "Production Publisher capability transport and multi-host publication are not qualified."
+      ]
+    }
+  ],
+  "acceptanceCriteria": [
+    "The generic reservation/publication protocol remains Step-owned and optional with Error Handling.",
+    "Atomic acceptance and custody transfer have one unambiguous linearization point.",
+    "The reservation guarantees complete-entry resources before operation execution.",
+    "The final ownership handoff is proven non-throwing by every concrete Step specialization.",
+    "All normal, rejected, exceptional, idempotent, conflict, contract-violation, and indeterminate-acceptance paths preserve result custody.",
+    "Every concrete Step names a Recovery Owner and defines escrow/reconciliation and status retention.",
+    "Identity generation/reuse rules prevent stale references and duplicate acceptance.",
+    "The Prefect integration does not equate Task State with publication acceptance and does not serialize an unsupported capability across process boundaries.",
+    "No universal Publisher implementation, queue, database, transaction manager, or recovery service is introduced.",
+    "The design remains within the PHASE-01/02 qualification boundary and does not claim production publication binding is qualified.",
+    "No specialized source contract is modified by this artifact."
+  ],
+  "changeControl": {
+    "authority": "Wave 4 detailed design proposal. It becomes an implementation constraint only after architecture review and explicit acceptance.",
+    "sourceContractPolicy": "The existing OperationEntryPublisher_Contract.json, PublicationReservation_Contract.json, and Single_Step_Publication_Specialization_Contract.json remain unchanged until their integration clarifications and concrete Step proof are approved.",
+    "implementationGate": "Do not implement a Publisher or Reservation mechanism until the owning Step specialization has completed and passed the no-fail transfer, Recovery Owner, identity, retention, and end-to-end branch proof.",
+    "nextStep": "Validate all three Wave 4 files together for Diagnostic/Error/Failure/Outcome separation, optional Error Handling ownership, and publication custody invariants before proceeding to Wave 5."
+  }
+}

@@ -1,0 +1,510 @@
+{
+  "documentType": "GPWCFDetailedArchitectureDesign",
+  "documentId": "gpwcf.architecture-closure.wave1.stage-callable",
+  "documentVersion": "1.0.0",
+  "status": "draft-for-architecture-review",
+  "designSequence": {
+    "wave": 1,
+    "waveName": "Stage Callable, Stage Result, Pipeline Invocation",
+    "artifactNumber": 1,
+    "nextArtifacts": [
+      "02.00_Stage_Result.json",
+      "03.00_Pipeline_Invocation.json"
+    ],
+    "predecessorArtifacts": [
+      ".docs/03.00_GPWCF_Structure_Architecture/Framework_Module_Boundary_Model.json",
+      ".docs/03.00_GPWCF_Structure_Architecture/Filesystem_Architecture.json",
+      ".docs/03.00_GPWCF_Structure_Architecture/Dependency_and_Public_API_Architecture.json",
+      ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/01.00_Architectural_Goals.md",
+      ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/02.00_Determined_Gaps_And_Candidate_Architectural_Solutions/F-08_Stage_Callable_Contract_And _Prefect_Binding.md",
+      ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/02.00_Determined_Gaps_And_Candidate_Architectural_Solutions/F-06_Stage_Flow_Result.md"
+    ]
+  },
+  "purpose": "Define the framework-owned, workflow-runtime-independent callable boundary of a GPWCF Stage. The contract makes a concrete Stage invocable as one bounded functional unit by a consuming workflow or by a native external workflow element, while preserving Stage ownership of its internal Step composition and Stage-specific flow semantics.",
+  "scope": {
+    "included": [
+      "The semantic meaning and responsibility of the Stage callable boundary.",
+      "The minimum invocation information required to invoke a concrete Stage.",
+      "The separation of Stage identity, Stage invocation identity, caller correlation identity, and external runtime identities.",
+      "The Stage input, execution-context, output, flow-result, and outcome typing boundaries.",
+      "Invocation acceptance, completion, returned-result, and thrown-exception distinctions.",
+      "The functional binding obligations imposed on an external workflow integration.",
+      "The relationship between Stage Aggregate, Stage Composition, and the Stage callable boundary.",
+      "The Stage-facing public API obligations and conformance requirements."
+    ],
+    "excluded": [
+      "Pipeline Root Entity, Pipeline Root Composition, or a generic GPWCF pipeline orchestration runtime.",
+      "A scheduler, dispatcher, worker manager, workflow graph executor, universal adapter, plugin manager, or runtime registry.",
+      "The internal topology or execution implementation of a Stage's Steps.",
+      "A universal schema for concrete Stage inputs, outputs, Stage Flow Results, or Stage-specific outcome classifications.",
+      "A universal Stage lifecycle manager or a cross-Stage lifecycle policy.",
+      "Prefect types, imports, decorators, Flow/Deployment objects, State values, or native identifiers in Core.",
+      "A universal failure, retry, timeout, cancellation, recovery, or compensation policy."
+    ]
+  },
+  "governingArchitecture": {
+    "entityAndAggregateOwnership": "Stage is the domain Entity/Aggregate that owns its Stage-specific Step membership, Stage Composition, flow semantics, transition meanings, and Stage Flow Result assembly. The callable contract is the public invocation boundary of that Stage; it does not transfer those responsibilities to the caller or external runtime.",
+    "compositionOwnership": "Stage Composition remains owned by the Stage Aggregate. It coordinates Step invocations only through each Step's public Stage-facing callable contract. A Stage must not bypass a Step boundary by directly invoking that Step's SPUs or Supporting Units.",
+    "externalExecutionAuthority": "The selected external workflow framework owns native workflow execution, scheduling, dispatch, and native hierarchy. GPWCF defines the Stage behavior and invocation/result semantics that the integration must preserve.",
+    "functionalBindingPrinciple": "Functional binding is mandatory for an integration claiming to execute a GPWCF Stage. The mechanism used to represent the relationship in the external runtime is selected according to its actual semantics; Association is not a universal prerequisite.",
+    "runtimeIndependence": "The Core Stage callable contract must be usable and importable without Prefect or any other external workflow runtime."
+  },
+  "architecturalOptions": [
+    {
+      "optionId": "STAGE-CALLABLE-A",
+      "name": "PlainCallable",
+      "description": "Represent a Stage as an unconstrained Python callable accepting arbitrary arguments and returning an arbitrary value.",
+      "advantages": [
+        "Minimal implementation surface.",
+        "Easy to wrap with most workflow runtimes."
+      ],
+      "disadvantages": [
+        "Does not establish Stage identity or invocation identity.",
+        "Does not define a stable invocation context or correlation boundary.",
+        "Does not distinguish Stage outputs from Stage Flow Result or runtime state.",
+        "Cannot express the required Stage Aggregate and composition obligations."
+      ],
+      "disposition": "rejected"
+    },
+    {
+      "optionId": "STAGE-CALLABLE-B",
+      "name": "RuntimeSpecificCallable",
+      "description": "Make a native workflow-runtime object, such as a Prefect Flow, the Stage callable contract.",
+      "advantages": [
+        "Direct access to native runtime capabilities."
+      ],
+      "disadvantages": [
+        "Couples Core contracts and consumer Stage implementations to Prefect.",
+        "Makes Core installation and import depend on an optional integration.",
+        "Conflates domain invocation semantics with operational execution constructs."
+      ],
+      "disposition": "rejected"
+    },
+    {
+      "optionId": "STAGE-CALLABLE-C",
+      "name": "RuntimeIndependentStageInvocationContract",
+      "description": "Define a framework-owned typed Stage invocation boundary. A concrete Stage Aggregate implements the boundary; an external integration binds that callable behavior to its native workflow element.",
+      "advantages": [
+        "Preserves Stage Aggregate ownership and domain semantics.",
+        "Provides a stable consumer-facing callable contract.",
+        "Supports multiple workflow runtimes without putting runtime types in Core.",
+        "Allows native workflow execution and hierarchical nesting without a second GPWCF scheduler.",
+        "Supports typed inputs, outputs, flow results, and correlation without prescribing business schemas."
+      ],
+      "disadvantages": [
+        "Requires explicit invocation and result contracts.",
+        "Requires an integration binding to translate native runtime context and operational evidence."
+      ],
+      "disposition": "recommended"
+    }
+  ],
+  "selectedDesign": {
+    "decision": "Adopt a runtime-independent, typed Stage invocation contract implemented by each concrete Stage Aggregate and exposed through the Stage public boundary.",
+    "contractName": "StageCallable",
+    "logicalOwnership": "core.stage",
+    "aggregateOwnership": "Stage Aggregate",
+    "publicApiSurface": "gpwcf.public_api.core",
+    "implementationBoundary": "The Stage Aggregate or an explicit Stage facade owned by that Aggregate may implement the callable contract. The contract does not mandate a separate facade class, inheritance hierarchy, or base class.",
+    "invocationOperation": {
+      "conceptualName": "invoke",
+      "conceptualSignature": "invoke(invocation: StageInvocation[TStageInput]) -> StageResult[TStageOutput, TStageFlowResult, TStageOutcome]",
+      "semantics": [
+        "The operation represents one invocation of one identified Stage instance.",
+        "The invocation object is the complete explicit input to the Stage boundary; implementations must not require hidden ambient caller state to interpret its identity or correlation.",
+        "The operation returns a StageResult only when the Stage invocation reaches the Stage-defined point at which a result can be returned.",
+        "A thrown exception remains a thrown invocation exception and is not silently converted into a StageResult or StepExecutionResult.",
+        "The Stage-specific flow and transition semantics remain owned by the Stage specialization and its Stage Composition.",
+        "The operation does not expose internal Step, SPU, or Supporting Unit topology to the caller."
+      ],
+      "synchronousContractDecision": "The initial Core callable contract is synchronous from the caller's perspective: invocation returns a StageResult or raises an exception. A Prefect Flow/Deployment wrapper may execute this callable within Prefect's native execution model. An asynchronous Core callable variant is not introduced in this design because no existing generic Stage contract or accepted integration evidence establishes the need for a second public invocation form. Revisit only if a concrete consumer requirement demonstrates that synchronous invocation cannot preserve required behavior.",
+      "callableShapeDecision": "Use an explicit named invocation operation rather than making arbitrary __call__ argument forwarding the normative contract. A concrete implementation may additionally be Python-callable as convenience, but that convenience is not the public contract."
+    },
+    "typeParameters": {
+      "TStageInput": {
+        "meaning": "Consumer-defined input data contract for the concrete Stage specialization.",
+        "ownership": "Defined by the consuming application and its Stage specialization.",
+        "constraint": "GPWCF does not prescribe a universal Stage input schema."
+      },
+      "TStageOutput": {
+        "meaning": "Consumer-defined outputs published by the Stage to its caller.",
+        "ownership": "Defined by the consuming application and its Stage specialization.",
+        "constraint": "Stage outputs remain semantically distinct from the Stage Flow Result, even if a particular specialization intentionally reuses the same underlying value representation."
+      },
+      "TStageFlowResult": {
+        "meaning": "Stage-owned result describing the Stage's internal Step-execution flow, including the Stage-defined treatment of returned StepExecutionResult values, invocation exceptions, transitions, and flow context.",
+        "ownership": "Defined and assembled by the Stage Aggregate/Stage Composition.",
+        "constraint": "It is independent of StepExecutionResult and is not required to share a schema with another Stage."
+      },
+      "TStageOutcome": {
+        "meaning": "Stage-specialized domain outcome/status classification exposed to the caller.",
+        "ownership": "Defined by the concrete Stage contract.",
+        "constraint": "No universal success/failure-only enumeration is imposed. A specialization may need partial, inconclusive, controlled-termination, or other domain outcomes."
+      },
+      "genericResultForm": "StageResult[TStageOutput, TStageFlowResult, TStageOutcome]",
+      "genericTypingPolicy": "The generic parameters express static contract relationships. They do not imply runtime type erasure, an untyped dictionary, a universal payload schema, or a dynamic type registry."
+    },
+    "stageInvocation": {
+      "logicalContractName": "StageInvocation[TStageInput]",
+      "requiredInformation": [
+        {
+          "field": "stage_identity",
+          "semanticType": "StageIdentity",
+          "required": true,
+          "meaning": "Identifies the concrete Stage domain instance being invoked. It is not a Prefect Deployment ID, Flow Run ID, Task Run ID, or Python object identity."
+        },
+        {
+          "field": "stage_invocation_identity",
+          "semanticType": "StageInvocationIdentity",
+          "required": true,
+          "meaning": "Uniquely identifies this invocation of the Stage within the identity scope defined by the Stage contract."
+        },
+        {
+          "field": "input",
+          "semanticType": "TStageInput",
+          "required": true,
+          "meaning": "The consumer-defined business/functional input for this invocation."
+        },
+        {
+          "field": "execution_context",
+          "semanticType": "StageExecutionContext",
+          "required": true,
+          "meaning": "Explicit invocation-scoped metadata and control requests required to interpret and correlate this invocation."
+        }
+      ],
+      "correlationInformation": {
+        "pipelineInvocationIdentity": {
+          "required": false,
+          "meaning": "An opaque correlation identity supplied by the consuming workflow when the Stage participates in a pipeline invocation. It is not evidence that GPWCF owns a Pipeline Root Entity or Pipeline Invocation runtime.",
+          "ownership": "The consuming workflow or its invocation contract."
+        },
+        "parentInvocationIdentity": {
+          "required": false,
+          "meaning": "An opaque identity for the immediate caller invocation when hierarchical correlation is required.",
+          "ownership": "The caller/integration boundary."
+        },
+        "rule": "Correlation identities are context, not substitutes for StageIdentity or StageInvocationIdentity. They must remain type/namespace-distinct from native workflow identifiers."
+      },
+      "inputOwnership": [
+        "The Stage specialization defines the semantic schema and validation rules for TStageInput.",
+        "The invocation boundary must preserve the association between the input and its StageInvocationIdentity.",
+        "Mutation of caller-owned input is not permitted unless the concrete Stage input contract explicitly defines transfer or mutation semantics.",
+        "The integration must not silently serialize, normalize, or transform input values in a way that changes their domain meaning."
+      ]
+    },
+    "stageExecutionContext": {
+      "logicalContractName": "StageExecutionContext",
+      "purpose": "Carry explicit, invocation-scoped correlation and execution-control information without becoming a service locator, runtime context wrapper, or universal dependency container.",
+      "allowedResponsibilities": [
+        "Carry only explicitly declared invocation-scoped execution constraints or control requests; Stage and invocation identities and caller/pipeline correlation remain fields of StageInvocation and are not duplicated inside StageExecutionContext.",
+        "Do not duplicate caller or pipeline correlation identities; those values belong to the explicit StageInvocation correlation fields.",
+        "Carry explicitly declared invocation constraints or control requests when a generic contract is justified.",
+        "Provide a stable boundary for the integration to map native execution context without exposing native runtime objects to Core."
+      ],
+      "prohibitedResponsibilities": [
+        "Expose Prefect FlowRun, TaskRun, Deployment, State, TaskRunner, or Flow objects.",
+        "Act as a general-purpose service locator or mutable dependency container.",
+        "Own scheduling, dispatch, worker assignment, or runtime configuration.",
+        "Carry arbitrary untyped application state as an undocumented dictionary.",
+        "Replace the concrete Stage input contract."
+      ],
+      "cancellationAndDeadlinePolicy": "The context may carry an explicit cancellation request/token or deadline only through a separately specified typed contract. This Stage callable design does not claim that cancellation is immediate, that arbitrary synchronous work is interruptible, or that timeout settlement is guaranteed. Concrete cancellation/timeout semantics remain subject to the Stage specialization and later runtime qualification.",
+      "mutability": "Invocation identity and correlation facts are immutable for the lifetime of the invocation. Any mutable cooperative control signal must be represented by a separately specified capability and must not make the invocation identity mutable."
+    },
+    "identityRules": [
+      "StageIdentity identifies a Stage domain instance.",
+      "StageInvocationIdentity identifies one invocation of that Stage.",
+      "PipelineInvocationIdentity, when supplied, identifies the consumer-owned pipeline invocation and is only a correlation value at this boundary.",
+      "ParentInvocationIdentity, when supplied, identifies the immediate parent invocation and is only a correlation value.",
+      "Prefect Deployment IDs, Flow Run IDs, Task Run IDs, and worker identifiers remain native operational identities owned by Prefect.",
+      "No identity is derived from another identity by casting, string reuse, or semantic aliasing.",
+      "Identity representation and uniqueness scope must be finalized consistently with the framework's identity architecture; this document does not impose UUIDs or a specific serialization format."
+    ],
+    "resultBoundary": {
+      "returnType": "StageResult[TStageOutput, TStageFlowResult, TStageOutcome]",
+      "requiredSemanticSeparation": [
+        "Stage outputs are the values the Stage publishes to its caller.",
+        "Stage Flow Result describes the Stage's internal Step-execution flow.",
+        "Stage outcome/status expresses the Stage-specialized domain interpretation of that execution.",
+        "Prefect operational State is external execution evidence and is not any of the preceding domain values."
+      ],
+      "resultOwnership": "The Stage Aggregate owns the meaning and assembly of the Stage Flow Result and the Stage-specific outcome. The concrete Stage contract defines the outputs.",
+      "deferredDetail": "The exact StageResult envelope fields, completion/settlement representation, diagnostics attachment, serialization boundary, and validation rules are defined in 02.00_Stage_Result.json. The result contract must preserve the semantic separation above and must not collapse outputs, Flow Result, and Stage outcome into one undifferentiated payload."
+    },
+    "exceptionBoundary": {
+      "returnedResult": "A StageResult represents a returned result from an invocation that reached the Stage-defined result boundary.",
+      "thrownException": "An exception that prevents the callable from returning a StageResult is recorded/propagated as an invocation exception according to the concrete Stage and integration contracts; it is not fabricated as a StageResult.",
+      "noAutomaticConversion": "A thrown exception is not automatically converted into StageError, a generic Failure, a failed Stage outcome, or a Prefect State mapping. Any such conversion requires an explicit specialized contract.",
+      "stageFlowResponsibility": "Stage Composition determines the Stage-specific response to Step invocation exceptions and Stage error occurrences. The callable contract does not impose a universal continue, abort, retry, or compensation policy."
+    }
+  },
+  "prefectIntegrationBindingRequirements": {
+    "selectedRuntime": {
+      "product": "Prefect",
+      "version": "3.9.2",
+      "decisionStatus": "accepted",
+      "decisionRecord": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-00/ADR-GPWCF-PREFECT-001.json",
+      "policy": "Prefect adoption is settled. This design specifies the binding to the accepted runtime; it does not reopen runtime selection."
+    },
+    "nativeRealization": {
+      "stageExecutionElement": "A Prefect Stage Parent Flow/Deployment invokes the concrete Stage callable within the Stage execution boundary.",
+      "invocationMechanism": "The qualified PHASE-02 profile invokes a named Stage Deployment through run_deployment(..., as_subflow=True), from a Root-owned Prefect dispatch Task.",
+      "boundaryRule": "The Prefect wrapper is an integration-owned executable element. It is not the Stage domain Entity and does not replace the Stage callable contract.",
+      "stageToStepRule": "Within the Stage execution, native Step dispatch invokes each Step through its public Stage-facing Step callable contract. The Stage must not invoke internal SPUs directly.",
+      "rootOwnership": "The native Root Flow and its orchestration remain consumer/external-runtime owned. No GPWCF Root Entity or Root Composition is introduced by this Stage contract."
+    },
+    "mappingObligations": [
+      "Map StageIdentity and StageInvocationIdentity to explicit Prefect parameters/context fields without replacing either with native IDs.",
+      "Pass the consumer-owned PipelineInvocationIdentity and immediate parent correlation when supplied.",
+      "Preserve TStageInput without domain-changing transformation.",
+      "Invoke the Stage callable exactly once per accepted Stage invocation unless a separately approved idempotency/retry contract authorizes another attempt.",
+      "Return the typed StageResult as a persisted/retrievable domain result where the selected deployment topology requires cross-process result retrieval.",
+      "Record Prefect Deployment/Flow Run/Task Run identities separately as operational correlation evidence.",
+      "Preserve the distinction between returned StageResult and Prefect terminal State.",
+      "Propagate invocation exceptions and operational failures through explicit mapping rules without fabricating domain results.",
+      "Preserve native parent/child linkage, including any runtime-generated intermediate invocation task."
+    ],
+    "qualifiedEvidence": {
+      "phase01": [
+        "Native Root Flow -> Stage Parent Flow -> Step Subflow -> SPU Task hierarchy was exercised with contract-shaped fixtures.",
+        "Step Subflow returned StepExecutionResult assembled from distinct SPUExecutionResult values.",
+        "The qualification did not bind production GPWCF Stage classes."
+      ],
+      "phase02": [
+        "Prefect 3.9.2 Stage Deployment invocation through run_deployment(..., as_subflow=True) was qualified for the same-host two-Process-Worker profile.",
+        "Five of five Root invocations completed; ten of ten Stage Deployment Flow Runs completed.",
+        "Root-to-Stage and Stage-to-Step indirect native parent linkage was verified.",
+        "Ten of ten persisted Stage domain results were retrieved by the Root.",
+        "Two sibling Stage deployments overlapped and were assigned to distinct Process Workers in five of five runs."
+      ],
+      "notQualified": [
+        "Production GPWCF Stage callable binding.",
+        "Multi-host code distribution or result storage.",
+        "More than two concurrent sibling Stages or autoscaling.",
+        "Failure, cancellation, timeout, retry, worker-loss, recovery, or safe-settlement semantics.",
+        "Production Step/SPU/Supporting Unit functional binding."
+      ],
+      "interpretation": "The Prefect topology and selected Stage Deployment invocation mechanism are qualified within the stated same-host two-worker profile. The GPWCF callable-to-Prefect production binding remains an implementation and verification obligation; the PoC is not evidence that it has already been implemented."
+    }
+  },
+  "dependencyRules": {
+    "allowed": [
+      "core.stage may depend on its own Stage identity, invocation, result, and Stage Composition contracts.",
+      "integrations.prefect may depend inward on the Core Stage callable and Stage result public contracts.",
+      "Consumer Stage specializations may depend on gpwcf.public_api.core.",
+      "The Prefect integration package may depend on the accepted Prefect runtime and its verified transitive dependency closure."
+    ],
+    "forbidden": [
+      "core.stage must not import Prefect or any native workflow-runtime package.",
+      "core.stage must not import consumer-specific Stage implementations or Generator contracts.",
+      "core.stage must not depend on core.processing_units.spu directly; Stage Composition coordinates Steps, and Step owns its SPU coordination.",
+      "The Stage callable contract must not depend on the Prefect integration package.",
+      "The Stage callable contract must not create or own a generic Pipeline Root contract.",
+      "The Stage execution context must not depend on a universal runtime registry, service locator, or scheduler."
+    ]
+  },
+  "publicApiRequirements": {
+    "corePublicApi": {
+      "surface": "gpwcf.public_api.core",
+      "mustExpose": [
+        "The supported Stage callable contract.",
+        "The supported Stage invocation and execution-context contracts.",
+        "The Stage identity and invocation identity types required to construct a valid invocation.",
+        "The Stage result contract and its generic typing surface after Wave 1 artifact 02 is accepted."
+      ],
+      "mustNotExpose": [
+        "Prefect-native objects or operational IDs as Core types.",
+        "Internal Stage Composition implementation classes unless explicitly designated as supported consumer extension points.",
+        "Private implementation helpers or undocumented package internals."
+      ]
+    },
+    "prefectIntegrationPublicApi": {
+      "surface": "gpwcf.public_api.integrations.prefect",
+      "mustExposeAfterBindingDesign": [
+        "The supported Prefect Stage binding/registration/invocation facilities defined by the later Prefect integration design."
+      ],
+      "mustNotBeImportedBy": [
+        "gpwcf.public_api.core",
+        "core.stage"
+      ]
+    }
+  },
+  "conformanceRequirements": [
+    {
+      "id": "STAGE-CALL-001",
+      "requirement": "A concrete Stage exposes one explicit, documented invocation operation conforming to StageCallable."
+    },
+    {
+      "id": "STAGE-CALL-002",
+      "requirement": "Each invocation carries a StageIdentity and a distinct StageInvocationIdentity."
+    },
+    {
+      "id": "STAGE-CALL-003",
+      "requirement": "Stage input is typed by the concrete Stage specialization; Core does not impose a universal business input schema."
+    },
+    {
+      "id": "STAGE-CALL-004",
+      "requirement": "Stage outputs, Stage Flow Result, and Stage-specialized outcome/status remain semantically distinguishable."
+    },
+    {
+      "id": "STAGE-CALL-005",
+      "requirement": "Stage Flow Result remains Stage-owned and distinct from StepExecutionResult."
+    },
+    {
+      "id": "STAGE-CALL-006",
+      "requirement": "A thrown invocation exception is not fabricated as a returned StageResult."
+    },
+    {
+      "id": "STAGE-CALL-007",
+      "requirement": "The Stage callable contract and Core public API import successfully in an environment where Prefect is not installed."
+    },
+    {
+      "id": "STAGE-CALL-008",
+      "requirement": "A Prefect integration invokes the Stage callable through its public boundary and preserves domain and native operational identities separately."
+    },
+    {
+      "id": "STAGE-CALL-009",
+      "requirement": "A Stage does not expose or allow callers to bypass its internal Step composition through the Stage callable contract."
+    },
+    {
+      "id": "STAGE-CALL-010",
+      "requirement": "The callable contract does not prescribe a universal Stage topology, lifecycle policy, exception response, or concurrency policy."
+    }
+  ],
+  "implementationAllocation": {
+    "logicalModule": "MOD-CORE-STAGE",
+    "canonicalPackage": "core.stage",
+    "proposedContractFiles": [
+      "core/stage/contracts/stage_callable.py",
+      "core/stage/contracts/stage_invocation.py",
+      "core/stage/contracts/stage_execution_context.py"
+    ],
+    "identityAllocation": "Allocate nominal identity value types once in a narrowly scoped core.identities module: StageIdentity and StageInvocationIdentity remain semantically owned/issued by the Stage Aggregate; PipelineInvocationIdentity and ParentInvocationIdentity are correlation types whose values are created and lifecycle-managed by the consumer/caller. The module contains value contracts only, not an identity provider, registry, generator, or lifecycle manager. This module is justified by cross-boundary use from Stage, Step, and the Prefect Integration and must be added to the Framework Module Boundary Model and Filesystem Architecture during architecture reconciliation. Do not create a broad core.shared_contracts package.",
+    "compositionAllocation": "Stage Composition remains under core.stage.composition.",
+    "resultAllocation": "StageResult is owned by core.stage and specified in the next Wave 1 artifact. Do not create a cross-framework core.results package.",
+    "publicApiAllocation": "Curated exports are defined by gpwcf.public_api.core; internal implementation paths are not consumer-stable import paths.",
+    "implementationStatus": "Design only. No source package, Python class, or runtime behavior is claimed to exist."
+  },
+  "decisionsAndRationales": [
+    {
+      "decisionId": "D-STAGE-CALL-01",
+      "decision": "Use a runtime-independent Stage callable contract.",
+      "rationale": "Preserves Core independence and enables Prefect binding without importing Prefect into the domain contract."
+    },
+    {
+      "decisionId": "D-STAGE-CALL-02",
+      "decision": "Use an explicit StageInvocation object instead of arbitrary positional/keyword arguments.",
+      "rationale": "Provides a stable boundary for identity, typed input, and correlation while keeping business input specialization consumer-owned."
+    },
+    {
+      "decisionId": "D-STAGE-CALL-03",
+      "decision": "Keep Stage outputs, Stage Flow Result, and Stage outcome/status distinct.",
+      "rationale": "The existing Stage-Level Architecture explicitly states that Flow Result is independent of the Stage outputs and execution status. Collapsing them into one payload would violate the source contract."
+    },
+    {
+      "decisionId": "D-STAGE-CALL-04",
+      "decision": "Do not create a generic Pipeline Root Entity or Root callable as a consequence of Stage invocation.",
+      "rationale": "Pipeline orchestration is consumer/external-runtime owned and no generic Root contract has been established."
+    },
+    {
+      "decisionId": "D-STAGE-CALL-05",
+      "decision": "Keep the initial callable contract synchronous from the caller's perspective.",
+      "rationale": "Avoids exposing two competing public invocation forms without a proven consumer requirement. The Prefect wrapper owns native execution mechanics."
+    }
+  ],
+  "openDesignItemsForFollowingArtifacts": [
+    {
+      "id": "W1-OPEN-01",
+      "subject": "Exact StageResult envelope fields and invariants",
+      "assignedTo": "02.00_Stage_Result.json",
+      "constraint": "Must preserve separate Stage outputs, Stage Flow Result, and Stage-specific outcome/status. Must keep Prefect State separate."
+    },
+    {
+      "id": "W1-OPEN-02",
+      "subject": "Whether PipelineInvocationIdentity is represented by a minimal generic invocation context contract or remains a consumer-owned opaque correlation value",
+      "assignedTo": "03.00_Pipeline_Invocation.json",
+      "constraint": "Must not create a Pipeline Root Entity, scheduler, or generic orchestration runtime."
+    },
+    {
+      "id": "W1-OPEN-03",
+      "subject": "Identity type ownership and canonical identity representation",
+      "assignedTo": "03.00_Pipeline_Invocation.json",
+      "constraint": "Must reconcile with .docs/Identity.json and avoid duplicate or aliased identity types."
+    },
+    {
+      "id": "W1-OPEN-04",
+      "subject": "The exact asynchronous extension boundary, if later required",
+      "assignedTo": "future architecture decision",
+      "constraint": "Do not add an asynchronous Core callable or dual sync/async protocol without demonstrated requirements."
+    }
+  ],
+  "acceptanceCriteria": [
+    "The selected contract is independent of Prefect and all external workflow-runtime types.",
+    "The Stage Aggregate remains the semantic owner of Stage Composition and Stage Flow Result.",
+    "A concrete Stage can be invoked through one explicit typed public boundary.",
+    "Stage, Stage invocation, caller, and native runtime identities remain distinct.",
+    "Stage outputs, Stage Flow Result, and Stage outcome/status are not collapsed into one undifferentiated value.",
+    "The design does not introduce a generic Pipeline Root Entity or GPWCF orchestration engine.",
+    "The Prefect binding reflects the accepted 3.9.2 target and only claims the PHASE-02 qualification boundary actually evidenced.",
+    "The design is traceable to the existing Stage-Level Architecture, Stage contract gap, accepted Prefect ADR, and PHASE-02 topology evidence.",
+    "No specialized source contract is modified by this design artifact."
+  ],
+  "traceability": [
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Level_Architecture.json",
+      "supports": [
+        "Stage is a bounded orchestration component.",
+        "Stage owns Step composition and flow semantics.",
+        "Stage Flow Result is independent of StepExecutionResult.",
+        "Stage Flow Result is Stage-specific and distinct from Stage outputs and execution status.",
+        "Stage facade is the caller-facing boundary.",
+        "External runtime may execute the native Stage Parent Workflow without acquiring domain semantic ownership."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "supports": [
+        "Stage invokes Step through the public Stage-facing Step contract.",
+        "Step owns internal SPU/supporting-unit composition.",
+        "No universal lifecycle, topology, or execution policy is imposed."
+      ]
+    },
+    {
+      "source": ".docs/Identity.json",
+      "supports": [
+        "GPWCF supplies Stage behavior and integration mechanisms but not Pipeline orchestration.",
+        "Consumer owns workflow topology and external runtime selection/configuration.",
+        "Core baseline uses the standard library and does not own Prefect as a Core dependency."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-00/ADR-GPWCF-PREFECT-001.json",
+      "supports": [
+        "Prefect 3.9.2 is the accepted initial pinned external workflow runtime.",
+        "Prefect owns native workflow execution while GPWCF retains component contracts, composition semantics, identities, typed results, and lifecycle obligations."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Topology_Decision_Record.json",
+      "supports": [
+        "Stage is realized as a native Prefect Parent Flow/Deployment.",
+        "Root invokes Stage Deployment through a Prefect-generated invocation Task chain.",
+        "Stage result is persisted and retrieved separately from Prefect State.",
+        "Domain identities remain distinct from Prefect native IDs.",
+        "Same-host two-worker topology is qualified; multi-host and production GPWCF binding are not."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Acceptance_Results.json",
+      "supports": [
+        "The five-run same-host deployment qualification and result retrieval evidence.",
+        "Production GPWCF binding and failure/cancellation/recovery behavior remain unqualified."
+      ]
+    }
+  ],
+  "changeControl": {
+    "authority": "Wave 1 detailed design proposal. It becomes an implementation constraint only after architecture review and explicit acceptance.",
+    "sourceContractPolicy": "This artifact interprets and allocates existing contract responsibilities. It does not modify Stage_Level_Architecture.json, Step_Contract.json, Identity.json, or any specialized contract.",
+    "implementationGate": "Do not create or modify GPWCF source packages from this artifact until the Wave 1 design set and the overall Architecture Closure Design are reviewed and accepted.",
+    "nextStep": "After this artifact passes structural and semantic checks, design 02.00_Stage_Result.json. Review the complete Wave 1 set before implementation; sequential design of later waves may proceed after cross-artifact validation."
+  }
+}

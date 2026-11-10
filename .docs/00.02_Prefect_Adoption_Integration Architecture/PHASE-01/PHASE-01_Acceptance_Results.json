@@ -1,0 +1,115 @@
+{
+  "documentType": "PrefectNativeHierarchyAcceptanceResults",
+  "documentId": "GPWCF-PREFECT-PHASE-01-ACCEPTANCE",
+  "documentVersion": "1.0.3",
+  "status": "native-hierarchy-qualified; sibling-flow-concurrency-open",
+  "target": {
+    "prefect": "3.9.2",
+    "python": "3.15.1",
+    "platform": "Windows x64",
+    "serverProfile": "local API server; one worker; SQLite; ThreadPoolTaskRunner(max_workers=4)"
+  },
+  "primaryEvidenceRuns": [
+    "run-5f8ffd7d-ec75-4380-8d25-cf8054a2dde0",
+    "run-c52c64f9-44bf-4cf5-85eb-85f6834d1cb9",
+    "run-0f24960a-b7b0-4285-825f-bc0f18950c67",
+    "run-bc923468-7a5e-4c62-8cc8-913b0ddd51ec"
+  ],
+  "acceptance": [
+    {
+      "id": "P01-ACC-01",
+      "criterion": "A native Pipeline Root Flow executes and returns a pipeline-level result.",
+      "result": "PASS",
+      "evidence": "All four runs recorded one Root Flow Run in COMPLETED state."
+    },
+    {
+      "id": "P01-ACC-02",
+      "criterion": "The Root Flow invokes at least two independently identifiable Stage Parent Flows.",
+      "result": "PASS",
+      "evidence": "All four runs recorded two Stage Flow Runs, each correlated to the Root Flow and a native dispatch Task Run."
+    },
+    {
+      "id": "P01-ACC-03",
+      "criterion": "Each Stage invokes at least two Steps through the public Step callable.",
+      "result": "PASS",
+      "evidence": "All four runs recorded four Step Subflow Runs. Stage code submits invoke_step dispatch Tasks; each dispatch calls StepFacade.execute."
+    },
+    {
+      "id": "P01-ACC-04",
+      "criterion": "Each Step is a native Prefect Subflow with an observable parent relationship.",
+      "result": "PASS",
+      "evidence": "All four Step Flow Runs per run have a native parent_task_run_id and explicit owning Stage Flow Run correlation."
+    },
+    {
+      "id": "P01-ACC-05",
+      "criterion": "At least two SPUs execute as Prefect Tasks inside each owning Step Subflow.",
+      "result": "PASS",
+      "evidence": "Eight distinct SPU Task Runs per run; each Step result was assembled after its two SPU futures completed."
+    },
+    {
+      "id": "P01-ACC-06",
+      "criterion": "The Stage does not bypass the Step boundary to call SPUs directly.",
+      "result": "PASS",
+      "evidence": "The Stage invokes only StepFacade.execute through invoke_step; SPU callables are referenced only by _step_subworkflow."
+    },
+    {
+      "id": "P01-ACC-07",
+      "criterion": "SPUExecutionResult and StepExecutionResult remain distinct and preserve the Step result fields.",
+      "result": "PASS",
+      "evidence": "Contract-shaped SPUExecutionResult and StepExecutionResult values are separate; all four Step result categories are retained."
+    },
+    {
+      "id": "P01-ACC-08",
+      "criterion": "GPWCF domain identities remain separate from Prefect native run identities.",
+      "result": "PASS",
+      "evidence": "Trace records separate domain invocation identities, Flow Run IDs, Task Run IDs and parent correlation fields."
+    },
+    {
+      "id": "P01-ACC-09",
+      "criterion": "Concurrent sibling Stage Parent Flow execution is deterministic in the selected local server profile.",
+      "result": "OPEN_NOT_QUALIFIED",
+      "evidence": "Sibling Stage Flow overlap occurred in 3/4 runs; the first run serialized the two child Flow executions. Dispatch Task submission alone does not guarantee concurrent child Flow execution."
+    },
+    {
+      "id": "P01-ACC-10",
+      "criterion": "Sibling Step Subflow concurrency is repeatable and deterministic.",
+      "result": "OPEN_NOT_QUALIFIED",
+      "evidence": "No sibling Step Subflow pair overlapped in the four supported-profile runs (0/8 pairs)."
+    },
+    {
+      "id": "P01-ACC-11",
+      "criterion": "SPU Task fan-out/fan-in overlaps within every Step.",
+      "result": "PASS",
+      "evidence": "Both SPU Tasks overlapped in all four Steps per run; 16/16 Step invocations across the four runs."
+    },
+    {
+      "id": "P01-ACC-12",
+      "criterion": "Native result/state and exception boundaries are observable.",
+      "result": "PASS_FOR_CONTROLLED_PROBE",
+      "evidence": "Root Flow COMPLETED; SPU Tasks COMPLETED; isolated RuntimeError probe Task FAILED while the probe Flow completed after catching the exception. Domain result and operational state are stored separately."
+    },
+    {
+      "id": "P01-ACC-13",
+      "criterion": "Real GPWCF production Stage/Step/SPU classes are bound to Prefect.",
+      "result": "OUT_OF_SCOPE_NOT_PROVEN",
+      "evidence": "The current GPWCF project has no executable production component classes; this phase uses contract-shaped fixtures only."
+    }
+  ],
+  "exitCriteriaAssessment": {
+    "rootStageStepSpuBoundariesObservableAndCorrelated": "PASS",
+    "stepBoundaryNotBypassed": "PASS",
+    "exactConcurrencyTopologyUnderstood": "PARTIAL_NOT_REPEATABLE_FOR_ROOT_SIBLING_FLOWS",
+    "unsupportedBehaviorExplicitlyRecorded": "PASS",
+    "phaseDisposition": "The native hierarchy structure and Step-internal SPU fan-out are qualified. Root sibling Stage Flow overlap occurred in 3/4 runs; sibling Step Subflows were serialized in 8/8 pairs. PHASE-01 is not a sibling-Flow concurrency sign-off; Generator branches that require parallel Stage execution remain blocked pending a deterministic Prefect-native execution profile."
+  },
+  "exclusions": [
+    "Supporting Unit binding",
+    "Generator Stage 1-13 production mapping",
+    "Domain-specific error-to-result conversion and recovery",
+    "Cancellation and timeout settlement",
+    "Retry/replay/idempotency",
+    "Process-tree termination",
+    "Persistence restart/recovery",
+    "Large artifact transfer and custody"
+  ]
+}

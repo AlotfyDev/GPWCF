@@ -1,0 +1,10 @@
+{
+  "serialNumber": 5,
+  "name": "Supporting Pattern Result to StepExecutionResult Optional Contributions Relationship",
+  "category": "Feature / Relationship",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/08.00_Supporting_Pattern_Functional_Binding.json",
+  "description": "Defines how Validator, Error, and Error Handler aggregates form the baseline optional Step result bundle, while Observation output remains outside the common contribution bundle.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,225 @@
+{
+  "documentId": "pipeline.step-supporting-observation-unit.behavioral.contract",
+  "documentVersion": "0.1.0",
+  "status": "design-baseline",
+  "title": "Step Supporting Observation Unit Behavioral Contract",
+  "scope": {
+    "architecturalLevel": "stage-step",
+    "component": "StepSupportingObservationUnit",
+    "owningLevel": "Step",
+    "purpose": "Define the observation responsibilities, activity boundary, observation output semantics, provenance, and custody obligations of an optional Step Supporting Observation Unit.",
+    "appliesTo": "A concrete Step specialization that selects and coordinates one or more Observation Unit instances."
+  },
+  "definition": {
+    "observationUnitInstance": "One concrete runtime instance identified by observationUnitIdentity.",
+    "observationActivity": "One distinct authorized activity identified by observationInvocationIdentity. A specialization may realize it as a call, callback, subscription activation, sampling cycle, or another explicit mechanism.",
+    "observationRecord": "One independently identifiable fact, measurement, event, or diagnostic observation identified by observationRecordIdentity.",
+    "observationSubject": "The entity, operation, execution fact, or scope about which an observation is made. It may be distinct from the association target.",
+    "observationContext": "The target/source context and correlation information required to interpret an observation.",
+    "observationDestination": "The explicitly defined recipient to which an observation record is emitted. It is not assumed to be a central collector."
+  },
+  "architecturalPrinciples": {
+    "optionality": [
+      "A Step is not required to select, provision, associate, or activate any Observation Unit.",
+      "The framework does not make observation mandatory for every Step.",
+      "Each Step selects only the observation capabilities required by its responsibility."
+    ],
+    "observationSemantics": [
+      "An Observation Unit observes, measures, captures, or records facts within its specialized capability.",
+      "An observation is not a validation judgment, business approval, error classification, or Step flow decision.",
+      "The concrete Observation Unit specialization defines what it observes and the semantics and structure of its observation payload.",
+      "Step Composition defines observation intent, timing, trigger, correlation context, and Step-specific use of emitted observations."
+    ],
+    "separation": [
+      "Observation output is independent of SPUExecutionResult, StepValidatorResult, ErrorResult, ErrorHandlerResult, and StepExecutionResult.",
+      "Observation events, logs, telemetry, and Observation Unit results remain outside the common StepExecutionResult contract unless a concrete Step defines a separate explicit application-specific integration.",
+      "Observation output does not imply that the observed operation succeeded or failed."
+    ],
+    "identity": [
+      "observationUnitIdentity, observationUnitAssociationIdentity, associationTargetIdentity, stepInstanceIdentity, observationInvocationIdentity, and observationRecordIdentity identify distinct facts.",
+      "Each observation activity is correlated with exactly one association context when performed under an association.",
+      "Every separately identifiable emitted record has its own observationRecordIdentity, including multiple records from one activity."
+    ]
+  },
+  "behavioralContract": {
+    "capability": "Observe or measure explicitly scoped facts and emit observation records through a specialization-defined mechanism, preserving provenance.",
+    "responsibilities": [
+      "Perform the observation, measurement, capture, or recording capability defined by the concrete specialization.",
+      "Use the observation input and context supplied or made accessible through the authorized observation boundary.",
+      "Preserve the distinction between the observed fact and any interpretation or decision made by Step Composition or another consumer.",
+      "Produce records whose provenance identifies the producing instance, activity, association, target scope, and owning Step.",
+      "Deliver records through the destination and handoff mechanism defined by the specialization.",
+      "Report inability to perform or complete observation through the declared failure boundary without fabricating records.",
+      "Preserve each produced record until the defined handoff/acceptance point."
+    ],
+    "nonResponsibilities": [
+      "Selecting, creating, changing, rebinding, or ending associations.",
+      "Provisioning, admitting, retaining, quiescing, or releasing the instance.",
+      "Deciding observation intent, business meaning, trigger policy, or Step flow topology.",
+      "Making validation judgments or deciding whether an observed condition is acceptable.",
+      "Creating SPUError or StepError occurrences merely because an observed fact is noteworthy.",
+      "Choosing Step transitions, retries, continuation, compensation, or termination.",
+      "Constructing or mutating SPUExecutionResult, StepValidatorResult, ErrorResult, ErrorHandlerResult, or StepExecutionResult.",
+      "Requiring a central telemetry service, event bus, logger, database, or global observation manager."
+    ]
+  },
+  "observationActivityBoundary": {
+    "authority": "Step Composition authorizes and coordinates observation activity within the owning Step.",
+    "conceptualActivity": "ObservationActivity consists of one observationInvocationIdentity, one authorized association context, observation input, and specialization-defined observation context.",
+    "implementationFreedom": [
+      "No separately allocated request object, universal method name, or callable signature is mandated.",
+      "A specialization may use explicit calls, callbacks, event-driven capture, sampling, subscriptions, or another defined mechanism.",
+      "Observation may be synchronous, asynchronous, incremental, or completion-based as defined by the specialization.",
+      "The mechanism must preserve identity, association, provenance, and custody obligations."
+    ],
+    "requiredInvocationInformation": [
+      "stepInstanceIdentity",
+      "observationUnitIdentity",
+      "observationUnitAssociationIdentity",
+      "associationTargetIdentity",
+      "observationInvocationIdentity"
+    ],
+    "specializationDefinedInformation": [
+      "observationInput: optional event, measurement request, instruction, or data required by the capability.",
+      "observationContext: target/source context and correlation information required to interpret facts.",
+      "observation configuration, filters, sampling parameters, or measurement options where applicable.",
+      "A target snapshot, immutable view, borrowed reference, handle, callback, or subscription source where required.",
+      "A destination identity or delivery capability when output is externally emitted."
+    ],
+    "bindingRules": [
+      "Step Composition selects an association valid for the instance and intended target before authorizing activity.",
+      "Each activity is bound to exactly one observationUnitAssociationIdentity and its corresponding associationTargetIdentity.",
+      "If one instance has multiple associations, the selected association must be explicit; the Unit must not infer or substitute another target.",
+      "An authorized activity must not be silently redirected if the association changes while the activity is in progress.",
+      "The concrete Step defines whether the observed target is a snapshot, live context, event source, or subscription and defines freshness/consistency guarantees."
+    ]
+  },
+  "observationRecordContract": {
+    "conceptualType": "ObservationRecord[TObservationPayload]",
+    "producer": "The Observation Unit instance or a specialization-defined capture mechanism operating under its identity.",
+    "meaning": "One independently identifiable fact, measurement, event, or diagnostic observation.",
+    "requiredProvenance": [
+      "stepInstanceIdentity",
+      "observationUnitIdentity",
+      "observationUnitAssociationIdentity",
+      "associationTargetIdentity",
+      "observationInvocationIdentity",
+      "observationRecordIdentity"
+    ],
+    "payload": "TObservationPayload is defined by the concrete specialization and may represent a measurement, event fact, sampled value, timing datum, state snapshot, or other observation content.",
+    "optionalMetadata": [
+      "observationSubjectIdentity when the subject differs from the association target.",
+      "observationTimestamp or monotonic measurement time where relevant.",
+      "sourceInvocationIdentity or sourceEventIdentity when correlating with a distinct SPU/Step activity.",
+      "Sequence/order metadata where required by the emission mechanism.",
+      "Specialization-defined quality, precision, units, sampling, or diagnostic metadata."
+    ],
+    "semantics": [
+      "One observation activity may emit zero, one, or multiple records.",
+      "A record describes an observation; it does not assert a validation verdict or prescribe a response.",
+      "No universal event schema, timestamp format, measurement unit, severity, or payload representation is imposed.",
+      "Record provenance remains stable after association dissociation or instance release.",
+      "Two records with identical payloads remain distinct when their record identities differ."
+    ]
+  },
+  "outputAndCustody": {
+    "cardinality": "Zero or more records may be emitted by one activity. An optional activity-completion indication may be produced where required.",
+    "productionOwnership": [
+      "The Observation Unit owns the observation operation and construction of records it produces.",
+      "The Unit preserves each produced record until accepted by its declared destination or explicitly transferred to a recovery owner.",
+      "Delivery attempt alone does not establish acceptance when the mechanism can reject or leave acceptance indeterminate."
+    ],
+    "handoff": [
+      "The specialization defines the destination and exact acceptance point.",
+      "The destination may be Step Composition, a Step-owned observation consumer, or an explicitly selected external destination; no central sink is mandated.",
+      "Upon acceptance, custody follows the destination contract. Step Composition retains records only where the concrete Step assigns that custody to it.",
+      "Rejected or indeterminate acceptance requires specialization-defined reconciliation and recovery to prevent silent loss or duplicate delivery.",
+      "For incremental emission, each record's identity and custody status must be independently correlatable."
+    ],
+    "completion": [
+      "Activity completion is distinct from production of individual records.",
+      "An activity may complete normally while emitting zero records.",
+      "Records accepted before a later exception remain valid and must not be revoked or rewritten.",
+      "The specialization defines reconciliation of pending, in-flight, or partially emitted records on abnormal completion or cancellation."
+    ]
+  },
+  "failureAndExceptionBoundary": {
+    "principle": "Observed facts, delivery outcomes, and failures of the observation mechanism are distinct.",
+    "rules": [
+      "A noteworthy or negative observed fact is not automatically an Observation Unit failure or error occurrence.",
+      "Failure to access a source, measure a value, construct a record, or deliver it is classified by the concrete specialization.",
+      "An exception does not fabricate an Observation Record.",
+      "An exception after records have been accepted does not revoke those records.",
+      "No universal exception taxonomy, retry policy, severity, or conversion into SPUError/StepError is prescribed.",
+      "Step Composition decides how an observation failure affects its flow, if at all."
+    ]
+  },
+  "responsibilityBoundary": {
+    "stepComposition": [
+      "Defines observation intent, trigger, timing, ordering, correlation, and execution mode for the concrete Step.",
+      "Selects the association and target context, coordinates activation, and supplies required input/context.",
+      "Determines whether it or another destination accepts custody of observation records.",
+      "Determines how observation output is consumed, retained, forwarded, or correlated with Step execution evidence.",
+      "Applies the concrete Step's response policy to observation failures."
+    ],
+    "observationUnit": [
+      "Executes the specialized observation capability and emits factual observation records.",
+      "Does not decide the business meaning or acceptability of observed facts.",
+      "Does not choose Step flow transitions or assemble Step results."
+    ],
+    "stepResultBoundary": "Observation Records and activity-completion information remain independent of StepExecutionResult. A concrete Step may define an explicit application-specific integration, but observation data is not a default StepExecutionResult field."
+  },
+  "retentionAndHistoricalInterpretation": {
+    "principle": "Observation records may outlive the association and Observation Unit instance that produced them.",
+    "rules": [
+      "The concrete Step or destination defines retention duration, representation, access policy, and deletion conditions.",
+      "Retained records preserve required provenance for as long as they remain observable or referenced.",
+      "An ended association remains historical provenance but cannot authorize new activities.",
+      "A released instance may remain referenced by historical identity without remaining callable.",
+      "Record content must remain interpretable without the original runtime instance unless an explicit independent dependency is defined."
+    ]
+  },
+  "specializationRequirements": {
+    "required": [
+      "Define the facts, events, measurements, or diagnostics the Unit can observe.",
+      "Define the subject and target-context model and its correspondence to associationTargetIdentity.",
+      "Define the activity mechanism: call, callback, event, sampling, subscription, or another explicit model.",
+      "Define concrete observation input/configuration types where applicable.",
+      "Define Observation Record payload, metadata, and required provenance.",
+      "Define identity generation and uniqueness scope for observationInvocationIdentity and observationRecordIdentity.",
+      "Define zero/multiple record semantics and ordering guarantees.",
+      "Define destination, handoff/acceptance point, custody, and recovery behavior.",
+      "Define completion, cancellation, partial emission, and failure behavior.",
+      "Define synchronous/asynchronous execution, concurrency, reentrancy, buffering, and backpressure where applicable.",
+      "Define record retention and detachment requirements.",
+      "Define how Step Composition coordinates and consumes observations without conflating them with validation, error, processing, or Step result contracts."
+    ],
+    "completionRule": "A specialization is complete when its capability, activity mechanism, target/association binding, record semantics, provenance, destination, custody, lifecycle interaction, and applicable failure/concurrency behavior are explicit."
+  },
+  "explicitNonGoals": [
+    "No mandatory Observation Unit for every Step or SPU.",
+    "No universal execute signature or mandatory request/response object.",
+    "No single-result-per-invocation assumption.",
+    "No universal event schema, timestamp format, measurement unit, severity, or telemetry protocol.",
+    "No mandatory central logger, event bus, broker, database, collector, or observation manager.",
+    "No validation verdict, business approval, error classification, or Step flow-control authority.",
+    "No association or lifecycle management authority for the Observation Unit.",
+    "No default inclusion of observation records in StepExecutionResult.",
+    "No universal synchronous, asynchronous, periodic, streaming, or subscription model."
+  ],
+  "references": [
+    {"document": "Step_Supporting_Observation_Unit_Association_Contract.json", "relationship": "Association identity, target binding, applicability, validity, and dissociation."},
+    {"document": "Step_Supporting_Observation_Unit_Lifecycle_Contract.json", "relationship": "Instance readiness, activation eligibility, quiescence, reuse, and release."},
+    {"document": "../00.00_Step/Step_Composition_Contract.json", "relationship": "Step Composition authority over observation coordination, internal flow, and supporting-unit lifecycle."},
+    {"document": "../00.00_Step/Step_Contract.json", "relationship": "Owning Step boundary and optional supporting-unit selection."},
+    {"document": "../01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json", "relationship": "SPU invocation context and possible observation subject."},
+    {"document": "../01.05_StepExecutionResult/StepExecutionResult_Contract.json", "relationship": "Explicit exclusion of observability events, logs, telemetry, and Observation Unit results from the common Step result."},
+    {"document": "../Stage_Step_Level_Architecture.json", "relationship": "Observation Unit independent observation semantics/results and Step Composition coordination."}
+  ],
+  "openDesignDetails": [
+    "Define concrete observation payload schemas and event/measurement semantics per Step specialization.",
+    "Define the selected observation destination and its delivery/acceptance protocol.",
+    "Define ordering, timestamp source, sampling precision, buffering, and backpressure guarantees where required.",
+    "Define concrete association scopes and instance lifecycle behavior for each Observation Unit specialization."
+  ]
+}

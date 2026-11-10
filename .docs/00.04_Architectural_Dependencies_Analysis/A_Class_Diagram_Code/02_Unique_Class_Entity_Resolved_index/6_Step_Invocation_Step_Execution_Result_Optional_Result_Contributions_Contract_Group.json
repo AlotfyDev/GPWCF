@@ -1,0 +1,10 @@
+{
+  "serialNumber": 6,
+  "name": "Step Invocation / Step Execution Result / Optional Result Contributions Contract Group",
+  "category": "Feature / API Contract Group",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Core Public API contract group covering StepInvocation, StepExecutionResult, and OptionalResultContributions; readiness gaps resolved according to Waves 1-4.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

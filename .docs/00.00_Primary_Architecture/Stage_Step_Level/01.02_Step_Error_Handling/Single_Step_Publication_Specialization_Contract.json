@@ -1,0 +1,291 @@
+{
+  "documentId": "pipeline.single-step-publication-specialization.contract",
+  "documentVersion": "0.1.1",
+  "status": "design-baseline",
+  "title": "Single Step Publication and Result-Retention Specialization Contract",
+  "scope": {
+    "architecturalLevel": "single-step",
+    "appliesWhen": "A concrete Single Step uses one or more ErrorHandlingUnits and an OperationEntryPublisher to deliver handling-operation results to its Step-specific Error Handling Composition.",
+    "normativeRule": "Every applicable Single Step contract MUST concretely instantiate every obligation in this document. Merely referencing the common Publisher and Reservation contracts is insufficient.",
+    "nonApplicability": "A Step without this publication path records explicit non-applicability and its architectural reason. It must not introduce an artificial Publisher solely to satisfy this contract."
+  },
+  "completionGate": {
+    "mandatory": "An applicable Single Step is not contract-complete or ready for implementation until every required specialization is concrete, internally consistent, and testable.",
+    "requiredEvidence": [
+      "Concrete type declarations or language-neutral structural definitions for the protocol values.",
+      "A no-fail final ownership-transfer strategy for the Step's actual THandlingOperationResult and complete ErrorHandlingOperationEntry.",
+      "A named Step-owned Recovery Owner and recovery procedure for pre-acceptance Publisher Contract Violation and indeterminate acceptance.",
+      "Identity generation, uniqueness, stability, retirement, and reuse rules.",
+      "Publication-status record retention, tombstone, and expiry rules.",
+      "An end-to-end state and custody trace covering every mandatory branch in this contract."
+    ],
+    "prohibitedCompletionClaims": [
+      "Leaving any required type, identity rule, transfer strategy, Recovery Owner, recovery procedure, or retention policy as TBD or implementation-defined.",
+      "Treating an exception, missing acknowledgement, or status-query failure as proof of rejection.",
+      "Treating a Unit-local value lost during exception unwinding as preserved recovery state.",
+      "Releasing a reservation or discarding a produced result while acceptance or custody remains unresolved."
+    ]
+  },
+  "requiredSpecializations": {
+    "protocolRepresentations": {
+      "requirement": "The Step contract MUST define concrete ReservationGrant, PublicationAcknowledgement, PublicationStatus, and PublisherContractViolation representations, plus PublicationRejection and ReleaseAcknowledgement where distinct.",
+      "ReservationGrant": {
+        "minimumInformation": [
+          "Granted, rejected, or contract-violation outcome; these outcomes must be distinguishable.",
+          "publisherIdentity, invocationIdentity, errorHandlingUnitIdentity, handlingOperationAttemptIdentity.",
+          "publicationReservationIdentity and the opaque capability when granted.",
+          "Evidence that complete-entry retention capacity and the required handoff path have been committed.",
+          "Rejection reason and diagnostics when not granted."
+        ],
+        "constraints": [
+          "A rejected grant contains no usable reservation and authorizes no operation start.",
+          "A granted reservation is bound to exactly one Publisher, Invocation, Unit, and Attempt.",
+          "Copied identity fields alone must not allow a caller to manufacture a valid capability."
+        ]
+      },
+      "PublicationAcknowledgement": {
+        "minimumInformation": [
+          "Accepted outcome and publisherIdentity, invocationIdentity, publicationReservationIdentity.",
+          "errorHandlingUnitIdentity, handlingOperationAttemptIdentity, handlingOperationIdentity.",
+          "An accepted-entry identity or unambiguous correlation to the exact immutable entry.",
+          "publicationSequenceNumber, or an explicit declaration that the Step does not expose it.",
+          "Evidence sufficient to correlate an idempotent retry with the original acceptance."
+        ],
+        "constraints": [
+          "Acknowledgement means atomic acceptance has already occurred and retention responsibility has transferred.",
+          "It must not mean merely received, queued for later admission, or partially copied.",
+          "An idempotent retry returns acknowledgement for the original acceptance and never represents a second entry."
+        ]
+      },
+      "PublicationStatus": {
+        "minimumInformation": [
+          "Query outcome, distinct from reservation lifecycle state.",
+          "publisherIdentity, invocationIdentity, publicationReservationIdentity.",
+          "Known state Reserved, Consumed, or Released when determinable.",
+          "Accepted-entry correlation and acknowledgement/sequence metadata when Consumed.",
+          "Diagnostics and explicit unresolved, unavailable, invalid-capability, or expired indication when state cannot be determined."
+        ],
+        "constraints": [
+          "Unknown, Indeterminate, Unavailable, InvalidCapability, and Expired are query outcomes, not additional PublicationReservation lifecycle states.",
+          "A failed query must not be mapped to Reserved, Released, or Rejected.",
+          "Consumed proves acceptance. Reserved permits retry only under the Step recovery policy and with the same immutable logical entry.",
+          "Released while a produced result is pending is a Publisher Contract Violation.",
+          "The Step defines which states remain observable after Invocation closure and for how long."
+        ]
+      },
+      "PublisherContractViolation": {
+        "minimumInformation": [
+          "Violation identity and stable violation code/category.",
+          "publisherIdentity, invocationIdentity, publicationReservationIdentity when known.",
+          "errorHandlingUnitIdentity and handlingOperationAttemptIdentity when known.",
+          "The phase in which the violation occurred.",
+          "Acceptance knowledge: definitely-not-accepted, definitely-accepted, or indeterminate.",
+          "The violated guarantee/invariant and diagnostic evidence.",
+          "Current result custodian, or an explicit custody-unresolved marker.",
+          "Required recovery handoff/reference and recovery status."
+        ],
+        "constraints": [
+          "A Publisher Contract Violation is distinct from ordinary PublicationRejection.",
+          "The concrete representation may be a typed result, exception, diagnostic object, or combination, but must preserve all minimum information.",
+          "Reporting the violation must not discard the Unit-owned result or obscure acceptance knowledge."
+        ]
+      },
+      "additionalProtocolTypes": "The Step defines concrete PublicationRejection and ReleaseAcknowledgement representations and the typed result/exception boundary for reserve, publish, status lookup, and release."
+    },
+    "resultTransfer": {
+      "requirement": "The Step contract MUST define a concrete transfer strategy for its actual THandlingOperationResult and complete ErrorHandlingOperationEntry that makes the final ownership handoff after reservation non-throwing.",
+      "mustSpecify": [
+        "Concrete THandlingOperationResult and complete entry representation, including all identity and target-reference fields.",
+        "How the complete entry is prepared before publish and which preparation operations may fail.",
+        "The exact reserved retention resource/slot/envelope and how reservation secures all required capacity and resources.",
+        "The no-fail transfer primitive or ownership-handle swap used at atomic acceptance.",
+        "Allocator/resource ownership and lifetime rules proving that final transfer does not allocate, serialize, convert, clone, or call arbitrary user code.",
+        "How the Unit retains the original result if entry construction or preparation fails before publish.",
+        "How accepted entries remain valid through ErrorHandlerResult aggregation and StepExecutionResult assembly."
+      ],
+      "allowedPatterns": [
+        "A preallocated, fully owning Entry envelope whose move/swap into a reserved slot is guaranteed non-throwing by the concrete Step type contract.",
+        "A pre-created owning handle/control block whose transfer into the reserved Publisher record is a no-fail ownership operation, with payload fully constructed and lifetime-pinned."
+      ],
+      "forbiddenPatterns": [
+        "Assuming a collection slot alone guarantees capacity for a dynamically sized operationResult.",
+        "Allocating, serializing, converting, deep-copying, or invoking potentially throwing user code during final acceptance/ownership transfer.",
+        "Treating a potentially throwing move as non-throwing without a concrete type-level guarantee.",
+        "Destroying or moving from the only recoverable result before atomic acceptance is established."
+      ],
+      "acceptanceProof": "The Step identifies the exact no-fail ownership-handoff operation and demonstrates that all fallible preparation occurs before it. Atomic acceptance and Reservation.Consumed remain one indivisible externally observable transition."
+    },
+    "publisherViolationRecovery": {
+      "requirement": "The Step contract MUST name an explicit Recovery Owner and define recovery for a Publisher Contract Violation before acceptance, after acceptance with lost acknowledgement, and with indeterminate acceptance.",
+      "recoveryOwner": {
+        "mustSpecify": [
+          "The concrete Step-owned component/object responsible for custody of a produced result not accepted by the Publisher.",
+          "Its identity, ownership boundary, storage/lifetime, and ability to retain the complete result without relying on the failed Publisher.",
+          "How result and reservation/attempt/operation identities remain correlated.",
+          "How custody transfer is explicit and verifiable."
+        ],
+        "constraints": [
+          "For pre-acceptance violation, the Recovery Owner must be distinct from the failed Publisher retention path.",
+          "A Unit-local variable lost during exception unwinding is not a Recovery Owner.",
+          "The recovery record preserves the complete result and entry material, not only an error message or identity."
+        ]
+      },
+      "requiredDecisionProcedure": [
+        "Freeze the affected attempt's publication state; do not start a replacement execution for the same logical operation.",
+        "Preserve the complete result and prepared entry under Unit custody or transfer them to the Recovery Owner before unwinding or releasing Unit resources.",
+        "Determine acceptance from authoritative Publisher status/evidence when safely available; a failed status query leaves acceptance indeterminate.",
+        "If definitely accepted, reconcile the original acknowledgement/entry and do not create a duplicate recovery publication.",
+        "If definitely not accepted and Publisher guarantees remain trustworthy, apply the Step retry rule using the same reservation and immutable entry. If the Publisher guarantee itself was violated, do not blindly retry through that failed path.",
+        "If acceptance remains indeterminate, retain the result and recovery record, prevent duplicate execution/publication, and follow the Step reconciliation/escalation path.",
+        "If an alternate sink is used, define its identity, deduplication, ownership transfer, and eventual aggregation semantics so two accepted logical entries cannot be created silently.",
+        "Record final custody disposition: Publisher accepted, Recovery Owner retained, explicitly transferred to another Step-owned owner, or unresolved/escalated.",
+        "While acceptance is indeterminate, keep the complete result recoverable in the Step-defined escrow/recovery owner, mark it non-publishable, and prohibit any new attempt or alternate publication until the original acceptance has been reconciled or the Step-specific deduplication protocol proves that a second acceptance cannot occur."
+      ],
+      "prohibitedActions": [
+        "Discarding a produced result because publish threw or returned no acknowledgement.",
+        "Releasing a reservation while a result is pending unless custody has first been explicitly transferred under the Step contract.",
+        "Starting a new operation attempt to replace a result whose publication outcome is ambiguous.",
+        "Treating status-query failure as evidence of non-acceptance."
+      ],
+      "ambiguousAcceptanceEscrow": {
+        "requirement": "The Step MUST define how the complete result remains recoverable when publish may have been accepted but acknowledgement and status lookup are unavailable.",
+        "mustSpecify": [
+          "How a complete immutable result/entry or owning handle is retained in a Step-owned escrow/recovery record before the Unit relinquishes its last recoverable reference.",
+          "How the escrow record correlates to publisherIdentity, invocationIdentity, publicationReservationIdentity, handlingOperationAttemptIdentity, handlingOperationIdentity, and acceptedEntryIdentity.",
+          "How the escrow copy/handle remains non-publishable while acceptance is indeterminate, preventing a second logical publication.",
+          "How the escrow is reconciled and released after status/evidence establishes Consumed, Reserved, or Released.",
+          "How the Step escalates and retains the escrow if acceptance cannot be determined within its defined operational horizon."
+        ],
+        "constraints": [
+          "The Recovery Owner may retain a safety copy/owning handle while the Publisher may already own the accepted entry; this is an explicitly represented custody-indeterminate state, not permission to create a second accepted entry.",
+          "The Step must not destroy the only recoverable representation while acceptance is indeterminate.",
+          "An escrow record is not itself an accepted ErrorHandlingOperationEntry and must not be included twice in ErrorHandlerResult.",
+          "The Step defines whether the escrow uses shared ownership, an immutable snapshot, a pre-created owning handle, or another concrete mechanism."
+        ]
+      }
+    },
+    "identityGeneration": {
+      "requirement": "The Step contract MUST define representation, issuer, uniqueness scope, generation, stability, reuse, and retirement rules for every publication-protocol identity.",
+      "identities": {
+        "publisherIdentity": "One concrete Publisher instance; define issuer, uniqueness scope, stability, and replacement-instance distinction while old records may remain observable.",
+        "invocationIdentity": "One Error Handling Unit/Publisher invocation; define parent scope and uniqueness across concurrent or repeated invocations.",
+        "errorHandlingUnitIdentity": "One concrete Unit instance; define assignment authority and reuse/replacement behavior.",
+        "handlingOperationAttemptIdentity": "One pre-execution attempt; allocated before reserve, unique in its stated scope, and never reused while any reservation, recovery record, or entry carrying it may be observed.",
+        "handlingOperationIdentity": "One actual execution; allocated only after a valid reservation and before operation start, unique in its scope, and distinct from Attempt identity.",
+        "publicationReservationIdentity": "One Publisher-issued reservation; unique within Publisher scope while reservation/status/recovery records may be observed.",
+        "acceptedEntryIdentity": "One immutable logical operation entry; define whether explicit or derived and how retries correlate to the same entry.",
+        "publicationSequenceNumber": "If exposed, monotonic and unambiguous within its declared Publisher scope; define overflow and restart behavior.",
+        "stepInstanceIdentity": "The owning Step instance identity carried by the complete operation entry and reservation.",
+        "errorHandlingUnitAssociationIdentity": "The exact Unit Association identity selected for the invocation; define issuer, uniqueness, stability, and historical retention.",
+        "associationTargetIdentity": "The target-scope identity bound to the selected Association; define representation and scope.",
+        "errorHandlingInvocationIdentity": "The canonical Unit invocation identity; define uniqueness across repeated/concurrent invocations and its binding to the Publisher invocationIdentity field."
+      },
+      "generationRequirements": [
+        "Define concrete representation and generation authority for every identity; the common contract mandates no UUID, counter, timestamp, random token, or other specific mechanism.",
+        "Define collision prevention under permitted concurrency.",
+        "Define behavior across Unit reuse, Publisher replacement, Invocation repetition, process restart, and retained recovery records to the extent in scope.",
+        "Identity retirement/reuse is forbidden while any result, reservation, acknowledgement, status, recovery record, or aggregate may still refer to it.",
+        "Identity generation and reservation/entry correlation must include Step instance, Unit Association, association target, and canonical Unit invocation provenance."
+      ]
+    },
+    "publicationStatusRetention": {
+      "requirement": "The Step contract MUST define a concrete retention and expiry policy for Publisher reservation/publication-status records, including terminal and unresolved states.",
+      "mustSpecify": [
+        "Retention duration or event-based boundary for Reserved, Consumed, and Released records.",
+        "Minimum period after Invocation closure during which status queries and idempotent retries remain supported.",
+        "How long acknowledgement and accepted-entry correlation data remain available relative to ErrorHandlerResult aggregation and StepExecutionResult completion.",
+        "How the Unit/Composition proves no legitimate retry/status observer remains before deleting a terminal record.",
+        "Whether compact tombstones remain after full record reclamation to prevent stale identity reuse or duplicate acceptance.",
+        "Policy for unresolved/indeterminate publication and recovery records.",
+        "Expiry behavior of late status queries and stale reservation capabilities."
+      ],
+      "minimumRules": [
+        "A status record is not removed while acceptance is indeterminate or a produced result lacks a confirmed custodian.",
+        "A Consumed record remains queryable at least until the accepted entry is collected into ErrorHandlerResult or another explicit Step aggregate and all permitted retry observers have left scope.",
+        "A Released record remains distinguishable from an unknown/expired identity for the Step-defined late-request window.",
+        "Post-expiry behavior is explicit; expired must never be misreported as definitely-not-accepted.",
+        "Identity reuse must not make a stale reservation/status query resolve to a different publication."
+      ]
+    }
+  },
+  "endToEndContract": {
+    "requiredTrace": "Each Step contract MUST include a concrete sequence/ownership trace from attempt identity allocation through ReservationGrant, operation start, THandlingOperationResult production, entry preparation, publish, atomic acceptance, status reconciliation, collection, ErrorHandlerResult assembly, and StepExecutionResult integration.",
+    "mandatoryBranches": [
+      "Reservation rejected before operation start.",
+      "Operation throws before producing THandlingOperationResult.",
+      "Result is produced but entry preparation fails.",
+      "Publication accepted and acknowledgement observed.",
+      "Publication accepted but acknowledgement is lost or an exception occurs after acceptance.",
+      "Publish rejected before acceptance for caller/precondition reason.",
+      "Publisher Contract Violation definitely before acceptance.",
+      "Publisher Contract Violation with acceptance indeterminate or status unavailable.",
+      "Repeated publish with the same reservation and immutable entry.",
+      "Conflicting repeated publish with different entry content.",
+      "Invocation closure while reservations or produced results remain unresolved.",
+      "Recovery Owner custody and eventual reconciliation/aggregation."
+    ],
+    "preservationInvariant": "For every successfully produced THandlingOperationResult, the Step trace must prove there is no result-custody gap. Before acceptance the Unit or Recovery Owner retains a complete recoverable representation; after confirmed acceptance the Publisher/Composition owns retention. During indeterminate acceptance, a Step-owned escrow may retain a safety copy/owning handle while the Publisher may already have accepted the same logical entry; the escrow is not a second publication and must not be aggregated twice. No path may silently drop the result or create duplicate accepted entries."
+  },
+  "reviewAndApproval": {
+    "reviewRequiredAgainst": [
+      "PublicationReservation_Contract.json",
+      "OperationEntryPublisher_Contract.json",
+      "ErrorHandlingUnit_Contract.json",
+      "ErrorHandlerResult_Contract.json",
+      "Step_Processing_Unit_SPU_Contract.json",
+      "StepExecutionResult_Contract.json",
+      "Step_Error_Model_Contract.json"
+    ],
+    "acceptanceCriteria": [
+      "No contradiction in identity scope, reservation binding, entry identity, or retry identity.",
+      "No ownership gap before/after atomic acceptance or during exception unwinding.",
+      "No potentially throwing work remains inside final ownership transfer.",
+      "Every Publisher Contract Violation has a defined custody and recovery disposition.",
+      "Status retention supports every permitted retry, reconciliation, and aggregation operation.",
+      "Every branch ends in a known custodian or explicitly represented unresolved/escalated state; no false success or false rejection is asserted."
+    ]
+  },
+  "references": [
+    {
+      "document": "PublicationReservation_Contract.json",
+      "relationship": "abstract reservation identity, lifecycle, capacity, and ownership guarantee"
+    },
+    {
+      "document": "OperationEntryPublisher_Contract.json",
+      "relationship": "abstract publication protocol, atomic acceptance, failure, concurrency, ordering, and closure"
+    },
+    {
+      "document": "ErrorHandlingUnit_Contract.json",
+      "relationship": "Unit operation attempts, result production, and publication obligations"
+    },
+    {
+      "document": "ErrorHandlerResult_Contract.json",
+      "relationship": "published entry shape and Step-specific aggregation"
+    },
+    {
+      "document": "../01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      "relationship": "SPU coordination and StepExecutionResult assembly"
+    },
+    {
+      "document": "../01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "relationship": "final Step invocation result contract"
+    },
+    {
+      "document": "../01.01_Step_Error_Model/Step_Error_Model_Contract.json",
+      "relationship": "source occurrence identity and ErrorResult relationship"
+    },
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Contract.json",
+      "relationship": "Canonical Supporting Unit invocation and operation provenance."
+    },
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Association_Contract.json",
+      "relationship": "Association and target identity requirements for each publication."
+    }
+  ],
+  "explicitNonGoals": [
+    "No universal concrete type representation, allocator, storage container, synchronization primitive, identity algorithm, recovery implementation, or numeric retention duration is selected for all Steps.",
+    "A Step without an Error Handling Unit publication path is not required to create these facilities.",
+    "The thirteen Stage processing sequences are not equated with thirteen Single Steps or SPUs."
+  ]
+}

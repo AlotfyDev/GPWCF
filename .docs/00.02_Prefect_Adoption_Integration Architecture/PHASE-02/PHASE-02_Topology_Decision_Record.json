@@ -1,0 +1,129 @@
+{
+  "documentType": "PrefectDeploymentBackedStageInvocationTopologyDecision",
+  "documentId": "GPWCF-PREFECT-PHASE-02-TOPOLOGY",
+  "documentVersion": "1.0.0",
+  "status": "qualified-for-same-host-two-process-worker-profile; production-binding-not-yet-qualified",
+  "decision": {
+    "stageInvocationMechanism": "Prefect Deployment invocation through run_deployment(..., as_subflow=True), called from a Root-owned Prefect dispatch Task.",
+    "deploymentModel": "Each Stage specialization is registered as a distinct Prefect Deployment and executed by Process Workers.",
+    "workerCapacityModel": "Two independent Process Worker instances in one Process work pool, each with flow-run limit 1. The exact expected ONLINE worker set and distinct per-Stage worker assignment are enforced by the qualification script.",
+    "codeSource": "Prefect LocalStorage bound to the PoC source directory. The Process Workers run on the same host and can access that local path.",
+    "stageResultTransport": "Stage Flow persist_result=True. The Root waits for the Deployment Flow Run to reach a terminal state and loads the persisted Stage domain result through the Prefect result reference."
+  },
+  "hierarchy": [
+    {
+      "gpwcfBoundary": "Pipeline Root",
+      "prefectConstruct": "Native Prefect Flow",
+      "responsibility": "Owns the Pipeline invocation and submits Root dispatch Tasks for the Stage Deployments."
+    },
+    {
+      "gpwcfBoundary": "Root-to-Stage dispatch",
+      "prefectConstruct": "Native Prefect Task plus run_deployment(as_subflow=True)",
+      "responsibility": "Creates the deployment Flow Run and awaits its terminal state/result. It is an invocation mechanism, not a GPWCF Stage component."
+    },
+    {
+      "gpwcfBoundary": "Stage Parent Flow",
+      "prefectConstruct": "Native Prefect Flow Run from a named Deployment",
+      "responsibility": "Executes the Stage specialization on a Process Worker; retains Stage domain identity, invocation identity, input and typed domain result."
+    },
+    {
+      "gpwcfBoundary": "Stage-to-Step dispatch",
+      "prefectConstruct": "Native Prefect Task invoking a native Step Subflow",
+      "responsibility": "Preserves the public Step callable boundary and native child Flow Run."
+    },
+    {
+      "gpwcfBoundary": "Step Subflow",
+      "prefectConstruct": "Native Prefect Flow Run",
+      "responsibility": "Owns SPU invocation and StepExecutionResult assembly."
+    },
+    {
+      "gpwcfBoundary": "SPU",
+      "prefectConstruct": "Native Prefect Task",
+      "responsibility": "Executes inside the owning Step Flow Run and returns SPUExecutionResult."
+    }
+  ],
+  "nativeParentCorrelation": {
+    "rootToStage": {
+      "chain": [
+        "Pipeline Root Flow Run",
+        "Root dispatch Task Run",
+        "Prefect-generated run_deployment synthetic Task Run",
+        "Stage Deployment Flow Run"
+      ],
+      "nativeEdge": "Stage Flow Run.parent_task_run_id points to the Prefect-generated synthetic Task Run, not directly to the user-defined Root dispatch Task Run.",
+      "proof": "The synthetic Task Run task_inputs.__parents__ contains the Root dispatch Task Run ID; the Stage Flow Run parent_task_run_id equals the synthetic Task Run ID.",
+      "interpretation": "The relationship is preserved through a native intermediate Task. It is an indirect parent/child chain, not a direct Root Flow Run to Stage Flow Run parent edge."
+    },
+    "stageToStep": {
+      "chain": [
+        "Stage Parent Flow Run",
+        "Step dispatch Task Run",
+        "Prefect-generated child-subflow Task Run",
+        "Step Subflow Flow Run"
+      ],
+      "nativeEdge": "Step Flow Run.parent_task_run_id points to the Prefect-generated child-subflow Task Run.",
+      "proof": "The synthetic Task Run task_inputs.__parents__ contains the Step dispatch Task Run ID."
+    },
+    "stepToSpu": {
+      "chain": [
+        "Step Subflow Flow Run",
+        "SPU Task Runs"
+      ],
+      "proof": "Each SPU Task Run flow_run_id identifies its owning Step Flow Run; two SPU Task Runs are recorded for each Step invocation."
+    }
+  },
+  "concurrency": {
+    "qualifiedProfile": "Two distinct Process Worker instances, same Process work pool, flow-run limit 1 each.",
+    "repeatedEvidence": "Five of five Root invocations showed positive overlap between the two sibling Stage Flow Run execution intervals.",
+    "singleWorkerExploration": "A single Process Worker configured with --limit 2 did not produce deterministic sibling Stage overlap in the exploratory trial; that profile is not accepted as the qualified concurrency configuration.",
+    "capacityBoundary": "The result qualifies two concurrent sibling Stage Deployments only. Higher sibling Stage counts and worker autoscaling/capacity are not qualified."
+  },
+  "sameHostConstraints": [
+    "The deployment pull step uses Prefect LocalStorage referencing a local source directory.",
+    "The default local result storage path is under the shared PREFECT_HOME on the same Windows host.",
+    "All qualified workers run on the same host and use the same CPython 3.15.1 environment.",
+    "Multi-host workers require shared/retrievable code storage and shared result storage; this has not been qualified.",
+    "The SQLite API server uses one API-server worker. This is separate from the two Process Worker instances."
+  ],
+  "resultSemantics": {
+    "prefectState": "Operational execution state; retained separately.",
+    "domainResult": "Persisted Stage return value containing Stage identity, invocation identity, Root correlation and StepExecutionResult values.",
+    "identityRule": "GPWCF domain identities remain distinct from Prefect Deployment IDs, Flow Run IDs and Task Run IDs."
+  },
+  "qualificationBoundary": {
+    "fixtureOnly": true,
+    "productionGpwcfClassesBound": false,
+    "generatorStagesBound": false,
+    "supportingUnitsIncluded": false,
+    "specializedContractsModified": false
+  },
+  "evidenceDocument": "PHASE-02_Repeatability_Evidence.json",
+  "pocLocation": ".poc/Prefect_Deployment_Stage_Qualification/",
+  "phase01GapDisposition": {
+    "HI-01_rootSiblingStageFlowConcurrency": {
+      "status": "qualified-for-same-host-two-process-worker-profile",
+      "evidence": "Five of five deployment-backed Root invocations showed sibling Stage Flow overlap and distinct Process Worker assignment."
+    },
+    "HI-02_stageToStepHierarchy": {
+      "status": "parent-correlation-and-boundary-qualified; sibling-Step-concurrency-not-requalified",
+      "evidence": "Step Subflow Flow Runs and synthetic parent links were validated for twenty Step invocations. Their sibling overlap was not measured in this phase."
+    },
+    "HI-03_stepToSpuFunctionalHierarchy": {
+      "status": "fixture-hierarchy-qualified",
+      "evidence": "Forty SPU Task Runs were correlated to their owning Step Flow Runs; production SPU binding remains out of scope."
+    }
+  },
+  "nonConclusions": [
+    "The two-worker same-host Process profile is not a multi-host execution qualification.",
+    "The two-worker profile does not establish capacity or autoscaling for more than two concurrent sibling Stages.",
+    "The PoC does not select a shared code or result storage backend for distributed workers.",
+    "The PoC does not bind production GPWCF or Generator stage contracts."
+  ],
+  "postQualificationRuntimeState": {
+    "prefectApiServer": "stopped",
+    "qualifiedProcessWorkers": "stopped",
+    "apiListener": "port 4210 no longer listening; TIME_WAIT connections only",
+    "prefectHomeAndResultStorage": "preserved outside the repository at C:\\poc\\GPWCF\\prefect-home-deployment",
+    "workPoolAndDeploymentRecords": "preserved in the external Prefect SQLite database for later inspection after the local server is restarted"
+  }
+}

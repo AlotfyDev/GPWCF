@@ -1,0 +1,488 @@
+{
+  "documentType": "GPWCFDetailedArchitectureDesign",
+  "documentId": "gpwcf.architecture-closure.wave2.step-callable",
+  "documentVersion": "1.0.0",
+  "status": "draft-for-architecture-review",
+  "designSequence": {
+    "wave": 2,
+    "waveName": "Step Callable, StepExecutionResult, Optional Result Contributions",
+    "artifactNumber": 1,
+    "predecessorArtifacts": [
+      "../Wave!_Stage_Callable_Stage Result_Pipeline Invocation/01.00_Stage_Callable.json",
+      "../Wave!_Stage_Callable_Stage Result_Pipeline Invocation/02.00_Stage_Result.json",
+      "../Wave!_Stage_Callable_Stage Result_Pipeline Invocation/03.00_Pipeline_Invocation.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json"
+    ],
+    "nextArtifacts": [
+      "05.00_Step_Execution_Result.json",
+      "06.00_Optional_Result_Contributions.json"
+    ]
+  },
+  "purpose": "Define the stable Stage-facing callable boundary of a Step, including explicit invocation identity and parent Stage correlation, while preserving the Step Aggregate as the owner of its internal Step Composition and the sole public boundary for Step execution and StepExecutionResult.",
+  "scope": {
+    "included": [
+      "The Step callable's responsibility and its relationship to the Step Aggregate and Step Composition.",
+      "A typed StepInvocation envelope carrying the input and required identity/correlation context.",
+      "The Stage-facing Step execution operation and its admission/result boundary.",
+      "Identity separation across Step, Step invocation, owning Stage, Stage invocation, Pipeline invocation, and Prefect runtime.",
+      "The separation between Step execution and Step lifecycle operations.",
+      "Functional binding obligations for the Prefect native Step Subworkflow.",
+      "Dependency and Public API constraints."
+    ],
+    "excluded": [
+      "The internal SPU/supporting-unit invocation topology and scheduling details.",
+      "A universal Step Composition runtime object, scheduler, graph executor, or state machine.",
+      "A universal Step lifecycle API or lifecycle result type.",
+      "A universal Step success/failure status or flow-control policy.",
+      "A universal error taxonomy or error-handling policy.",
+      "A universal serialization format or result codec registry.",
+      "Any direct dependency from Step Core to Stage implementation classes or Prefect."
+    ]
+  },
+  "governingArchitecture": {
+    "stepEntityAndAggregate": "Step is the Stage-composable processing/orchestration Entity and Aggregate Root. It owns its Step Composition, internal component membership/association decisions, Step-specific flow semantics, result assembly, and public execution/lifecycle boundaries.",
+    "stageFacingBoundary": "Stage Composition invokes the Step only through the Step public callable contract and consumes the returned StepExecutionResult. It does not select, invoke, or coordinate the Step's internal SPUs or Supporting Units.",
+    "stepCompositionBoundary": "Step Composition is internal to Step. It coordinates selected SPUs and applicable Supporting Units, preserves invocation-scoped facts/results/exceptions/custody, applies Step-specific flow decisions, and supplies the information needed for StepExecutionResult assembly.",
+    "externalRuntimeAuthority": "Prefect executes the native Step Subworkflow and its native child executable elements. It does not acquire ownership of Step semantics, component contracts, result assembly, lifecycle settlement, or domain identities.",
+    "functionalBindingPrinciple": "Each executable responsibility is bound to a native executable element that preserves its specialized callable and result contract. The relationship mechanism is chosen according to semantics; functional binding does not imply Association unless a specialized contract requires it."
+  },
+  "sourceContractAssessment": {
+    "currentStepCallable": {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "declaredSignature": "execute(input: TInput) -> StepExecutionResult[TOutput]",
+      "currentMeaning": "Stage Composition supplies the Step-specialized input; Step returns its Step-level aggregate result."
+    },
+    "missingInvocationContext": [
+      "The current public signature does not explicitly carry StepInvocationIdentity.",
+      "The current public signature does not explicitly carry the owning StageInvocationIdentity.",
+      "The current public signature does not explicitly carry optional PipelineInvocationIdentity.",
+      "The integration architecture nevertheless requires Step identity, invocation identity, parent Stage invocation identity, input correlation, and result provenance to remain traceable across the native Step workflow boundary.",
+      "Relying on ambient Prefect context or mutable state stored on a reusable Step instance would couple Core to the runtime or create unsafe cross-invocation state."
+    ],
+    "requiredChange": "Replace the input-only public argument with an explicit StepInvocation[TInput] envelope. This is a proposed semantic/signature revision to Step_Contract.json and must be applied only after this Wave 2 design is reviewed and accepted.",
+    "compatibility": "The GPWCF production implementation baseline is not yet established. No compatibility shim for the old execute(input) form is mandated. If a consumer compatibility requirement is later demonstrated, it must be addressed by an explicit versioned adapter and must not become a second ambiguous normative contract."
+  },
+  "architecturalOptions": [
+    {
+      "optionId": "STEP-CALLABLE-A",
+      "name": "KeepInputOnlySignatureAndUseAmbientContext",
+      "description": "Keep execute(input) and obtain invocation identity/correlation from Prefect context, thread-local state, context variables, or mutable Step instance state.",
+      "advantages": [
+        "Preserves the existing input-only method signature."
+      ],
+      "disadvantages": [
+        "Makes Core behavior depend on hidden ambient state.",
+        "Creates a Prefect coupling if native runtime context is used directly.",
+        "Mutable per-instance invocation state is unsafe for reusable or concurrent Step instances.",
+        "Weakens reproducibility and direct in-process invocation."
+      ],
+      "disposition": "rejected"
+    },
+    {
+      "optionId": "STEP-CALLABLE-B",
+      "name": "AddSeparateContextArgument",
+      "description": "Change the method to execute(input, context) with a second independently supplied argument.",
+      "advantages": [
+        "Makes context explicit without wrapping the input."
+      ],
+      "disadvantages": [
+        "Creates a multi-argument boundary that is easier to extend inconsistently.",
+        "Does not naturally bind the input, identities, and context into one immutable invocation value.",
+        "Can encourage positional signature growth as additional correlation requirements emerge."
+      ],
+      "disposition": "not-selected"
+    },
+    {
+      "optionId": "STEP-CALLABLE-C",
+      "name": "TypedStepInvocationEnvelope",
+      "description": "Change the public operation to execute(invocation: StepInvocation[TInput]) and carry input, identities, parent Stage correlation, optional pipeline correlation, and explicit execution context in one typed invocation value.",
+      "advantages": [
+        "Makes invocation identity and correlation explicit and immutable at the boundary.",
+        "Preserves a single public execution operation.",
+        "Supports Prefect and direct in-process invocation without ambient runtime context.",
+        "Allows the Step to apply its own linearizable admission rules to a complete invocation.",
+        "Avoids a reverse dependency from Step to Stage implementation by using identity value types from the narrow core.identities module."
+      ],
+      "disadvantages": [
+        "Changes the existing input-only Step callable signature.",
+        "Requires a reviewed revision to Step_Contract.json and the corresponding consumer specializations."
+      ],
+      "disposition": "recommended"
+    }
+  ],
+  "selectedDesign": {
+    "decision": "Adopt an explicit StepInvocation envelope as the sole normative input to the Stage-facing Step execution operation.",
+    "contractName": "StepCallable",
+    "logicalOwnership": "core.step",
+    "aggregateOwnership": "Concrete Step Aggregate Root",
+    "publicApiSurface": "gpwcf.public_api.core",
+    "invocationOperation": {
+      "name": "execute",
+      "conceptualSignature": "execute(invocation: StepInvocation[TInput]) -> StepExecutionResult[TOutput, TValidatorResult, TErrorResult, TErrorHandlerResult]",
+      "semantics": [
+        "One call represents one proposed Step invocation.",
+        "The Step validates invocation identity and context, applies its public admission boundary, and determines whether the invocation is accepted.",
+        "An accepted invocation becomes attributable to its StepIdentity and StepInvocationIdentity and is included in active-work/result-custody accounting.",
+        "A rejected invocation must not begin ordinary Step processing and must not fabricate a StepExecutionResult for work that was never accepted.",
+        "A normally completed invocation returns one StepExecutionResult assembled by the owning Step/Step Composition.",
+        "An exception that prevents a StepExecutionResult from being returned remains an invocation exception and is not converted into a fabricated StepExecutionResult.",
+        "The Stage sees only the Step public input/output/result contract and does not gain access to Step-internal topology."
+      ],
+      "synchronousBoundary": "The initial callable contract returns StepExecutionResult synchronously from the caller's perspective. The concrete Step may coordinate native Prefect tasks/subflows internally through the integration wrapper, but the public result is returned only after the Step-defined result boundary is reached. A second async public method or a union of direct/awaitable results is not introduced in this baseline.",
+      "asyncSpecialization": "If a concrete Step genuinely requires an asynchronous public invocation form that cannot be represented behind the synchronous boundary, it requires a separately reviewed async contract/version. The common Step contract's current non-mandate of a universal sync/async policy is recorded as a review consequence; this design does not silently claim all async Step patterns are already covered."
+    },
+    "stepInvocation": {
+      "name": "StepInvocation[TInput]",
+      "requiredFields": [
+        {
+          "field": "step_identity",
+          "type": "StepIdentity",
+          "required": true,
+          "meaning": "Identifies the concrete Step instance within its owning Stage composition scope."
+        },
+        {
+          "field": "step_invocation_identity",
+          "type": "StepInvocationIdentity",
+          "required": true,
+          "meaning": "Identifies this one proposed Step invocation. A distinct value is required for each distinct admitted invocation."
+        },
+        {
+          "field": "owning_stage_identity",
+          "type": "StageIdentity",
+          "required": true,
+          "meaning": "Identifies the Stage Aggregate that owns the Step composition membership."
+        },
+        {
+          "field": "parent_stage_invocation_identity",
+          "type": "StageInvocationIdentity",
+          "required": true,
+          "meaning": "Identifies the Stage invocation whose Stage Composition is invoking this Step."
+        },
+        {
+          "field": "pipeline_invocation_identity",
+          "type": "PipelineInvocationIdentity",
+          "required": false,
+          "meaning": "Optional consumer-owned correlation identity propagated unchanged when the Step participates in a pipeline invocation."
+        },
+        {
+          "field": "input",
+          "type": "TInput",
+          "required": true,
+          "meaning": "The Step-specialized input value supplied by the owning Stage Composition."
+        },
+        {
+          "field": "execution_context",
+          "type": "StepExecutionContext",
+          "required": true,
+          "meaning": "Explicit invocation-scoped execution constraints/control requests that are not already represented by identity or input fields."
+        }
+      ],
+      "identityOwnership": [
+        "StepIdentity and StepInvocationIdentity are nominal value types supplied by core.identities; the Step Aggregate owns their semantic scope, validation, admission, and invocation accounting.",
+        "StageIdentity and StageInvocationIdentity are nominal value types supplied by core.identities; their semantic issuance/ownership remains with the Stage Aggregate.",
+        "PipelineInvocationIdentity is a nominal value type supplied by core.identities; the consumer creates and owns its lifecycle.",
+        "Step Core imports identity value contracts only. It must not import Stage Aggregate implementation or Stage Composition."
+      ],
+      "identitySupplyAndAdmission": "The caller (Stage Composition or its integration binding) supplies a candidate StepInvocationIdentity before calling execute. The Step public boundary validates it against the Step identity scope and atomically accepts or rejects the invocation. A candidate ID that is rejected does not represent accepted Step work. The Step must not accept the same identity for two distinct concurrent invocations unless an explicit idempotency/replay contract authorizes that behavior.",
+      "inputRules": [
+        "TInput is defined by the concrete Step specialization; no common business input schema is imposed.",
+        "The invocation input remains associated with its StepInvocationIdentity.",
+        "Mutation of caller-owned input is prohibited unless the concrete Step input contract explicitly defines transfer or mutation semantics.",
+        "The Step must not infer identity or correlation by parsing business input fields."
+      ]
+    },
+    "stepExecutionContext": {
+      "name": "StepExecutionContext",
+      "purpose": "Carry only explicitly declared invocation-scoped execution constraints or control requests that are not already represented by StepInvocation identity/correlation fields.",
+      "allowedResponsibilities": [
+        "Carry typed execution constraints required by the concrete Step contract.",
+        "Carry a typed cooperative cancellation request/token only when its semantics are separately defined.",
+        "Carry a deadline or timeout request only when its clock source, interpretation, and settlement behavior are explicitly defined.",
+        "Provide a runtime-independent location for non-identity execution metadata that is required by the Step contract."
+      ],
+      "prohibitedResponsibilities": [
+        "Duplicate Step, Stage, Pipeline, or parent invocation identities already carried by StepInvocation.",
+        "Expose Prefect Flow, Task, Deployment, State, TaskRunner, or native runtime objects.",
+        "Act as a service locator, dependency-injection container, mutable global context, or arbitrary untyped dictionary.",
+        "Own scheduling, dispatch, concurrency limits, or worker configuration.",
+        "Replace TInput or carry undocumented business payload."
+      ],
+      "mutability": "Identity/correlation fields in StepInvocation are immutable. Any mutable cooperative control capability is separately typed and does not permit mutation of invocation identity or input provenance.",
+      "cancellationBoundary": "Presence of a cancellation request does not prove that accepted work has stopped or that its results/custody obligations are settled. The concrete Step and selected runtime define cancellation behavior; no universal immediate-cancellation guarantee is introduced."
+    },
+    "admissionAndInvocationBoundary": {
+      "owner": "Step Aggregate public boundary.",
+      "requiredSemantics": [
+        "The effective ordering between invocation acceptance and RetainForReuse/TerminalRetirement admission closure is linearizable.",
+        "An invocation accepted before effective closure belongs to the Step settlement set and all its internal obligations must be accounted for.",
+        "An invocation arriving after effective closure is rejected without beginning ordinary Step processing.",
+        "No invocation may be accepted without its StepInvocationIdentity becoming attributable to the Step and included in active-work/result-custody accounting.",
+        "Concurrent invocations are governed by the concrete Step specialization; the common contract does not mandate concurrency or reentrancy.",
+        "A candidate invocation identity cannot be silently reused for a different invocation."
+      ],
+      "acceptanceResponse": "The normal execute return is the StepExecutionResult for an accepted invocation that reached the result boundary. A rejected invocation or an exception before result return is not represented as a StepExecutionResult. The exact rejection/exception contract is specialized and must be explicit; no universal rejection result enum is introduced here."
+    },
+    "resultBoundary": {
+      "returnType": "StepExecutionResult[TOutput, TValidatorResult, TErrorResult, TErrorHandlerResult]",
+      "producer": "Concrete Step Aggregate, assembled through its Step Composition.",
+      "consumer": "Owning Stage Composition.",
+      "semantics": [
+        "The result describes one Step invocation, not an individual SPU invocation.",
+        "The result preserves Step identity and invocation correlation sufficient for the Stage and external integration to attribute it.",
+        "The processing artifact is the Step-level output, not automatically an individual SPU's processing artifact.",
+        "Selected optional result contributions remain distinct typed categories and are not collapsed into the processing artifact.",
+        "Observation events/records remain outside the common StepExecutionResult contract unless a concrete Step defines a separate explicit application-specific integration.",
+        "The exact envelope and optional contribution structure are defined in 05.00_Step_Execution_Result.json and 06.00_Optional_Result_Contributions.json."
+      ]
+    },
+    "exceptionBoundary": {
+      "normalReturn": "A StepExecutionResult is returned only when the Step reaches its Step-defined result boundary.",
+      "thrownException": "An exception that prevents the Step from returning a result remains an invocation exception. StepCompositionFlowResult and concrete recovery/custody contracts preserve previously produced internal evidence as required.",
+      "noFabrication": "No StepExecutionResult, SPUExecutionResult, Validator Result, ErrorResult, or ErrorHandlerResult is fabricated for an operation that did not produce it.",
+      "flowPolicy": "The concrete Step and Step Composition determine continuation, branching, retry, compensation, recovery, or termination. The common callable contract imposes no universal response."
+    },
+    "lifecycleSeparation": {
+      "rule": "Step execution and Step lifecycle are separate public capabilities.",
+      "execute": "Accepts one StepInvocation and returns StepExecutionResult for that invocation.",
+      "lifecycle": "RetainForReuse and TerminalRetirement remain separate Step public lifecycle interactions with concrete request/outcome contracts.",
+      "prohibition": "StepExecutionResult is not a lifecycle settlement result. A returned StepExecutionResult does not prove the Step is reusable or terminally released."
+    }
+  },
+  "prefectIntegrationBinding": {
+    "selectedRuntime": "Prefect 3.9.2 (accepted initial external workflow runtime)",
+    "nativeRealization": "The concrete Step is realized behind a native Prefect Step Subworkflow within its owning Stage Parent Flow.",
+    "invocationMechanism": "A Stage-owned native dispatch Task invokes the Step Subflow through the integration binding while preserving the Step public callable contract.",
+    "mappingObligations": [
+      "Pass the complete StepInvocation data to the native Step Subworkflow without relying on ambient Prefect context for domain identity.",
+      "Preserve StepIdentity, StepInvocationIdentity, owning Stage identity, parent Stage invocation identity, and optional PipelineInvocationIdentity as domain fields.",
+      "Keep Prefect Flow Run and Task Run identities separately as operational evidence.",
+      "Return the exact StepExecutionResult domain value to Stage Composition.",
+      "Preserve the distinction between returned StepExecutionResult and Prefect operational State.",
+      "Do not allow Stage-level dispatch to invoke SPU Tasks directly; SPU Tasks execute within the owning Step Subworkflow.",
+      "Map thrown exceptions, task failures, cancellation, and unresolved result custody without fabricating a StepExecutionResult."
+    ],
+    "phase01Evidence": [
+      "The fixture topology used a Stage dispatch Task to invoke StepFacade.execute(input), and the facade invoked the Step-specific Prefect Subflow.",
+      "The Step Subflow invoked SPU Tasks and assembled StepExecutionResult from distinct SPUExecutionResult values.",
+      "Sibling Step Subflow overlap was not observed in the PHASE-01 repeated runs; no Step concurrency guarantee is inferred."
+    ],
+    "phase02Evidence": [
+      "Stage-to-Step native Subflow boundaries and indirect parent correlation were verified for twenty fixture Step invocations.",
+      "Forty SPU Task Runs were correlated to their owning Step Flow Runs.",
+      "Production GPWCF Step class binding was not tested."
+    ],
+    "notQualified": [
+      "Production StepInvocation/StepCallable binding.",
+      "Sibling Step concurrency profile.",
+      "Failure, cancellation, timeout, retry, worker-loss, recovery, and safe settlement.",
+      "Production optional Supporting Unit result binding."
+    ]
+  },
+  "dependencyRules": {
+    "allowed": [
+      "core.step may depend on core.identities value contracts.",
+      "core.step may depend on core.processing_units.spu callable/result contracts.",
+      "core.step may depend on selected optional Supporting Pattern contract surfaces only when selected by the concrete Step.",
+      "core.step may depend on its own StepExecutionResult and OptionalResultContributions contracts.",
+      "integrations.prefect may depend inward on the Step public callable and result contracts.",
+      "Consumer Step specializations may depend on gpwcf.public_api.core."
+    ],
+    "forbidden": [
+      "core.step must not import Stage Aggregate or Stage Composition implementation.",
+      "core.step must not import Prefect or any other external workflow runtime.",
+      "core.processing_units.spu must not import core.step or Step Composition.",
+      "Optional Supporting Pattern packages must not become mandatory imports merely because StepExecutionResult supports optional typed contributions.",
+      "Step Core must not depend on Generator-specific Error_Model.json or Generator-private result types.",
+      "StepInvocation/StepExecutionContext must not use ambient runtime state, global registries, or service locators."
+    ]
+  },
+  "publicApiRequirements": {
+    "surface": "gpwcf.public_api.core",
+    "mustExpose": [
+      "StepCallable contract.",
+      "StepInvocation[TInput] and StepExecutionContext.",
+      "StepIdentity and StepInvocationIdentity through the canonical core.identities public surface.",
+      "StageIdentity, StageInvocationIdentity, and PipelineInvocationIdentity value types needed to construct valid Step invocation correlation.",
+      "StepExecutionResult and OptionalResultContributions generic contracts after artifacts 05 and 06 are accepted."
+    ],
+    "mustNotExpose": [
+      "Step Composition implementation details unless explicitly designated as supported extension points.",
+      "SPU internal topology or supporting-unit implementation classes as mandatory Step API dependencies.",
+      "Prefect native objects or operational identifiers as Core types.",
+      "Generator-specific error/result schemas."
+    ]
+  },
+  "conformanceRequirements": [
+    {
+      "id": "STEP-CALL-001",
+      "requirement": "A concrete Step exposes one normative execute(StepInvocation[TInput]) operation through its public Stage-facing boundary."
+    },
+    {
+      "id": "STEP-CALL-002",
+      "requirement": "Every proposed invocation carries StepIdentity and a distinct StepInvocationIdentity."
+    },
+    {
+      "id": "STEP-CALL-003",
+      "requirement": "Every Stage-originated invocation carries the owning Stage identity and parent StageInvocationIdentity."
+    },
+    {
+      "id": "STEP-CALL-004",
+      "requirement": "PipelineInvocationIdentity remains optional and is propagated unchanged when supplied."
+    },
+    {
+      "id": "STEP-CALL-005",
+      "requirement": "The Step public boundary owns invocation acceptance/rejection and preserves the linearizable admission relationship with lifecycle requests."
+    },
+    {
+      "id": "STEP-CALL-006",
+      "requirement": "Stage Composition invokes only the Step public contract and never bypasses the Step to invoke internal SPUs or Supporting Units."
+    },
+    {
+      "id": "STEP-CALL-007",
+      "requirement": "Step Composition remains internal to Step and owns internal component coordination and Step-specific result assembly."
+    },
+    {
+      "id": "STEP-CALL-008",
+      "requirement": "A normally completed accepted invocation returns one StepExecutionResult; a thrown invocation exception does not fabricate one."
+    },
+    {
+      "id": "STEP-CALL-009",
+      "requirement": "StepExecutionResult remains distinct from SPUExecutionResult, StepCompositionFlowResult, lifecycle settlement outcomes, and Prefect State."
+    },
+    {
+      "id": "STEP-CALL-010",
+      "requirement": "The Step callable and Core public API import without Prefect installed."
+    },
+    {
+      "id": "STEP-CALL-011",
+      "requirement": "Step Core uses identity value types without importing Stage implementation, preserving the Stage-to-Step dependency direction."
+    }
+  ],
+  "requiredGoverningContractChanges": [
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "change": "Revise genericContract.logicalOperation.signature from execute(input: TInput) to execute(invocation: StepInvocation[TInput]); define the StepInvocation field/identity semantics and the candidate-ID/acceptance boundary.",
+      "reason": "The existing input-only signature cannot carry required invocation and parent Stage correlation without hidden ambient state or mutable per-instance context.",
+      "changeType": "proposed-breaking-contract-revision",
+      "approval": "Requires explicit architecture acceptance before source contract editing."
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+      "change": "Clarify that Step Composition obtains the input and correlation from the accepted StepInvocation and preserves its StepInvocationIdentity across internal SPU/Supporting Unit invocation and result/custody records.",
+      "reason": "Internal invocation and result provenance must remain attributable to the public Step invocation.",
+      "changeType": "clarification-and-traceability-revision",
+      "approval": "Requires explicit architecture acceptance before source contract editing."
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Framework_Module_Boundary_Model.json",
+      "change": "Add the narrowly scoped MOD-CORE-IDENTITIES module and the allowed dependency edges from Stage, Step, and Prefect Integration to identity value contracts.",
+      "reason": "Step needs Stage invocation correlation without a forbidden reverse dependency on Stage implementation.",
+      "changeType": "architecture-module-model-revision",
+      "approval": "Required during governing-artifact reconciliation."
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Filesystem_Architecture.json",
+      "change": "Add the canonical core.identities package and its identity value-type source allocation.",
+      "reason": "A single canonical source location prevents duplicate identity types across Stage, Step, and integration packages.",
+      "changeType": "filesystem-architecture-revision",
+      "approval": "Required during governing-artifact reconciliation."
+    }
+  ],
+  "implementationAllocation": {
+    "logicalModule": "MOD-CORE-STEP",
+    "canonicalPackage": "core.step",
+    "proposedContractFiles": [
+      "core/step/contracts/step_callable.py",
+      "core/step/contracts/step_invocation.py",
+      "core/step/contracts/step_execution_context.py"
+    ],
+    "composition": "Step Composition remains under core.step.composition and is not exposed as the Stage-facing callable.",
+    "result": "StepExecutionResult and OptionalResultContributions remain under core.step.results; their exact contract is specified in artifacts 05 and 06.",
+    "identityDependency": "core.identities provides nominal identity value types only; Step Aggregate owns Step identity semantics and admission.",
+    "implementationStatus": "Design only. No production Step class or source implementation is claimed to exist."
+  },
+  "decisionsAndRationales": [
+    {
+      "decisionId": "D-STEP-CALL-01",
+      "decision": "Use a typed StepInvocation envelope as the sole normative execute input.",
+      "rationale": "The invocation needs input, Step identity, Step invocation identity, parent Stage invocation identity, and optional pipeline correlation as one explicit value."
+    },
+    {
+      "decisionId": "D-STEP-CALL-02",
+      "decision": "Keep Step as the public Aggregate Root and Step Composition internal.",
+      "rationale": "Preserves the established Stage-facing boundary and prevents Stage from bypassing Step-owned orchestration."
+    },
+    {
+      "decisionId": "D-STEP-CALL-03",
+      "decision": "Use the narrow core.identities module for cross-boundary identity value types.",
+      "rationale": "Avoids reverse Stage dependencies and duplicate identity wrappers without introducing a broad shared-contracts module or runtime identity service."
+    },
+    {
+      "decisionId": "D-STEP-CALL-04",
+      "decision": "Keep Step execution result and lifecycle outcomes separate.",
+      "rationale": "A returned StepExecutionResult does not establish reuse readiness or terminal release."
+    },
+    {
+      "decisionId": "D-STEP-CALL-05",
+      "decision": "Use one synchronous caller-facing execute operation in the initial contract.",
+      "rationale": "Provides one deterministic Stage-facing boundary and leaves native task/subworkflow execution to Prefect Integration. An asynchronous public contract remains a separately reviewable extension if demonstrated necessary."
+    }
+  ],
+  "traceability": [
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "supports": [
+        "Step is the Stage-facing Aggregate Root and Facade.",
+        "The current execute(input: TInput) signature and the need to preserve the Step public boundary.",
+        "Step identity scope, invocation admission, lifecycle separation, and no universal execution topology."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+      "supports": [
+        "Step Composition is internal to Step and coordinates SPUs and selected Supporting Units.",
+        "Step Composition retains invocation-scoped results, exceptions, and custody facts.",
+        "The native Step Subworkflow executes the internal graph without replacing Step callable semantics."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "supports": [
+        "StepExecutionResult is the structured result returned by one Step invocation to Stage.",
+        "The Step result contains the Step processing artifact and optional Step-level aggregate results."
+      ]
+    },
+    {
+      "source": ".docs/Identity.json",
+      "supports": [
+        "GPWCF provides Stage/Step component contracts but does not own pipeline orchestration.",
+        "Consumers own workflow topology and operational policy."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Topology_Decision_Record.json",
+      "supports": [
+        "The native Step Subflow is invoked through a Stage-owned dispatch Task.",
+        "Step-to-SPU execution hierarchy and native parent correlation are qualified with fixtures.",
+        "Production GPWCF Step binding remains unqualified."
+      ]
+    }
+  ],  "acceptanceCriteria": [
+    "The Step callable preserves Step Aggregate ownership and Step Composition internality.",
+    "The public invocation input explicitly carries typed input, Step identity, Step invocation identity, owning Stage identity, parent Stage invocation identity, optional pipeline identity, and execution context.",
+    "The design preserves dependency direction without importing Stage implementation into Step.",
+    "The invocation acceptance boundary remains linearizable with Step lifecycle disposition requests.",
+    "The returned result is the exact StepExecutionResult contract defined in Wave 2 artifact 05.",
+    "Optional Supporting Pattern results remain independently typed and do not become mandatory imports.",
+    "The Prefect binding maps to the native Step Subworkflow without replacing domain identities/results with operational state.",
+    "All claims remain within PHASE-01/02 evidence limits; production binding and failure/recovery behavior remain unqualified.",
+    "No source contract is modified by this design artifact."
+  ],
+  "changeControl": {
+    "authority": "Wave 2 detailed design proposal. It becomes an implementation constraint only after architecture review and explicit acceptance.",
+    "sourceContractPolicy": "The current Step_Contract.json and Step_Composition_Contract.json remain unchanged until the proposed revisions are reviewed and approved.",
+    "implementationGate": "Do not implement StepInvocation or change the public Step signature until the Wave 2 design set and the required governing contract changes are accepted.",
+    "nextStep": "Design 05.00_Step_Execution_Result.json, preserving the existing StepExecutionResult semantics while adding only the identity and type-safe contribution boundaries justified by the callable design."
+  }
+}

@@ -1,0 +1,306 @@
+{
+  "documentId": "pipeline.stage-step-level.architecture",
+  "documentVersion": "0.3.0",
+  "status": "design-baseline",
+  "title": "Pipeline Stage Step-Level Architecture",
+  "scope": {
+    "architecturalLevel": "stage-step",
+    "parentLevel": "stage",
+    "childLevel": "step-components",
+    "purpose": "Describe the structural contract of a Stage-composable Step, its internal Step Composition, pluggable SPUs, optional supporting units, and their distinct execution results.",
+    "appliesTo": "Each concrete Step Instance composed by an owning Stage."
+  },
+  "step": {
+    "definition": "A Stage-composable processing and orchestration component that exposes its own specialized input/output contract and internally coordinates the SPU Instances and supporting units required for its responsibility.",
+    "identity": "Each Step is defined within the context of its owning Stage and has its own specialized input, output, processing flow, internal component composition, and applicable supporting components.",
+    "architecturalNature": [
+      "Step is the Stage-facing Aggregate Root boundary for its internal composition.",
+      "Step provides a Facade to Stage and hides its internal SPU/supporting-unit topology.",
+      "Step owns its Step Composition and delegates internal orchestration and Step-specific flow control to that composition.",
+      "Step owns the public lifecycle boundary for its Aggregate and is accountable for safe settlement of accepted Step invocations and internal obligations before confirming terminal retirement."
+    ],
+    "compositionIsIncremental": true,
+    "internalComponents": [
+      "Step Processing Unit Instances (SPUs)",
+      "Applicable supporting-unit instances and contracts"
+    ],
+    "optionalSupportingComponents": [
+      "Validator Units",
+      "Step Error Model",
+      "Error Handling Units and Operation Entry Publisher",
+      "Observation Units"
+    ],
+    "compositionConstraint": "A Step selects only the SPUs and supporting units required by its responsibility. No fixed number or mandatory supporting-unit set is imposed.",
+    "stageBoundary": "Stage Composition invokes Step through Step[TInput,TOutput] and consumes StepExecutionResult[TOutput]. It does not invoke or coordinate internal SPUs directly. Stage Composition requests retention for reuse or terminal retirement only through the public Step lifecycle boundary and acts on the specialized outcome; it does not coordinate internal shutdown.",
+    "result": "StepExecutionResult[TOutput], returned by the concrete Step and assembled by Step Composition from retained SPUExecutionResult values and applicable supporting-unit results according to the concrete Step specialization.",
+    "requiredContractSpecializations": {
+      "whenApplicable": "Every concrete Step using ErrorHandlingUnits and OperationEntryPublisher MUST instantiate all obligations in 01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json.",
+      "mandatoryAreas": [
+        "Concrete ReservationGrant, PublicationAcknowledgement, PublicationStatus, PublicationRejection, ReleaseAcknowledgement, and PublisherContractViolation representations.",
+        "Concrete non-throwing transfer of the complete Step THandlingOperationResult and ErrorHandlingOperationEntry.",
+        "Named Step-owned Recovery Owner and recovery procedure for pre-acceptance violations and indeterminate acceptance.",
+        "Representation, generation authority, uniqueness scope, stability, retirement, and reuse rules for all publication identities.",
+        "Publication-status retention, tombstone, and expiry policy.",
+        "End-to-end custody trace through ErrorHandlerResult and StepExecutionResult."
+      ],
+      "completionRule": "A Step using this path is not contract-complete until these specializations are concrete and pass the specialization-contract completion gate. Common-contract references alone are insufficient.",
+      "nonApplicableRule": "A Step without this publication path records explicit non-applicability and its architectural reason."
+    },
+    "compositionBoundary": "Step Composition is the authoritative internal coordination responsibility defined by 00.00_Step/Step_Composition_Contract.json. Step owns it; Stage interacts only with Step."
+  },
+  "stepProcessingUnit": {
+    "abbreviation": "SPU",
+    "definition": "The actual pluggable processing unit that performs one specialized processing responsibility within its owning Step.",
+    "genericContract": {
+      "name": "StepProcessingUnit",
+      "typeParameters": [
+        {
+          "name": "TInput",
+          "meaning": "The input type accepted by the Step Processing Unit."
+        },
+        {
+          "name": "TOutput",
+          "meaning": "The processing artifact type produced by the Step Processing Unit."
+        }
+      ],
+      "executionResult": "SPUExecutionResult[TOutput]"
+    },
+    "specialization": "Each concrete Step Processing Unit realizes the generic execution contract and specializes its input and output types for its own processing responsibility.",
+    "responsibilities": [
+      "Perform the actual specialized processing assigned to this SPU.",
+      "Accept the SPU-specific input supplied by Step Composition.",
+      "Return SPUExecutionResult[TOutput] for a normally completed invocation.",
+      "Define and register SPU-owned error type definitions through its assigned Registry.",
+      "Create SPUError occurrences for errors arising within its own processing responsibility and make them available to Step Composition."
+    ],
+    "errorOwnershipAndProduction": {
+      "definitionOwnership": "Each concrete SPU owns the specialized SPUErrorTypeDefinition types and definitions for its own error domain.",
+      "registration": "The SPU registers its definitions through its assigned SPUErrorTypeDefinitionRegistry. The Pipeline owns and manages the Registry Instance; registration authority does not transfer Registry ownership to the SPU.",
+      "occurrenceCreation": "The SPU creates SPUError[TErrorOccurrenceContext] occurrences for errors arising within its own processing responsibility. Each occurrence references exactly one definition registered in that SPU's assigned Registry.",
+      "resultContribution": "The SPU provides the occurrences it creates to the Step's ErrorResult construction or aggregation process. The detailed ErrorResult contract and aggregation rules are defined by the Step Error Model.",
+      "exceptionSeparation": "A thrown exception that prevents the SPU from returning StepExecutionResult remains distinct from an SPUError occurrence and is not automatically converted into one."
+    }
+  },
+  "supportingComponentRoles": {
+    "validatorUnits": {
+      "role": "Perform validation responsibilities associated with the Step Processing Unit.",
+      "resultRequirement": "Each validator unit provides its own structured result.",
+      "association": "Optional and defined per Step.",
+      "coordinationBoundary": "Step Composition selects/associates, provisions, invokes, and retains applicable Validator Unit results according to the concrete Step specialization.",
+      "ownershipBoundary": "Validator Units retain their own validation semantics and result contracts. Step Composition owns internal orchestration and lifecycle/reuse decisions; no universal validator-to-SPU cardinality or validation order is imposed."
+    },
+    "errorModel": {
+      "role": "Define the Step-specific ErrorResult contract, including the representation semantics and aggregation rules for SPU error occurrences and any other Step error/failure information within the scope of that Step.",
+      "association": "Step-specific; its required contents are defined incrementally for each Step.",
+      "responsibilities": [
+        "Define the structure and semantics of the Step-specific ErrorResult contract.",
+        "Define how SPUError occurrences are represented within ErrorResult.",
+        "Define the Step-specific aggregation rules for the error information carried by ErrorResult.",
+        "Keep error identification/occurrence information distinct from the results of error-handling activities.",
+        "Define the occurrence-entry structure that associates each original SPUError occurrence with its producerSPUIdentity.",
+        "Require preservation of occurrenceIdentity and the complete SPUErrorTypeDefinitionReference, including registryIdentity and errorTypeIdentity, when occurrences are represented in ErrorResult.",
+        "Define how ErrorHandlerResult may refer to handled occurrences by the composite producerSPUIdentity and occurrenceIdentity without containing or merging ErrorResult."
+      ],
+      "boundaries": [
+        "The Step Error Model defines ErrorResult structure, representation semantics, and aggregation rules; it need not be a separate runtime object that physically executes aggregation.",
+        "SPUs own their SPUErrorTypeDefinition definitions and create occurrences for errors arising within their own processing responsibilities.",
+        "Step Composition collects eligible occurrences and performs physical ErrorResult assembly according to the Step Error Model.",
+        "The Step Error Model does not own SPUErrorTypeDefinition definitions or the SPUErrorTypeDefinitionRegistry assigned to an SPU; the Pipeline retains the Registry ownership specified by the common Error Model contract.",
+        "Occurrence identity, producerSPUIdentity, and the complete SPUErrorTypeDefinitionReference remain preserved as required by the Step Error Model.",
+        "ErrorHandlerResult remains independent; references to handled occurrences do not embed or mutate ErrorResult."
+      ],
+      "nature": "A Step-specific contract/specification defining ErrorResult structure and aggregation semantics; it is not presumed to be an executable runtime unit.",
+      "coordinationBoundary": "SPUs create their own SPUError occurrences. Step Composition collects eligible occurrences and physically assembles ErrorResult by applying the Step Error Model's rules."
+    },
+    "errorHandlingUnits": {
+      "role": "Perform the error-handling responsibilities associated with the Step Processing Unit.",
+      "resultRequirement": "Each Error Handling Unit provides a structured, Step-specialized THandlingOperationResult for each operation execution it performs; the applicable Step-specific error-handling composition represents those operation results as entries in ErrorHandlerResult.",
+      "association": "Optional and defined per Step.",
+      "responsibilities": [
+        "Perform the error-handling operations assigned by the owning Step design.",
+        "Identify the SPUError occurrences targeted by each operation using the Step-defined composite occurrence reference.",
+        "Provide a structured operation-specific result for each operation execution that returns a result.",
+        "Accept a Step-specialized input and use only the target-occurrence access authorized for the current invocation.",
+        "Produce a distinct operation entry for each handling operation that returns a structured result, preserving unit identity, operation identity, target occurrence references, and operation-specific result."
+      ],
+      "boundaries": [
+        "Error Handling Units execute the handling operations assigned by the concrete Step and produce operation-specific results under their own contracts.",
+        "Step Composition coordinates Unit association, lifecycle/reuse, invocation, and collection; association with a particular SPU does not transfer those responsibilities to the SPU.",
+        "The Step-specific Error Handling Composition owns the OperationEntryPublisher instance/protocol scope assigned to it, accepts/reconciles complete operation entries, and assembles ErrorHandlerResult from accepted entries.",
+        "Step Composition coordinates with that Error Handling Composition and integrates its ErrorHandlerResult into StepExecutionResult where applicable.",
+        "Operation results do not contain ErrorResult; target references identify occurrences without embedding or mutating the ErrorResult aggregate.",
+        "The concrete Step must satisfy Single_Step_Publication_Specialization_Contract.json whenever it uses Error Handling Units and OperationEntryPublisher.",
+        "No global Pipeline- or Stage-level Error Handling Unit manager is introduced."
+      ],
+      "lifecycleOwnership": "The owning Step Composition controls association, provisioning, invocation coordination, collection, reuse, and release of Error Handling Unit instances. A Unit may be associated with a particular SPU, but that association does not transfer orchestration or lifecycle ownership to the SPU.",
+      "coordinationBoundary": "Step Composition owns internal association, provisioning/reuse/release decisions, invocation coordination, and result collection for Error Handling Unit instances, including instances associated with a particular SPU. The Step-specific Error Handling Composition owns publication aggregation and ErrorHandlerResult assembly."
+    },
+    "observationUnits": {
+      "role": "Provide optional observability capabilities associated with the Step execution, including logging, telemetry, and integrations with observability systems or services where needed.",
+      "responsibility": "Observe relevant execution events, state, timing, diagnostics, or contextual information and publish or forward observability data through the applicable mechanisms.",
+      "resultRequirement": "An Observation Unit may define its own result contract if its operation requires one; that contract is independent of StepExecutionResult.",
+      "association": "Optional and defined per Step.",
+      "executionResultRelationship": "Observation activity and its own results are not fields of StepExecutionResult. StepExecutionResult aggregates the processing artifact and the specified validation, error, and error-handling results only.",
+      "coordinationBoundary": "Step Composition coordinates applicable Observation Unit association and invocation at the scope and timing selected by the concrete Step.",
+      "boundaries": [
+        "Observation Units own their observation semantics and any event/result contract.",
+        "Observation activity and Observation Unit results remain outside StepExecutionResult by default.",
+        "Step Composition coordination does not turn observation data into processing output or impose a universal observation-failure policy.",
+        "The concrete Step defines any required failure isolation or explicit application-specific integration."
+      ]
+    }
+  },
+  "executionResult": {
+    "name": "StepExecutionResult",
+    "genericType": "StepExecutionResult[TOutput]",
+    "purpose": "Provide the Stage-facing structured aggregate result for one complete Step invocation.",
+    "producer": "The concrete Step Instance / Step Composition, not an individual SPU.",
+    "inputs": [
+      "SPUExecutionResult values returned by internal SPU invocations",
+      "Applicable supporting-unit results",
+      "Step-level error and error-handling aggregates",
+      "The Step-defined output artifact"
+    ],
+    "optionalElements": [
+      {
+        "name": "processingArtifact",
+        "type": "TOutput",
+        "meaning": "The Step-level output artifact exposed to Stage."
+      },
+      {
+        "name": "validatorResult",
+        "type": "StepValidatorResult",
+        "meaning": "The Step-specialized validation result or aggregate."
+      },
+      {
+        "name": "errorResult",
+        "type": "ErrorResult",
+        "meaning": "The Step-level ErrorResult defined by its Step Error Model."
+      },
+      {
+        "name": "errorHandlerResult",
+        "type": "ErrorHandlerResult",
+        "meaning": "The Step-level aggregate of accepted error-handling operation entries."
+      }
+    ],
+    "optionality": "Each element is independently optional; absence is not itself a status.",
+    "preservation": "Step Composition preserves all required results actually produced and retained, including those produced before a later failure.",
+    "observationBoundary": "Observation data and Observation Unit results remain outside StepExecutionResult."
+  },
+  "relationships": [
+    {
+      "from": "Stage Composition",
+      "to": "Step",
+      "relationship": "invokes-through-Stage-facing-Step-contract"
+    },
+    {
+      "from": "Step",
+      "to": "Step Composition",
+      "relationship": "owns-and-delegates-internal-orchestration-responsibility-to"
+    },
+    {
+      "from": "Step Composition",
+      "to": "StepProcessingUnit",
+      "relationship": "selects-associates-invokes-and-collects-per-invocation-results-from"
+    },
+    {
+      "from": "StepProcessingUnit",
+      "to": "SPUExecutionResult[TOutput]",
+      "relationship": "returns-per-SPU-invocation-result"
+    },
+    {
+      "from": "Step Composition",
+      "to": "Validator Units",
+      "relationship": "coordinates-applicable-association-invocation-and-result-retention"
+    },
+    {
+      "from": "Step Composition",
+      "to": "Step Error Model",
+      "relationship": "applies-contract-defined-ErrorResult-semantics-and-assembles-the-result"
+    },
+    {
+      "from": "Step Composition",
+      "to": "Error Handling Units",
+      "relationship": "owns-internal-association-lifecycle-coordination-invocation-and-result-collection"
+    },
+    {
+      "from": "Step-specific Error Handling Composition",
+      "to": "ErrorHandlerResult",
+      "relationship": "aggregates-accepted-operation-entries"
+    },
+    {
+      "from": "Step Composition",
+      "to": "Observation Units",
+      "relationship": "coordinates-applicable-observation-capabilities-with-independent-observation-results"
+    },
+    {
+      "from": "Step Composition",
+      "to": "StepExecutionResult[TOutput]",
+      "relationship": "assembles-Step-level-result-for-return-by-Step"
+    }
+  ],
+  "constraints": [
+    "Step is distinct from SPU and is the Stage-facing Aggregate Root/Facade boundary.",
+    "Stage Composition interacts with Step through the public Step contract and does not bypass it to invoke or coordinate internal SPUs or supporting units.",
+    "Step owns its Step Composition; Step Composition owns the Step-specific internal orchestration and flow decisions.",
+    "Each SPU performs its assigned processing responsibility and returns SPUExecutionResult for a normally completed invocation; it does not assemble StepExecutionResult.",
+    "SPUs create SPUError occurrences for errors arising within their own processing responsibilities; Step Composition collects eligible occurrences and assembles ErrorResult according to the Step Error Model.",
+    "The Step Error Model defines ErrorResult semantics and is not presumed to be an executable runtime unit.",
+    "Step Composition owns association and lifecycle/reuse coordination for supporting-unit instances, including Error Handling Units associated with particular SPUs.",
+    "The Step-specific Error Handling Composition aggregates accepted operation entries into ErrorHandlerResult; Step Composition integrates that independent result into StepExecutionResult where applicable.",
+    "Observation Units retain independent observation semantics/results; observation data remains outside StepExecutionResult by default.",
+    "Supporting component categories are optional unless a concrete Step specialization makes them applicable or required.",
+    "The internal ordering, topology, and response to exceptions are Step-specific and are not prescribed by the common architecture.",
+    "Step invocation admission and terminal-retirement admission closure have a well-defined linearizable ordering; accepted invocations are included in settlement and later invocations are not admitted as ordinary work.",
+    "Stage Composition distinguishes retention for reuse from terminal retirement and interacts with Step lifecycle only through the public Step boundary.",
+    "Step Composition coordinates internal quiescence, result/custody reconciliation, and component release; Stage Composition does not inspect or manage internal components.",
+    "An unresolved retirement outcome prevents Step from being treated as terminally released or safely reusable until concrete reconciliation establishes that condition."
+  ],
+  "references": [
+    {
+      "document": "../Stage_Level_Architecture.json",
+      "relationship": "owning-stage-orchestration-boundary"
+    },
+    {
+      "document": "00.00_Step/Step_Contract.json",
+      "relationship": "Stage-facing Step and Step Composition contract"
+    },
+    {
+      "document": "01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      "relationship": "internal pluggable SPU contract"
+    },
+    {
+      "document": "01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+      "relationship": "per-SPU-invocation result contract"
+    },
+    {
+      "document": "01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "relationship": "Stage-facing Step result contract"
+    },
+    {
+      "document": "00.00_Step/Step_Composition_Contract.json",
+      "relationship": "authoritative internal Step composition and supporting-unit coordination contract"
+    },
+    {
+      "document": "01.01_Step_Error_Model/Step_Error_Model_Contract.json",
+      "relationship": "ErrorResult semantics and occurrence aggregation rules"
+    },
+    {
+      "document": "01.02_Step_Error_Handling/ErrorHandlingUnit_Contract.json",
+      "relationship": "Error Handling Unit execution and lifecycle contract"
+    },
+    {
+      "document": "01.02_Step_Error_Handling/ErrorHandlerResult_Contract.json",
+      "relationship": "accepted operation-entry aggregation contract"
+    }
+  ],
+  "openDesignDetails": [
+    "The exact structured result types and composition rules for multiple validator units are not defined here.",
+    "The exact error result structure is owned by the Step Error Model and its detailed contract.",
+    "The exact Observation Unit interfaces, event model, configuration, and integrations are defined only where required by individual Steps.",
+    "The exact execution protocol and validation/processing/error-handling/observation order are defined per Step.",
+    "Concrete ErrorHandlerResult type specializations and Error Handling Unit operation-result contracts are defined by the Step-specific error-handling contract.",
+    "Each concrete Step must instantiate the mandatory publication specialization when applicable; no cross-Step concrete defaults are supplied.",
+    "Concrete Step specializations define the public lifecycle interaction, linearizable execute-admission closure, reuse and terminal-retirement outcomes, and recovery for failed/indeterminate retirement; Step Composition specializations define internal settlement evidence."
+  ]
+}

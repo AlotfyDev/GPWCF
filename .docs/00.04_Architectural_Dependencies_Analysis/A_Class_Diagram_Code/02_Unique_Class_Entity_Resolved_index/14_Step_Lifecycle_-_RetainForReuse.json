@@ -1,0 +1,10 @@
+{
+  "serialNumber": 14,
+  "name": "Step Lifecycle - RetainForReuse",
+  "category": "Feature / Lifecycle State",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+  "description": "Step lifecycle disposition requesting continued availability for reuse. Complete only when reuse/reset/readiness/isolation conditions are satisfied; admission closure is staged during settlement/reset.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

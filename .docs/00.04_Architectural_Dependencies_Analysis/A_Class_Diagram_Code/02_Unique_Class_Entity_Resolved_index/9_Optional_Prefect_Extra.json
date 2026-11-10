@@ -1,0 +1,10 @@
+{
+  "serialNumber": 9,
+  "name": "Optional Prefect Extra",
+  "category": "Feature / Dependency Policy",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "Prefect declared only under the optional [prefect] extra as prefect==3.9.2; Prefect extra installs Prefect 3.9.2 and its minimized verified transitive closure.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}

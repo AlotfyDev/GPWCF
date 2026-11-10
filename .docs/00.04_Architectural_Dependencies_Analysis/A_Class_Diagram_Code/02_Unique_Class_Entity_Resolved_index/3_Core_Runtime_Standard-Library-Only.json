@@ -1,0 +1,10 @@
+{
+  "serialNumber": 3,
+  "name": "Core Runtime Standard-Library-Only",
+  "category": "Feature / Constraint",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "Core runtime imports remain standard-library-only in the current baseline; Core is installable and importable without Prefect, Generator dependencies, or SMRB development assets.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

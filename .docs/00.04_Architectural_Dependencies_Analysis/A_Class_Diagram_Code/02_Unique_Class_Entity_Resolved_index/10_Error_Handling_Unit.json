@@ -1,0 +1,10 @@
+{
+  "serialNumber": 10,
+  "name": "Error Handling Unit",
+  "category": "Class / Component",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/10.00_Error_Handling.json",
+  "description": "Step-owned optional Supporting Unit callable that executes one or more authorized handling operations against target occurrences/resources and produces THandlingOperationResult values until the publication acceptance/custody transfer point.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 5,
+  "name": "Stage Flow/Deployment Binding",
+  "category": "Feature / Pattern Binding",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+  "description": "Native Prefect realization of Stage execution as Stage Flow/Deployment using the accepted run_deployment(..., as_subflow=True) profile from PHASE-02 topology qualification.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

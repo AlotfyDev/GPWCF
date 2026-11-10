@@ -1,0 +1,10 @@
+{
+  "serialNumber": 2,
+  "name": "Validation Functional Binding",
+  "category": "Feature / Pattern Binding",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/08.00_Supporting_Pattern_Functional_Binding.json",
+  "description": "Binding of the Validator Unit pattern to Prefect native execution (Task), preserving its specialized Behavioral, Association, and Lifecycle contracts; validation conclusions remain domain results, not automatic invocation failures.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

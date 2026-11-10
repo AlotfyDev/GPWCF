@@ -1,0 +1,10 @@
+{
+  "serialNumber": 23,
+  "name": "Required Governing Artifact Changes - Framework Module Boundary Model",
+  "category": "Feature / Change Control",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Add MOD-CORE-IDENTITIES and MOD-CORE-DIAGNOSTICS modules; map each Public API surface/sub-surface to its logical module owner; keep consumer and Prefect Integration ownership boundaries separate.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

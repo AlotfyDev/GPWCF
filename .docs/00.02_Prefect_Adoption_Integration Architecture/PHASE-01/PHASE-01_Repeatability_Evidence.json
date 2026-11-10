@@ -1,0 +1,102 @@
+{
+  "documentType": "PrefectNativeHierarchyRepeatabilityEvidence",
+  "documentVersion": "1.0.3",
+  "executionProfile": "local-prefect-server-api-sqlite-single-worker; CPython 3.15.1; Prefect 3.9.2; Windows x64; ThreadPoolTaskRunner(max_workers=4)",
+  "primaryRuns": [
+    {
+      "runId": "run-5f8ffd7d-ec75-4380-8d25-cf8054a2dde0",
+      "rootFlowState": "COMPLETED",
+      "rootStageFlowCount": 2,
+      "rootStageSiblingOverlap": false,
+      "rootStageOverlapSeconds": 0,
+      "stepSubflowCount": 4,
+      "stepSiblingOverlapByStage": {
+        "stageA": false,
+        "stageB": false
+      },
+      "spuTaskRunCount": 8,
+      "spuTaskFanoutOverlapByStep": {
+        "step1": true,
+        "step2": true,
+        "step3": true,
+        "step4": true
+      },
+      "controlledFailureTaskState": "FAILED"
+    },
+    {
+      "runId": "run-c52c64f9-44bf-4cf5-85eb-85f6834d1cb9",
+      "rootFlowState": "COMPLETED",
+      "rootStageFlowCount": 2,
+      "rootStageSiblingOverlap": true,
+      "rootStageOverlapSeconds": 5.472557,
+      "stepSubflowCount": 4,
+      "stepSiblingOverlapByStage": {
+        "stageA": false,
+        "stageB": false
+      },
+      "spuTaskRunCount": 8,
+      "spuTaskFanoutOverlapByStep": {
+        "step1": true,
+        "step2": true,
+        "step3": true,
+        "step4": true
+      },
+      "controlledFailureTaskState": "FAILED"
+    },
+    {
+      "runId": "run-0f24960a-b7b0-4285-825f-bc0f18950c67",
+      "rootFlowState": "COMPLETED",
+      "rootStageFlowCount": 2,
+      "rootStageSiblingOverlap": true,
+      "rootStageOverlapSeconds": 3.244401,
+      "stepSubflowCount": 4,
+      "stepSiblingOverlapByStage": {
+        "stageA": false,
+        "stageB": false
+      },
+      "spuTaskRunCount": 8,
+      "spuTaskFanoutOverlapByStep": {
+        "step1": true,
+        "step2": true,
+        "step3": true,
+        "step4": true
+      },
+      "controlledFailureTaskState": "FAILED"
+    },
+    {
+      "runId": "run-bc923468-7a5e-4c62-8cc8-913b0ddd51ec",
+      "rootFlowState": "COMPLETED",
+      "rootStageFlowCount": 2,
+      "rootStageSiblingOverlap": true,
+      "rootStageOverlapSeconds": 6.489385,
+      "stepSubflowCount": 4,
+      "stepSiblingOverlapByStage": {
+        "stageA": false,
+        "stageB": false
+      },
+      "spuTaskRunCount": 8,
+      "spuTaskFanoutOverlapByStep": {
+        "step1": true,
+        "step2": true,
+        "step3": true,
+        "step4": true
+      },
+      "controlledFailureTaskState": "FAILED"
+    }
+  ],
+  "aggregate": {
+    "rootSiblingStageFlowOverlap": "3/4 runs; not deterministic",
+    "stepSiblingSubflowOverlap": "0/8 Stage sibling pairs; serialized in all four runs",
+    "spuTaskFanoutOverlap": "16/16 Step invocations",
+    "rootFlowCompletion": "4/4 runs",
+    "controlledFailureTaskState": "FAILED in 4/4 runs"
+  },
+  "interpretation": "The native hierarchy is stable as an invocation/result boundary. Sibling Stage Flow overlap is not deterministic (3/4 runs); sibling Step Subflows were serialized in all eight Stage sibling pairs. Step-internal SPU Task fan-out/fan-in is repeatable in all 16 Step invocations.",
+  "serverConstraint": "Prefect rejects API-server multi-worker mode with SQLite. The supported profile used one API-server worker; ThreadPoolTaskRunner(max_workers=4) is a separate task execution setting.",
+  "evidenceFiles": {
+    "run1": "../../../.poc/Prefect_Native_Hierarchy_Qualification/evidence/run-5f8ffd7d-ec75-4380-8d25-cf8054a2dde0",
+    "run2": "../../../.poc/Prefect_Native_Hierarchy_Qualification/evidence/run-c52c64f9-44bf-4cf5-85eb-85f6834d1cb9",
+    "run3": "../../../.poc/Prefect_Native_Hierarchy_Qualification/evidence/run-0f24960a-b7b0-4285-825f-bc0f18950c67",
+    "run4": "../../../.poc/Prefect_Native_Hierarchy_Qualification/evidence/run-bc923468-7a5e-4c62-8cc8-913b0ddd51ec"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 7,
+  "name": "StageCallableContract",
+  "category": "Class / Contract",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+  "description": "The public invocation boundary of the Stage Aggregate; does not transfer Stage responsibilities to caller or external runtime. Defines semantic meaning, minimum invocation information, input/execution-context/output/flow-result/outcome typing boundaries, and invocation acceptance/completion/result/exception distinctions.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

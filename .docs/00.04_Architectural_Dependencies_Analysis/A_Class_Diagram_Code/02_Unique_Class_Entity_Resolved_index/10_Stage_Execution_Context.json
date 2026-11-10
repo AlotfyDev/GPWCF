@@ -1,0 +1,10 @@
+{
+  "serialNumber": 10,
+  "name": "Stage Execution Context",
+  "category": "Feature / Contract Rule",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+  "description": "Execution context passed to a Stage invocation as part of the callable boundary, distinct from the input value itself; owned by the Stage contract and not prescribed universally.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

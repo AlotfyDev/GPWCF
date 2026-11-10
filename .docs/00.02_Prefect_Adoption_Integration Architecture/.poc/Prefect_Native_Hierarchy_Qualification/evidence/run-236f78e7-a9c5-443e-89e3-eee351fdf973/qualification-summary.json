@@ -1,0 +1,52 @@
+{
+  "documentType": "PrefectNativeHierarchyQualificationEvidence",
+  "documentVersion": "1.0.0",
+  "status": "qualified-with-observed-step-sibling-serialization",
+  "runtime": {
+    "python": "3.15.1",
+    "prefect": "3.9.2",
+    "platform": "Windows x64"
+  },
+  "runRoot": "C:\\Trading\\Projects\\Shared_Memory_Reqgion_Broker\\SMRB\\SMRB.GenericPipelineWorkflowComponentsFramework\\.poc\\Prefect_Native_Hierarchy_Qualification\\evidence\\run-236f78e7-a9c5-443e-89e3-eee351fdf973",
+  "counts": {
+    "pipelineRootFlows": 1,
+    "stageParentFlows": 2,
+    "stepSubflows": 4,
+    "spuTaskRuns": 8
+  },
+  "correlation": {
+    "stageFlowsHaveNativeParentTaskRun": true,
+    "stepSubflowsHaveNativeParentTaskRun": true,
+    "spuTasksHaveNativeTaskRunId": true,
+    "domainIdentityAndNativeRunIdentityAreSeparate": true
+  },
+  "concurrency": {
+    "rootSiblingStageFlowsOverlap": true,
+    "siblingStepSubflowsOverlapByStage": {
+      "9a11c117-55b9-4922-9445-e011d6ed0548": false,
+      "d191a59d-c301-4911-8d43-b0d9f1718ddf": false
+    },
+    "spuTaskFanoutOverlapsByStep": {
+      "b4b0eaa3-d6b6-457f-ae07-1107cc2cadd5": true,
+      "873a8073-55be-4331-bf62-67555e48343e": true,
+      "0339d6d2-15a6-48ba-8feb-f10415b4c6ae": true,
+      "99e9d82d-f142-48fb-849f-571ed776d19a": true
+    },
+    "interpretation": "Root-to-Stage sibling Flow concurrency and Step-internal SPU Task fan-out were observed. Sibling Step Subflow runs were serialized in this local execution profile; any Stage specialization requiring concurrent Step Subflows needs a separate topology qualification."
+  },
+  "typedResults": {
+    "stepExecutionResultFieldsPreserved": true,
+    "spuExecutionResultDistinctFromStepExecutionResult": true,
+    "prefectStateNotUsedAsDomainResult": true
+  },
+  "notTested": [
+    "Real GPWCF production Stage/Step/SPU runtime classes (the current framework project has no executable implementations yet)",
+    "Supporting Unit binding",
+    "Exception/result-failure mapping",
+    "Cancellation and timeout settlement",
+    "Retry/replay/idempotency",
+    "Process-tree termination",
+    "Persistence restart/recovery",
+    "Full Generator Stage 1-13 integration"
+  ]
+}

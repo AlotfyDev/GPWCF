@@ -1,0 +1,400 @@
+{
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index",
+  "indexVersion": "1.0.0",
+  "sourceDirectories": [
+    ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step",
+    ".docs/00.02_Prefect_Adoption_Integration Architecture",
+    ".docs/00.03_Architecture_Closure_Design"
+  ],
+  "sourceFileCount": 31,
+  "totalRecords": 55,
+  "description": "Index of all relevant features, classes, entities, components, and contracts defined in the GPWCF Primary Architecture Stage/Step Level documents, Prefect Adoption & Integration Architecture, and Architecture Closure Design documents. Links are relative to this index file location.",
+  "records": [
+    {
+      "number": 1,
+      "name": "Step Callable",
+      "category": "Architectural Design / Feature",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/04.00_Step_Callable.json",
+      "description": "Wave 2 detailed design (artifact 1) defining the stable Stage-facing callable boundary of a Step, including explicit invocation identity and parent Stage correlation, while preserving the Step Aggregate as the owner of its internal Step Composition and the sole public boundary for Step execution and StepExecutionResult."
+    },
+    {
+      "number": 2,
+      "name": "Step Entity / Aggregate Root",
+      "category": "Class / Entity",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "description": "A Stage-composable processing and orchestration component that exposes a stable callable contract to its owning Stage while internally coordinating its specialized Step Processing Units and applicable supporting units. Architectural level: stage-step, owning level: Stage."
+    },
+    {
+      "number": 3,
+      "name": "Step[TInput,TOutput]",
+      "category": "Class / Generic Type",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "description": "Generic Step contract with type parameters TInput (input type accepted from owning Stage) and TOutput (output artifact type exposed to owning Stage). No common concrete types imposed across Steps."
+    },
+    {
+      "number": 4,
+      "name": "Step Logical Operation - execute",
+      "category": "Operation / Method",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "description": "Signature execute(input: TInput) -> StepExecutionResult[TOutput]. The Stage-facing public callable; input supplied by owning Stage, output is the Step-level structured aggregate result."
+    },
+    {
+      "number": 5,
+      "name": "StepInvocation",
+      "category": "Class / Entity",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/04.00_Step_Callable.json",
+      "description": "Typed invocation envelope carrying the input and required identity/correlation context (Step identity, Step invocation identity, owning Stage identity, parent Stage invocation identity, optional pipeline identity, execution context)."
+    },
+    {
+      "number": 6,
+      "name": "Step Public Callable Boundary",
+      "category": "Feature / Boundary",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "description": "Stage-facing facade boundary that exposes Step capability without exposing internal component topology. Stage sees only public input/output contract and Step-level result; Stage does not invoke SPUs or supporting units directly."
+    },
+    {
+      "number": 7,
+      "name": "Step Composition",
+      "category": "Class / Component",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+      "description": "The Step-owned internal composition boundary responsible for coordinating pluggable processing and supporting components required by one concrete Step. Architectural level: stage-step, owning level: Step. Not a separately allocated runtime object or universal engine."
+    },
+    {
+      "number": 8,
+      "name": "StepComposition Internal Orchestration",
+      "category": "Feature / Responsibility",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+      "description": "Owns internal component composition and Step-specific orchestration decisions; selects and coordinates SPUs and supporting-unit instances; preserves invocation-scoped facts/results/exceptions/custody; applies Step-specific flow decisions."
+    },
+    {
+      "number": 9,
+      "name": "Step Execution Result",
+      "category": "Architectural Design / Feature",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/05.00_Step_Execution_Result.json",
+      "description": "Wave 2 detailed design (artifact 2) defining the Step-level structured result returned to Stage, preserving the processing artifact and independently optional Step-specialized aggregates while adding explicit invocation provenance and type-safe optional-result contribution boundary."
+    },
+    {
+      "number": 10,
+      "name": "StepExecutionResult[TOutput]",
+      "category": "Class / Generic Type",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/05.00_Step_Execution_Result.json",
+      "description": "Structured result of one Step invocation returned to its owning Stage. Carries the Step-level processing artifact and independently optional Step-specialized validation, error, and error-handling aggregates."
+    },
+    {
+      "number": 11,
+      "name": "Optional Result Contributions",
+      "category": "Architectural Design / Feature",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/06.00_Optional_Result_Contributions.json",
+      "description": "Wave 2 detailed design (artifact 3) defining a closed, typed, independently optional contribution model for the Step-level validation, error, and error-handling aggregates, preserving specialized result ownership."
+    },
+    {
+      "number": 12,
+      "name": "OptionalResultContributions Aggregate",
+      "category": "Class / Entity",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/06.00_Optional_Result_Contributions.json",
+      "description": "Closed aggregate grouping the three baseline optional Step-level result categories (validatorResult, errorResult, errorHandlerResult) for transport through the Step result without redefining their meaning."
+    },
+    {
+      "number": 13,
+      "name": "OptionalResultSlot",
+      "category": "Class / Generic Type",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/06.00_Optional_Result_Contributions.json",
+      "description": "Discriminated presence model where each contribution slot is independently present or absent. Absent and Present(None) are distinct; absence alone is not a universal status."
+    },
+    {
+      "number": 14,
+      "name": "Step Lifecycle - RetainForReuse",
+      "category": "Feature / Lifecycle State",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "description": "Step lifecycle disposition requesting continued availability for reuse. Complete only when reuse/reset/readiness/isolation conditions are satisfied; admission closure is staged during settlement/reset."
+    },
+    {
+      "number": 15,
+      "name": "Step Lifecycle - TerminalRetirement",
+      "category": "Feature / Lifecycle State",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "description": "Step lifecycle disposition requesting terminal release. Complete only when admission is closed, all accepted invocations and obligations are settled, and required internal release is confirmed."
+    },
+    {
+      "number": 16,
+      "name": "Step Admission Boundary",
+      "category": "Feature / Boundary",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "description": "Linearizable ordering at the Step public boundary for admission of execute invocations and closure for RetainForReuse or TerminalRetirement. Invocations accepted before closure belong to the retirement settlement set."
+    },
+    {
+      "number": 17,
+      "name": "Prefect Adoption and Integration Architecture",
+      "category": "Architectural Design / Document",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/Prefect_Adoption_And_Integration_Architecture_v1.0.json",
+      "description": "Establishes Prefect 3.9.2 as GPWCF's adopted external workflow runtime (ADR-GPWCF-PREFECT-001), defining integration boundary, responsibility boundaries, mapping of 13 reference-consumer stages, implementation sequence, and traceable acceptance plan."
+    },
+    {
+      "number": 18,
+      "name": "ADR-GPWCF-PREFECT-001",
+      "category": "Decision Record / ADR",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/Prefect_Adoption_And_Integration_Architecture_v1.0.json",
+      "description": "Accepted decision to adopt Prefect 3 as the external workflow runtime. Uses Prefect-native Flows/Subflows and Tasks as execution constructs while preserving GPWCF-owned component contracts, semantic composition, typed outcomes, identity domains, artifact custody, and specialized relationship rules."
+    },
+    {
+      "number": 19,
+      "name": "Prefect Native Hierarchy Topology",
+      "category": "Feature / Topology",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-01/PHASE-01_Topology_Decision_Record.json",
+      "description": "GPWCF-to-Prefect boundary mapping: Pipeline Root -> Native Flow, Stage -> Stage Parent Flow, Step -> Step Subflow, SPU -> Native Task. Uses invoke_stage and invoke_step dispatch Tasks as invocation mechanisms."
+    },
+    {
+      "number": 20,
+      "name": "Prefect Dispatch Tasks",
+      "category": "Component / Mechanism",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-01/PHASE-01_Topology_Decision_Record.json",
+      "description": "Narrow Prefect Task dispatch wrappers (invoke_stage, invoke_step) used to invoke native child Flow objects while preserving Prefect parent_task_run_id relationships. Carry no GPWCF business or composition semantics."
+    },
+    {
+      "number": 21,
+      "name": "Domain Identity versus Prefect Operational Identity",
+      "category": "Feature / Conceptual Distinction",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-01/PHASE-01_Topology_Decision_Record.json",
+      "description": "GPWCF domain identities (Pipeline, Stage, Step, SPU, invocation) remain separate from Prefect Flow Run IDs and Task Run IDs. Prefect State is operational execution evidence, not a domain result."
+    },
+    {
+      "number": 22,
+      "name": "PHASE-00 Contract Inventory",
+      "category": "Architectural Design / Document",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-00/PHASE-00_Contract_Inventory.json",
+      "description": "Baseline-frozen inventory of generic Stage/Step/SPU/result contracts and versions, environment baseline (CPython 3.15.1 / Prefect 3.9.2), and PHASE-00 disposition identifying open gaps for subsequent phases."
+    },
+    {
+      "number": 23,
+      "name": "PHASE-01 Acceptance Results",
+      "category": "Architectural Design / Evidence Record",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-01/PHASE-01_Acceptance_Results.json",
+      "description": "Native hierarchy acceptance results qualifying Pipeline Root Flow, Stage Parent Flows, Step Subflows, SPU Tasks, and identity correlation. Fixture-only qualification; production GPWCF binding out of scope."
+    },
+    {
+      "number": 24,
+      "name": "PHASE-02 Acceptance Results",
+      "category": "Architectural Design / Evidence Record",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Acceptance_Results.json",
+      "description": "Deployment-backed Stage invocation acceptance results qualifying same-host two-Process-Worker concurrent sibling Stage Flow execution, native identity correlation, indirect parent linkage, and Stage result retrieval."
+    },
+    {
+      "number": 25,
+      "name": "Contract Classification and Allocation",
+      "category": "Architectural Design / Document",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-03_GPWCF_Structure/01.01_Contract_Classification_and_Allocation.json",
+      "description": "PHASE-03 evidence-based classification and logical module allocation of existing GPWCF architecture artifacts and contracts before defining module boundaries, dependency architecture, or filesystem changes."
+    },
+    {
+      "number": 26,
+      "name": "Dependency and Public API Architecture",
+      "category": "Architectural Design / Document",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-03_GPWCF_Structure/Dependency_and_Public_API_Architecture.json",
+      "description": "PHASE-03 defining dependency ownership and direction, installation profiles, and Core vs Prefect Integration Public APIs. DEP-002: Prefect is opt-in dependency of Prefect Integration package, never Core."
+    },
+    {
+      "number": 27,
+      "name": "Filesystem Architecture",
+      "category": "Architectural Design / Document",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-03_GPWCF_Structure/Filesystem_Architecture.json",
+      "description": "PHASE-03 accepted filesystem/package ownership architecture materializing approved package boundaries and package markers only; directories allocated by cohesive ownership and dependency boundary."
+    },
+    {
+      "number": 28,
+      "name": "Framework Module Boundary Model",
+      "category": "Architectural Design / Document",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-03_GPWCF_Structure/Framework_Module_Boundary_Model.json",
+      "description": "PHASE-03 logical module and dependency-boundary baseline retaining Entity/Aggregate ownership: Stage, Step, SPU as distinct Entities; composition owned by Aggregate; Core owns domain contracts, Prefect owns execution mechanisms."
+    },
+    {
+      "number": 29,
+      "name": "Core Public API vs Prefect Integration Public API",
+      "category": "Feature / API Boundary",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-03_GPWCF_Structure/Dependency_and_Public_API_Architecture.json",
+      "description": "Separable public API surfaces; Core must remain usable with Prefect absent. No Prefect types leak into Core API. Public API is an explicit curated stable boundary under public_api."
+    },
+    {
+      "number": 30,
+      "name": "Architectural Goals",
+      "category": "Architectural Design / Document",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/01.00_Architectural_Goals.md",
+      "description": "Defines the target architecture: Prefect 3.9.2 native execution, GPWCF Public API (Core + Prefect), Stage/Step/SPU Entities, Supporting Patterns, and four non-violable conditions (Functional Completeness, Hierarchical Completeness, Dependency Integrity, Runtime Independence)."
+    },
+    {
+      "number": 31,
+      "name": "Functional Completeness Condition",
+      "category": "Feature / Design Principle",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/01.00_Architectural_Goals.md",
+      "description": "Every function must have a clear contract, implementation, result, and defined lifecycle responsibility."
+    },
+    {
+      "number": 32,
+      "name": "Hierarchical Completeness Condition",
+      "category": "Feature / Design Principle",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/01.00_Architectural_Goals.md",
+      "description": "Each level participates in hierarchical nesting within its own scope without requiring a custom workflow engine inside GPWCF."
+    },
+    {
+      "number": 33,
+      "name": "Dependency Integrity Condition",
+      "category": "Feature / Design Principle",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/01.00_Architectural_Goals.md",
+      "description": "No reverse or circular dependencies between components."
+    },
+    {
+      "number": 34,
+      "name": "Runtime Independence Condition",
+      "category": "Feature / Design Principle",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/01.00_Architectural_Goals.md",
+      "description": "Core remains usable without requiring Prefect installation, while allowing Prefect integration when necessary."
+    },
+    {
+      "number": 35,
+      "name": "Stage Callable Contract (G-01 / F-08)",
+      "category": "Architectural Design / Gap Solution",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/02.00_Determined_Gaps_And_Candidate_Architectural_Solutions/F-08_Stage_Callable_Contract_And _Prefect_Binding.md",
+      "description": "Unified contract defining how a Stage receives invocation, returns result, and integrates with parent workflow. StageAggregate implementing a callable contract independent of Prefect; StageCallableContract has no awareness of Flow, Deployment, or FlowRun."
+    },
+    {
+      "number": 36,
+      "name": "Stage Flow Result Strategy (G-02 / F-06)",
+      "category": "Architectural Design / Gap Solution",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/02.00_Determined_Gaps_And_Candidate_Architectural_Solutions/F-06_Stage_Flow_Result.md",
+      "description": "Generic StageResult contract with specialized payload (StageResult[TStagePayload]) consisting of generic envelope (Stage identity, invocation identity, completion, outcome classification, correlation, settlement, diagnostics) plus consumer-specialized payload."
+    },
+    {
+      "number": 37,
+      "name": "Pipeline Root Contract (G-03)",
+      "category": "Architectural Design / Gap Solution",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/03.00_Functional_Gaps_Closure.md",
+      "description": "Pipeline Invocation Contract without a Root Entity (Option C): defines Pipeline Invocation Identity, Stage Invocation Requests, Shared Pipeline Context, Stage Result Collection, Overall Pipeline Settlement, Correlation Information. Root Flow remains consumer-owned and executed by Prefect."
+    },
+    {
+      "number": 38,
+      "name": "Generic Diagnostics Contract (G-04)",
+      "category": "Architectural Design / Gap Solution",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/03.00_Functional_Gaps_Closure.md",
+      "description": "Constrained Generic Diagnostics Contract followed by decoupling of Generator Error Model; Dependency Closure Analysis identifies which contracts require diagnostics, specialized error handling, or generator-specific error semantics."
+    },
+    {
+      "number": 39,
+      "name": "StepExecutionResult Optional Result Slots (G-05 / F-05)",
+      "category": "Architectural Design / Gap Solution",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/03.00_Functional_Gaps_Closure.md",
+      "description": "Typed extension slots combined with typed result contributions. StepExecutionResult[TCoreResult, TOptionalContributions] structure; Core Result mandatory, optional results added via typed contributions with clear identities and types."
+    },
+    {
+      "number": 40,
+      "name": "Single Step Publication (G-06)",
+      "category": "Architectural Design / Gap Solution",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/03.00_Functional_Gaps_Closure.md",
+      "description": "Publication/recovery policy remains a concrete consumer specialization; no generic transaction manager or universal publication policy is introduced."
+    },
+    {
+      "number": 41,
+      "name": "Production Prefect Binding (G-07)",
+      "category": "Architectural Design / Gap Solution",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/03.00_Functional_Gaps_Closure.md",
+      "description": "Fixture qualification is not production binding evidence; real GPWCF contract binding and failure/cancellation/recovery qualification remain required before production Prefect binding."
+    },
+    {
+      "number": 42,
+      "name": "F-01 Independence of StepExecutionResult from Step Aggregate",
+      "category": "Architectural Design / Gap Solution",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/02.00_Determined_Gaps_And_Candidate_Architectural_Solutions/F-01_Independence_Of_StepExecutionResult_From_Step_Aggregate.md",
+      "description": "StepExecutionResult remains logically independent module within the Step package (Option B); contract defines Step identity, invocation identity, completion status, SPU results, supporting unit results, reconciliation information, and failure/uncertainty details without Prefect-specific states."
+    },
+    {
+      "number": 43,
+      "name": "F-02 Conditional Step Error Model",
+      "category": "Architectural Design / Gap Solution",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/02.00_Determined_Gaps_And_Candidate_Architectural_Solutions/F-02_ Conditional_Step_Error_Model.md",
+      "description": "Three independent concepts: Error Identity/Description, Failure Semantics, Execution Outcome. Minimal core derived from Generic Diagnostics; Error Handling remains optional Supporting Pattern under core/supporting_patterns/error_handling/."
+    },
+    {
+      "number": 44,
+      "name": "F-03 Architectural Guidance",
+      "category": "Architectural Design / Gap Solution",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/02.00_Determined_Gaps_And_Candidate_Architectural_Solutions/F-03_Architectural_Guidance.md",
+      "description": "Documentation + Conformance Rules (Option B); programmatically verifiable rules enforceable through architecture tests (e.g., Stage not permitted to call SPU directly, Core not permitted to import Prefect, SPU not permitted to import Step Composition)."
+    },
+    {
+      "number": 45,
+      "name": "F-04 Consumer Boundary",
+      "category": "Architectural Design / Gap Solution",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/02.00_Determined_Gaps_And_Candidate_Architectural_Solutions/F-04_Consumer_Boundary.md",
+      "description": "Consumer treated as independent project relying on Public API (Option C); Consumer Integration Contract defines architectural boundary without creating consumer runtime or generator package within GPWCF."
+    },
+    {
+      "number": 46,
+      "name": "F-05 Correcting Dependency Direction between SPU and Step",
+      "category": "Architectural Design / Gap Solution",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/02.00_Determined_Gaps_And_Candidate_Architectural_Solutions/F-05_Correcting_the_dependency_direction_between_SPU_And_Step.md",
+      "description": "Option 4: both interact via independent contracts with Step retaining coordination responsibility. Step Composition selects SPUs; SPU has no reverse package dependency on Step; no Universal Executable Unit introduced."
+    },
+    {
+      "number": 47,
+      "name": "F-07 Packaging Architecture",
+      "category": "Architectural Design / Gap Solution",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/02.00_Determined_Gaps_And_Candidate_Architectural_Solutions/F-07_Packaging_Architecture.md",
+      "description": "Option A: Single Distribution with Optional Prefect Extra (gpwcf Core + optional prefect extra). Core installs without Prefect; installing Core does not trigger indirect Prefect installation. One GPWCF distribution for initial release."
+    },
+    {
+      "number": 48,
+      "name": "F-09 Public API Tests",
+      "category": "Architectural Design / Gap Solution",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/02.00_Determined_Gaps_And_Candidate_Architectural_Solutions/F-09_Public_API_Tests.md",
+      "description": "Public API Conformance Suite demonstrating Public API functions as stable interface; tests/core/, tests/public_api/core/, tests/public_api/integrations/prefect/, tests/integrations/prefect/, tests/architecture/ structure."
+    },
+    {
+      "number": 49,
+      "name": "F-10 Shared Contracts",
+      "category": "Architectural Design / Gap Solution",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/02.00_Determined_Gaps_And_Candidate_Architectural_Solutions/F-10_Shared_Contracts.md",
+      "description": "Create shared contracts only when clear need arises for contract independent of any specific entity (Option C). Acceptance criteria: more than one actual consumer, meaning independent of entity, no consumer implementation dependency, no circular dependency, clear ownership."
+    },
+    {
+      "number": 50,
+      "name": "PHASE-03 Suggested ADRs and Remaining Gates",
+      "category": "Architectural Design / Decision Record",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/04.00_Suggested_ADRs.md",
+      "description": "Accepted PHASE-03 dispositions for Step Result, Conditional Step Error Model, Architectural Guidance, Consumer, SPU/Step Dependency, Stage Result, Packaging, Stage Callable, Public API Tests, Shared Contracts, Pipeline Root, Optional Result Slots, Single Step Publication, Prefect Binding."
+    },
+    {
+      "number": 51,
+      "name": "Stage Composition Owns Step Membership",
+      "category": "Feature / Responsibility",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-03_GPWCF_Structure/Framework_Module_Boundary_Model.json",
+      "description": "Stage Composition coordinates Step public contracts only; Step Composition coordinates SPUs and selected Supporting Units. Composition is an aggregate responsibility owned by the Entity/Aggregate whose internal elements it coordinates."
+    },
+    {
+      "number": 52,
+      "name": "SPU/Step Dependency Direction",
+      "category": "Feature / Dependency Rule",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-03_GPWCF_Structure/Framework_Module_Boundary_Model.json",
+      "description": "Step Composition to SPU contract only; SPU has no reverse package dependency on Step. SPU package is independently callable processing Entity, not a Step subfolder."
+    },
+    {
+      "number": 53,
+      "name": "PHASE-03 Disposition and Remaining Gates",
+      "category": "Architectural Design / Decision Record",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/03.00_Functional_Gaps_Closure.md",
+      "description": "PHASE-03 disposition (2026-11-09) for G-01 through G-07; remaining gates include Stage callable contract/signature, Stage-specific Flow Result contract, StepExecutionResult optional result-slot typing, generic error vocabulary, concrete publication/recovery specialization, production Prefect binding, minimal Prefect lock, build backend/pinning."
+    },
+    {
+      "number": 54,
+      "name": "GPWCF Distribution Shape",
+      "category": "Feature / Packaging",
+      "link": "../../../../.docs/00.03_Architecture_Closure_Design/04.00_Suggested_ADRs.md",
+      "description": "One GPWCF distribution with dependency-free Core base and optional Prefect extra. Core installs and imports without Prefect; optional extra supplies Prefect Integration runtime. prefect==3.9.2 remains the direct Integration requirement."
+    },
+    {
+      "number": 55,
+      "name": "Reference Consumer (SMRB.PayloadDescriptionGenerator)",
+      "category": "Entity / Reference",
+      "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/Prefect_Adoption_And_Integration_Architecture_v1.0.json",
+      "description": "Reference consumer for target-specific integration design and end-to-end acceptance; 13 specified stages (STG-01 through STG-13). Stage Model objectives and execution_steps are not presumed to be GPWCF Steps or SPUs."
+    }
+  ]
+}
+

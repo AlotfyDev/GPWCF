@@ -1,0 +1,10 @@
+{
+  "serialNumber": 5,
+  "name": "StepInvocation",
+  "category": "Class / Entity",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/04.00_Step_Callable.json",
+  "description": "Typed invocation envelope carrying the input and required identity/correlation context (Step identity, Step invocation identity, owning Stage identity, parent Stage invocation identity, optional pipeline identity, execution context).",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,19 @@
+digraph "Core vs Prefect Integration Boundary" {
+  rankdir=LR;
+  node [shape=box, style=filled, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=8, len=1.5];
+  label="Core vs Prefect Integration Boundary";
+  labelloc=t;
+  Core [fillcolor="#e6f3ff", tooltip="GPWCF Core: usable without Prefect"];
+  PrefectIntegration [fillcolor="#ffe6e6", tooltip="Prefect Integration: opt-in extra"];
+  CorePublicAPI [fillcolor="#e6ffe6", tooltip="Core Public API (no Prefect types)"];
+  IntegrationPublicAPI [fillcolor="#ffe6e6", tooltip="Integration Public API"];
+  PrefectRuntime [fillcolor="#ffe6e6", tooltip="Prefect 3.9.2 native runtime"];
+  Core -> CorePublicAPI [label="exposes", color="#0066cc"];
+  PrefectIntegration -> IntegrationPublicAPI [label="exposes", color="#cc6600"];
+  PrefectIntegration -> PrefectRuntime [label="depends on", color="#cc6600"];
+  Core -> PrefectIntegration [label="FORBIDDEN", style=dashed, color="#ff0000"];
+  CorePublicAPI -> PrefectRuntime [label="NO Prefect types leak", style=dashed, color="#ff0000"];
+  CorePublicAPI -> PrefectIntegration [label="NO dependency", style=dashed, color="#ff0000"];
+  IntegrationPublicAPI -> CorePublicAPI [label="complements", style=dotted, color="#666666"];
+}

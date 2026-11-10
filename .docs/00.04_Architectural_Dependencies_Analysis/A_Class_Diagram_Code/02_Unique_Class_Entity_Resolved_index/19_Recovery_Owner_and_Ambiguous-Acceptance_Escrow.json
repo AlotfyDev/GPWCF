@@ -1,0 +1,10 @@
+{
+  "serialNumber": 19,
+  "name": "Recovery Owner and Ambiguous-Acceptance Escrow",
+  "category": "Class / Entity",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/11,00_Publication.json",
+  "description": "Recovery Owner obligations for ambiguous-acceptance escrow and status reconciliation; every concrete Step names a Recovery Owner and defines escrow/reconciliation and status retention for unresolved produced-but-unaccepted outputs.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

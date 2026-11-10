@@ -1,0 +1,2 @@
+# Dev/test-only dependencies. Runtime stays standard-library-only (requirements.txt).
+pytest>=8

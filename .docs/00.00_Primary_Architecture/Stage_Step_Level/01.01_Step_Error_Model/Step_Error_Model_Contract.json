@@ -1,0 +1,356 @@
+{
+  "documentId": "pipeline.step-error-model.contract",
+  "documentVersion": "0.2.0",
+  "status": "design-baseline",
+  "title": "Step Error Model Contract",
+  "scope": {
+    "architecturalLevel": "stage-step-component",
+    "component": "Step Error Model",
+    "owningLevel": "step",
+    "purpose": "Define the Step-specific ErrorResult contract and the rules for representing and aggregating SPUError occurrences produced within the Step.",
+    "appliesTo": "A concrete Step that defines an Error Model as one of its supporting components.",
+    "normativeBoundary": "This contract defines the structure and semantics of ErrorResult. It does not define SPU error types, create SPU error occurrences, execute error handling, or assemble StepExecutionResult."
+  },
+  "contract": {
+    "name": "ErrorResult",
+    "genericType": "ErrorResult[TErrorOccurrenceEntry, TErrorAggregationContext]",
+    "definedBy": "The Step-specific Error Model contract.",
+    "assembledBy": "The owning Step Composition as part of assembling StepExecutionResult[TOutput].",
+    "purpose": "Carry a Step-specific collection of SPU error occurrence entries while preserving the identity, source, definition reference, and occurrence-specific content of each represented occurrence.",
+    "coreMeaning": "ErrorResult is an aggregate representation of error occurrences. It is not an error occurrence, an error type definition, an error-handling result, or a Step execution status.",
+    "nonResponsibilities": [
+      "Define or register SPUErrorTypeDefinition instances.",
+      "Create, replace, or own the lifecycle of SPUError occurrences.",
+      "Store error occurrences in an SPUErrorTypeDefinitionRegistry.",
+      "Execute or prescribe error-handling actions.",
+      "Define a universal error taxonomy, severity model, or handling policy.",
+      "Determine Step, Stage, or Pipeline control flow.",
+      "Represent thrown exceptions that prevent an SPU from returning SPUExecutionResult."
+    ]
+  },
+  "typeParameters": [
+    {
+      "name": "TErrorOccurrenceEntry",
+      "meaning": "The Step-specialized entry type used to represent one SPUError occurrence in the ErrorResult collection.",
+      "specialization": "Defined by the owning Step. It must preserve the producer SPU identity and the original occurrence identity and content. It may accommodate multiple SPUError specializations when the Step aggregates occurrences from more than one SPU."
+    },
+    {
+      "name": "TErrorAggregationContext",
+      "meaning": "The Step-specific context associated with the aggregation represented by ErrorResult, when the Step requires such context.",
+      "specialization": "Its structure, semantics, presence, and use are defined by the owning Step. This common contract does not prescribe fields or require a universal context schema."
+    }
+  ],
+  "occurrenceEntry": {
+    "genericConcept": "SPUErrorOccurrenceEntry[TSPUErrorOccurrence]",
+    "purpose": "Associate one original SPUError occurrence with the identity of the SPU that produced it, so occurrences from different SPUs remain distinguishable within one Step-level collection.",
+    "requiredStructuralElements": [
+      {
+        "name": "producerSPUIdentity",
+        "conceptualType": "SPUIdentity",
+        "meaning": "Identifies the concrete SPU that created the represented occurrence.",
+        "constraints": [
+          "The identity is the identity of the occurrence producer, not the Step identity, Registry identity, error type identity, or occurrence identity.",
+          "It must identify the producer within the identity scope defined by the owning Pipeline and Step architecture.",
+          "It must remain associated with the occurrence when the occurrence is represented in ErrorResult."
+        ]
+      },
+      {
+        "name": "occurrence",
+        "conceptualType": "SPUError[TErrorOccurrenceContext] or a faithful representation/reference of that occurrence",
+        "meaning": "Carries or refers to the original SPUError occurrence, including its occurrence identity, exact error type definition reference, and complete occurrence-specific context.",
+        "constraints": [
+          "The represented occurrence must remain the occurrence created by the producer SPU; aggregation must not create a replacement occurrence.",
+          "The occurrence identity must be preserved unchanged.",
+          "The SPUErrorTypeDefinitionReference must be preserved unchanged, including both registryIdentity and errorTypeIdentity.",
+          "The occurrence-specific context and all content required by the specialized SPUError contract must remain available without loss.",
+          "A reference to the original occurrence or a faithful representation preserving its identity and complete content may be used; this contract does not mandate a particular memory ownership or storage strategy."
+        ]
+      }
+    ],
+    "compositeIdentity": {
+      "name": "OccurrenceEntryIdentity",
+      "conceptualType": "CompositeIdentity",
+      "elements": [
+        "producerSPUIdentity",
+        "occurrenceIdentity"
+      ],
+      "meaning": "Identifies one represented occurrence within the Step-level aggregate, including the producer scope needed to distinguish occurrences whose occurrence identities are only locally unique.",
+      "constraints": [
+        "The composite identity is an addressing/reference concept for the aggregate; it does not replace or mutate the occurrenceIdentity stored by SPUError.",
+        "The error type definition reference is not part of this composite occurrence identity because it identifies the error kind, not the occurrence.",
+        "The registryIdentity and errorTypeIdentity remain available through the occurrence's SPUErrorTypeDefinitionReference."
+      ]
+    }
+  },
+  "elements": [
+    {
+      "name": "errorOccurrences",
+      "type": "Collection[TErrorOccurrenceEntry]",
+      "cardinality": "One or more entries for a produced ErrorResult.",
+      "meaning": "The collection of SPUError occurrence entries represented by this ErrorResult.",
+      "constraints": [
+        "The collection may contain occurrences produced by one SPU or by multiple SPUs participating in the owning Step.",
+        "Each entry represents one distinct original occurrence.",
+        "Every occurrence supplied to the Step's ErrorResult construction or aggregation process and selected for inclusion under the Step-specific aggregation rules must be represented without silent loss.",
+        "Different occurrences must not be merged into one occurrence entry merely because they share an error type definition or have similar content.",
+        "The same occurrence must not be duplicated in the collection unless the Step-specific contract explicitly defines a multi-view representation; such views must remain distinguishable from additional occurrences.",
+        "The collection implementation, mutability, and concrete ordering are defined by the Step specialization."
+      ]
+    },
+    {
+      "name": "aggregationContext",
+      "type": "Optional[TErrorAggregationContext]",
+      "absentValue": "null or the Step-specialized equivalent of absence",
+      "meaning": "Optional Step-specific context describing the aggregation represented by this ErrorResult.",
+      "constraints": [
+        "The common contract does not prescribe the structure or semantics of this context.",
+        "A Step may omit this element when no aggregation-level context is required.",
+        "The context must not replace or absorb the identity or occurrence-specific content of any entry."
+      ]
+    }
+  ],
+  "occurrencePreservation": {
+    "principle": "ErrorResult preserves the identity and content of each original SPUError occurrence represented in its collection; aggregation does not manufacture replacement occurrences.",
+    "perEntryInvariants": [
+      "Preserve producerSPUIdentity.",
+      "Preserve occurrenceIdentity exactly.",
+      "Preserve the complete SPUErrorTypeDefinitionReference, including registryIdentity and errorTypeIdentity.",
+      "Preserve the occurrenceContext and all additional content required by the specialized SPUError contract.",
+      "Preserve the association between the producer SPU and the occurrence."
+    ],
+    "representationOptions": [
+      "A reference to the original SPUError occurrence.",
+      "A faithful value or serialized representation that retains the original occurrence identity and all contractually relevant occurrence content."
+    ],
+    "prohibitions": [
+      "Do not construct a new SPUError occurrence as a side effect of aggregation.",
+      "Do not replace occurrenceIdentity with an aggregate-generated identity.",
+      "Do not replace the exact definition reference with copied descriptive text or errorTypeIdentity alone.",
+      "Do not discard producerSPUIdentity when combining occurrences from multiple SPUs.",
+      "Do not treat equal error type identities as evidence that two occurrences are the same occurrence."
+    ],
+    "identityDistinctions": [
+      "SPU identity identifies the producer.",
+      "Registry identity identifies the Registry Instance in which the error type definition is registered.",
+      "Error type identity identifies the registered error kind within that Registry.",
+      "Occurrence identity identifies one actual occurrence within its defined identity scope.",
+      "OccurrenceEntryIdentity combines producerSPUIdentity and occurrenceIdentity for unambiguous Step-level occurrence addressing."
+    ]
+  },
+  "aggregationRules": {
+    "ownership": "The Step Error Model defines the rules; the owning Step Composition performs the physical ErrorResult assembly as part of StepExecutionResult construction.",
+    "rules": [
+      {
+        "name": "source-preservation",
+        "rule": "Every included occurrence remains associated with the SPU that produced it."
+      },
+      {
+        "name": "identity-preservation",
+        "rule": "Occurrence identity and the complete error type definition reference remain unchanged through aggregation."
+      },
+      {
+        "name": "occurrence-distinction",
+        "rule": "Distinct occurrences remain distinct entries even when they reference the same error type definition."
+      },
+      {
+        "name": "no-implicit-deduplication",
+        "rule": "The common contract does not permit automatic deduplication based on matching error type, context, or descriptive content."
+      },
+      {
+        "name": "no-implicit-merging",
+        "rule": "The common contract does not permit collapsing multiple occurrences into a synthetic occurrence or a single entry that loses their individual identities."
+      },
+      {
+        "name": "content-preservation",
+        "rule": "Aggregation must not discard or reinterpret occurrence-specific context required by the originating SPUError specialization."
+      },
+      {
+        "name": "step-defined-selection",
+        "rule": "The owning Step defines which supplied occurrences participate in a particular ErrorResult. Once selected for inclusion, an occurrence must be represented in accordance with this contract."
+      },
+      {
+        "name": "step-defined-ordering",
+        "rule": "The owning Step defines whether collection order is meaningful and, if so, how entries are ordered. The common contract does not define a universal chronological, production, severity, or priority order."
+      }
+    ],
+    "aggregationContextBoundary": "TErrorAggregationContext and any additional aggregation metadata are Step-specialized. They must not obscure, replace, or weaken the required occurrence-entry invariants."
+  },
+  "errorHandlingRelationship": {
+    "separationPrinciple": "ErrorResult represents error occurrences; ErrorHandlerResult represents the result of error-handling activity. They are distinct result contracts and neither contains nor subsumes the other.",
+    "errorHandlerResultProducer": "The Step-specific Error Handling Composition assembles ErrorHandlerResult from operation entries accepted from applicable Error Handling Units.",
+    "relationshipRules": [
+      "An Error Handling Unit may process all or a subset of the occurrences represented by ErrorResult, according to its own contract and the owning Step design.",
+      "ErrorHandlerResult may identify the occurrences to which its handling result relates by using OccurrenceEntryIdentity.",
+      "The occurrence reference used by ErrorHandlerResult consists of producerSPUIdentity and occurrenceIdentity, as specified by ErrorHandlerResult_Contract.json; it identifies the original occurrence without embedding ErrorResult.",
+      "An ErrorHandlerResult occurrence reference does not replace the original occurrence or its error type definition reference.",
+      "ErrorHandlerResult must not contain or own ErrorResult as a nested result merely to indicate which errors were handled.",
+      "Producing ErrorHandlerResult does not remove, mutate, or erase the corresponding entries from ErrorResult.",
+      "This contract does not prescribe whether handling is performed per occurrence, per group, or through another Step-specific unit of work.",
+      "The structure, execution semantics, and outcome interpretation of ErrorHandlerResult remain defined by the applicable error-handling contract.",
+      "When the corresponding ErrorResult is present and contains the referenced occurrence, the reference resolves to that occurrence entry; ErrorResult is not required to be embedded in ErrorHandlerResult, and the two StepExecutionResult fields remain independently optional.",
+      "During an SPU invocation, an Error Handling Unit resolves target references only through the authorized occurrence-access surface supplied by that invocation; it does not resolve arbitrary producer/occurrence identity pairs outside that scope.",
+      "After the invocation, a reference resolves against ErrorResult only when ErrorResult is present and contains the matching original occurrence; otherwise post-invocation resolution requires a Step-retained resolution scope or another explicitly defined stable mechanism.",
+      "A HandledErrorOccurrenceReference is an identity value, not an owning pointer; ErrorHandlerResult does not extend the lifetime of the original occurrence.",
+      "If ErrorResult is absent and no separate resolution mechanism is retained, the reference remains a correlation identity and post-invocation dereferencing is not guaranteed."
+    ],
+    "referenceConcept": {
+      "name": "HandledErrorOccurrenceReference",
+      "conceptualType": "OccurrenceEntryIdentity",
+      "requiredElements": [
+        "producerSPUIdentity",
+        "occurrenceIdentity"
+      ],
+      "meaning": "References an original SPUError occurrence by producerSPUIdentity and occurrenceIdentity. If that occurrence is represented in ErrorResult, the reference resolves to its corresponding entry; the reference does not contain ErrorResult.",
+      "lifetimeAndResolution": "The invocation-scoped access surface is supplied by the SPU. Post-invocation resolution is backed by ErrorResult when it contains the occurrence, or by a separate Step-defined retained resolution scope; the reference itself does not own or keep the occurrence alive."
+    }
+  },
+  "StepExecutionResultIntegration": {
+    "field": "errorResult",
+    "type": "Optional[ErrorResult]",
+    "producer": "Step Composition",
+    "rules": [
+      "Step Composition assembles ErrorResult according to this contract and the owning Step's specialization.",
+      "Step Composition assembles and returns StepExecutionResult[TOutput].",
+      "ErrorResult remains independently optional in StepExecutionResult.",
+      "The presence or absence of ErrorResult does not, by itself, define Step execution success or failure.",
+      "ErrorHandlerResult remains a separate independently optional StepExecutionResult element.",
+      "An ErrorResult does not become a StepExecutionResult, and an individual SPUError occurrence does not become an ErrorResult by itself."
+    ]
+  },
+  "exceptionBoundary": {
+    "rules": [
+      "A thrown exception that prevents an SPU from returning StepExecutionResult remains distinct from SPUError occurrences.",
+      "An exception is not automatically converted into an SPUError occurrence or inserted into ErrorResult.",
+      "Any explicit exception-to-SPUError conversion must be defined by the owning SPU contract; this Step Error Model contract does not introduce such conversion."
+    ]
+  },
+  "responsibilityAllocation": {
+    "SPU": [
+      "Own and register its SPUErrorTypeDefinition instances through its Pipeline-assigned SPUErrorTypeDefinitionRegistry.",
+      "Create SPUError occurrences for errors arising within its own processing responsibility.",
+      "Return or otherwise make the produced occurrences available to Step Composition with producer identity and occurrence identity preserved."
+    ],
+    "StepErrorModel": [
+      "Define the ErrorResult contract and its Step-specific specialization.",
+      "Define the occurrence-entry representation and aggregation invariants.",
+      "Define Step-specific selection, ordering, and aggregation-context semantics where required.",
+      "Define the reference relationship between ErrorResult occurrences and error-handling results without merging the result contracts."
+    ],
+    "ErrorHandlingUnit": [
+      "Perform the applicable error-handling operations.",
+      "Produce a specialized THandlingOperationResult for each operation execution that returns a structured result.",
+      "Publish each complete operation entry through the invocation-bound OperationEntryPublisher under its matching PublicationReservation.",
+      "Identify related occurrences using the composite occurrence reference when required by the Step design.",
+      "Do not assemble ErrorHandlerResult unless the owning Step explicitly assigns that responsibility."
+    ],
+    "Pipeline": [
+      "Retain ownership and lifecycle responsibility for the SPUErrorTypeDefinitionRegistry Instances assigned to SPUs.",
+      "The Pipeline does not own ErrorResult assembly or SPUError occurrence creation by virtue of owning those Registry Instances."
+    ],
+    "StepSpecificErrorHandlingComposition": [
+      "Retain entries accepted atomically by its Publisher.",
+      "Assemble ErrorHandlerResult from the accepted operation entries according to the Step-specific contract.",
+      "Preserve every operation entry and its identity/result/target references without merging distinct executions."
+    ],
+    "StepComposition": [
+      "Collect eligible SPUError occurrences from internal SPU invocations.",
+      "Assemble ErrorResult according to the owning Step Error Model contract and its concrete specialization.",
+      "Assemble and return StepExecutionResult[TOutput], retaining ErrorResult independently from ErrorHandlerResult."
+    ]
+  },
+  "explicitNonGoals": [
+    "No universal TErrorOccurrenceContext is imposed across SPUs.",
+    "No universal TErrorAggregationContext schema is imposed across Steps.",
+    "No universal collection implementation, mutability model, or ordering is mandated.",
+    "No universal occurrence selection, deduplication, grouping, severity, priority, or handling policy is imposed.",
+    "No universal ErrorHandlerResult schema or handler execution protocol is defined.",
+    "No automatic relationship between an error type's handlingAction description and execution of an Error Handling Unit is introduced.",
+    "No exception-to-occurrence conversion is imposed.",
+    "No language-specific class hierarchy, union representation, serialization format, or memory ownership model is mandated."
+  ],
+  "relationships": [
+    {
+      "from": "SPU",
+      "to": "SPUError occurrence",
+      "relationship": "creates-and-makes-original-occurrence-available-to-Step-Composition"
+    },
+    {
+      "from": "SPUError occurrence",
+      "to": "SPUExecutionResult or authorized Step-scoped occurrence channel",
+      "relationship": "made-available-with-producer-identity-and-original-occurrence-identity"
+    },
+    {
+      "from": "SPUErrorOccurrenceEntry collection",
+      "to": "ErrorResult",
+      "relationship": "forms-step-specific-occurrence-aggregate"
+    },
+    {
+      "from": "Step Error Model",
+      "to": "ErrorResult",
+      "relationship": "defines-contract-representation-and-aggregation-rules"
+    },
+    {
+      "from": "Step Composition",
+      "to": "ErrorResult",
+      "relationship": "assembles-according-to-Step-Error-Model-contract"
+    },
+    {
+      "from": "ErrorResult",
+      "to": "StepExecutionResult[TOutput].errorResult",
+      "relationship": "is-carried-as-independent-optional-result-element"
+    },
+    {
+      "from": "ErrorHandlerResult",
+      "to": "StepExecutionResult[TOutput].errorHandlerResult",
+      "relationship": "is-carried-as-independent-optional-result-element"
+    }
+  ],
+  "references": [
+    {
+      "document": "../01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "relationship": "aggregate-result-field-and-independence-boundary"
+    },
+    {
+      "document": "../Stage_Step_Level_Architecture.json",
+      "relationship": "Step-level ownership-and-supporting-component-architecture"
+    },
+    {
+      "document": "../01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      "relationship": "SPU occurrence-production-and-result-assembly-contract"
+    },
+    {
+      "document": "../../../Common/Error_Model.json",
+      "relationship": "SPUError occurrence, error type definition, and Registry contracts"
+    },
+    {
+      "document": "../01.02_Step_Error_Handling/ErrorHandlerResult_Contract.json",
+      "relationship": "detailed-error-handling-operation-entry-target-reference-and-ErrorHandlerResult-aggregation-contract"
+    },
+    {
+      "document": "../01.02_Step_Error_Handling/ErrorHandlingUnit_Contract.json",
+      "relationship": "Error-Handling-Unit-target-occurrence-access-and-reference-lifetime-contract"
+    },
+    {
+      "document": "../01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json",
+      "relationship": "mandatory per-Step publication custody, recovery, identity, and retention specialization"
+    },
+    {
+      "document": "../00.00_Step/Step_Contract.json",
+      "relationship": "Step Composition ownership and Stage-facing result assembly"
+    },
+    {
+      "document": "../01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+      "relationship": "per-SPU invocation result and occurrence availability"
+    }
+  ],
+  "openDesignDetails": [
+    "Define the concrete TErrorOccurrenceEntry specialization for each Step, including how heterogeneous SPUError context specializations are represented if multiple SPUs contribute.",
+    "Define the concrete TErrorAggregationContext specialization and whether the aggregationContext element is required for that Step.",
+    "Define the concrete collection type, mutability, and ordering semantics for each Step.",
+    "Define the Step-specific occurrence selection and any explicitly permitted view or grouping behavior without violating occurrence identity preservation.",
+    "Define serialization and cross-boundary reference resolution only if ErrorResult must cross a process or persistence boundary.",
+    "Define any occurrence-reference validity/lifetime guarantees required by the selected reference or faithful-representation strategy.",
+    "Define Step-specific ErrorHandlerResult type-parameter specializations and any Step-specific refinements to operation-to-target cardinality.",
+    "Define the concrete post-invocation occurrence-resolution retention policy for each Step when references must remain dereferenceable independently of ErrorResult."
+  ]
+}

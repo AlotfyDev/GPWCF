@@ -1,0 +1,18 @@
+[
+  {
+    "stageIdentity": "STAGE-A",
+    "deploymentParentTaskRunId": "8c548285-33d5-4838-b703-f71bfe220b85",
+    "rootDispatchTaskRunId": "01a1bc97-9bab-738a-b10f-e628cb83120e",
+    "syntheticParentTaskInputs": "{'stage_identity': [], 'stage_invocation_identity': [], 'pipeline_invocation_identity': [], 'root_flow_run_id': [], 'root_dispatch_task_run_id': [], 'trace_file': [], 'stage_delay_seconds': [], '__parents__': [TaskRunResult(input_type='task_run', id=UUID('01a1bc97-9bab-738a-b10f-e628cb83120e'))]}",
+    "syntheticParentLinksRootDispatchTask": true,
+    "passed": true
+  },
+  {
+    "stageIdentity": "STAGE-B",
+    "deploymentParentTaskRunId": "c3a7470a-ba8d-45b7-826e-ccf5a3746fdd",
+    "rootDispatchTaskRunId": "01a1bc97-9bb0-7b9b-a097-019edbfc856c",
+    "syntheticParentTaskInputs": "{'stage_identity': [], 'stage_invocation_identity': [], 'pipeline_invocation_identity': [], 'root_flow_run_id': [], 'root_dispatch_task_run_id': [], 'trace_file': [], 'stage_delay_seconds': [], '__parents__': [TaskRunResult(input_type='task_run', id=UUID('01a1bc97-9bb0-7b9b-a097-019edbfc856c'))]}",
+    "syntheticParentLinksRootDispatchTask": true,
+    "passed": true
+  }
+]

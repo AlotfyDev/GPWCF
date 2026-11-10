@@ -1,0 +1,10 @@
+{
+  "serialNumber": 52,
+  "name": "PublicationReservation",
+  "category": "Class / Entity",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/PublicationReservation_Contract.json",
+  "description": "Opaque, single-use publication capability issued by the OperationEntryPublisher; reserves complete-entry retention capacity and handoff path for exactly one Handling Operation Attempt; states Reserved/Consumed/Released with forbidden transitions and capacity invariant TotalCapacity >= ReservedCapacity + OccupiedCapacity.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

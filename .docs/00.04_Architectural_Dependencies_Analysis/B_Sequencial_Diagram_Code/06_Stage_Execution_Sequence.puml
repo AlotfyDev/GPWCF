@@ -1,0 +1,29 @@
+@startuml
+title Stage Execution Sequence - StageCallableContract Boundary
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+skinparam roundcorner 0
+
+participant "Consuming Workflow / Root" as CW
+participant "StageCallableContract" as SCC
+participant "Stage Composition" as SComp
+participant "Stage[TStagePayload]" as Stage
+participant "StageResult[TStagePayload]" as SRes
+
+CW -> SCC : StageInvocation
+(input, execution context, correlation)
+SCC -> SComp : coordinate Step instances
+SComp -> Stage : invoke Steps through public contracts
+Stage --> SComp : collect Step results
+SComp --> SCC : assemble Stage Flow Result
+SCC --> SRes : StageResult envelope
+(outputs slot, flow result slot,
+domain outcome slot, diagnostics)
+SRes --> CW : return Stage result
+
+note right of CW : StageCallableContract = public boundary
+StageAggregate owns Step membership & flow semantics
+StageResult distinct from StepExecutionResult
+Prefect State != domain result
+
+@enduml

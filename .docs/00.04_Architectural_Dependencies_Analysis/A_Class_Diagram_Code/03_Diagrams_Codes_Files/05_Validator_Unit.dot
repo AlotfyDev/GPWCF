@@ -1,0 +1,10 @@
+digraph "05_Validator_Unit" {
+  rankdir=TB;
+  node [shape=record, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=8];
+  label="05 Validator Unit Class Diagram";
+  labelloc=t;
+
+  "Validation_Functional_Binding" [label="{Validation Functional Binding|Feature / Pattern Binding|Association}", tooltip="Binding of the Validator Unit pattern to Prefect native execution (Task), preserving its specialized Behavioral, Association, and Lifecycle contracts; validation conclusions remain domain results, not"];
+
+}

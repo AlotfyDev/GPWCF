@@ -1,0 +1,10 @@
+{
+  "serialNumber": 15,
+  "name": "Prefect Transitive Lock Release Gate",
+  "category": "Feature / Release Gate",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "The exact Prefect transitive lock and clean isolated build verification remain explicit release gates; Prefect 3.9.2 preserved as optional runtime extra.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

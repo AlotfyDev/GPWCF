@@ -1,0 +1,10 @@
+{
+  "serialNumber": 3,
+  "name": "Two-Separate-Distributions Option (Deferred)",
+  "category": "Feature / Packaging Option",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "Option A (deferred): Build gpwcf-core and gpwcf-prefect as separately published distributions from the initial release; requires coordinated multi-distribution build/release and version compatibility policy.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}

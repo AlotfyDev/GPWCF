@@ -1,0 +1,10 @@
+{
+  "serialNumber": 21,
+  "name": "Required Governing Artifact Changes - Dependency_and_Public_API_Architecture",
+  "category": "Feature / Change Control",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Update Core Public API contract groups to include StageCallable/StageInvocation/StageResult, StepInvocation/StepExecutionResult/OptionalResultContributions, generic SPU result types, and canonical identities; add optional Diagnostics and separate Supporting Pattern public sub-surfaces; update Prefect Integration API to binding/configuration/correlation/result retrieval contract groups.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

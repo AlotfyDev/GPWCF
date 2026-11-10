@@ -1,0 +1,405 @@
+{
+  "documentType": "GPWCFDetailedArchitectureDesign",
+  "documentId": "gpwcf.architecture-closure.wave4.generic-diagnostics",
+  "documentVersion": "1.0.0",
+  "status": "draft-for-architecture-review",
+  "designSequence": {
+    "wave": 4,
+    "waveName": "Generic Diagnostics, Error Handling, and Publication",
+    "artifactNumber": 1,
+    "predecessorArtifacts": [
+      "../Wave!_Stage_Callable_Stage Result_Pipeline Invocation/02.00_Stage_Result.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/05.00_Step_Execution_Result.json",
+      "../Wave3_SPU_Supporting_Pattern_Functional_Binding/08.00_Supporting_Pattern_Functional_Binding.json",
+      ".docs/Architecture/Common/Error_Model.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.01_Step_Error_Model/Step_Error_Model_Contract.json"
+    ],
+    "nextArtifacts": [
+      "10.00_Error_Handling.json",
+      "11,00_Publication.json"
+    ]
+  },
+  "purpose": "Determine whether GPWCF needs a reusable generic diagnostic value contract, define its deliberately narrow semantics if adopted, and prevent descriptive diagnostics from becoming a universal Error Model, Failure taxonomy, execution outcome, or control-flow policy.",
+  "scope": {
+    "included": [
+      "The semantic distinction among Diagnostic, Error Occurrence, Failure, Exception, and domain Outcome.",
+      "A narrow typed Diagnostic value contract and its ownership boundaries.",
+      "The optional reusable module and Public API allocation for generic diagnostics.",
+      "How specialized contracts may carry diagnostics without inheriting a generic Error Model.",
+      "Dependency and non-interference rules."
+    ],
+    "excluded": [
+      "A universal Error Type Definition, Error Occurrence, Error Registry, Error Model, or error taxonomy.",
+      "A universal Failure object, failure enum, severity scale, retryability classification, or resolution status.",
+      "A universal Stage/Step/SPU outcome model.",
+      "A mandatory diagnostics field in StageResult, StepExecutionResult, SPUExecutionResult, or every error occurrence.",
+      "A logger, telemetry pipeline, event bus, diagnostic collector, storage service, or runtime manager.",
+      "A generic exception conversion or error-handling policy."
+    ]
+  },
+  "sourceAssessment": {
+    "generatorCommonErrorModel": {
+      "source": ".docs/Architecture/Common/Error_Model.json",
+      "classification": "Consumer-specific Generator Common Error Model; not a baseline GPWCF Core contract.",
+      "usefulExistingConcepts": [
+        "Error Type Definition is distinct from Error Occurrence.",
+        "SPU-level and Stage-level error families remain distinct programmatic types.",
+        "Occurrence context is specialized by its owning SPU or Stage.",
+        "A thrown exception is not automatically an SPUError or StageError.",
+        "The Error Model does not impose a universal Stage flow-control policy."
+      ],
+      "notPromoted": [
+        "Generator Pipeline ownership of the registry matrix.",
+        "Generator-specific error content and handling-action structures.",
+        "Generator-specific SPUError/StageError concrete families and registry implementations.",
+        "Any implicit requirement that every GPWCF consumer adopts this Error Model."
+      ]
+    },
+    "stepErrorModel": {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.01_Step_Error_Model/Step_Error_Model_Contract.json",
+      "classification": "Specialized Step-level Error Model contract with consumer-specific dependency clauses requiring isolation.",
+      "boundary": "The generic diagnostics design must not generalize the Step Error Model or redefine its ErrorResult aggregation."
+    },
+    "crossContractNeed": {
+      "observedConsumers": [
+        "Error occurrence contexts may carry descriptive diagnostic information.",
+        "Publisher Contract Violation requires diagnostic evidence alongside acceptance knowledge and custody facts.",
+        "Specialized lifecycle/invocation contracts may need explanatory evidence for invalid, unavailable, indeterminate, or violated conditions."
+      ],
+      "conclusion": "A narrow descriptive Diagnostic value contract is reusable across more than one specialized contract, but it is not required by every result or every consumer. It should therefore be optional and independently importable."
+    }
+  },
+  "semanticDistinctions": {
+    "diagnostic": {
+      "definition": "Descriptive evidence that helps explain or inspect a condition, observation, protocol event, or contract violation.",
+      "authority": "Descriptive only. It does not decide whether a domain operation succeeded, failed, should retry, or should transition.",
+      "examples": [
+        "A human-readable explanation of an invalid capability reference.",
+        "A producer-owned diagnostic code identifying a violated invariant.",
+        "Typed contextual detail explaining why a publication status query was unavailable."
+      ]
+    },
+    "errorOccurrence": {
+      "definition": "A specialized domain occurrence that references an Error Type Definition and carries occurrence-specific context under its owning Error Model.",
+      "authority": "Its meaning, identity, type-definition reference, and aggregation are owned by the specialized Error Model.",
+      "distinction": "A Diagnostic may appear inside an occurrence context, but a Diagnostic is not itself an SPUError, StageError, Error Type Definition, or ErrorResult."
+    },
+    "failure": {
+      "definition": "A contract-specific determination that an operation or obligation was not fulfilled, or that an expected guarantee was violated.",
+      "authority": "Failure semantics are defined by the specialized operation/contract that owns the obligation.",
+      "distinction": "A Failure may be accompanied by diagnostics and may or may not create a domain Error Occurrence. GPWCF does not introduce one universal Failure type in this design."
+    },
+    "exception": {
+      "definition": "A thrown language/runtime control-flow object indicating that an invocation did not return through its normal result boundary.",
+      "authority": "The callable and invocation contracts define propagation/handling; no automatic conversion is imposed.",
+      "distinction": "An exception is not automatically a Diagnostic, Error Occurrence, Failure object, or domain Outcome."
+    },
+    "domainOutcome": {
+      "definition": "The result classification defined by the owning Stage, Step, SPU, Validator, or Error Handling specialization.",
+      "authority": "The owning specialized contract defines its values and meaning.",
+      "distinction": "A Diagnostic does not determine or replace an Outcome. A Prefect State does not determine a domain Outcome."
+    }
+  },
+  "architecturalOptions": [
+    {
+      "optionId": "DIAGNOSTICS-A",
+      "name": "PromoteGeneratorCommonErrorModel",
+      "description": "Move the existing Generator Common Error Model into generic GPWCF Core and make it the standard Error Model for every consumer.",
+      "advantages": [
+        "Reuses a mature existing structural design."
+      ],
+      "disadvantages": [
+        "Imports Generator-specific ownership, registry, and error-family assumptions into a general framework.",
+        "Violates the established consumer-specific classification of Common/Error_Model.json.",
+        "Creates mandatory Error Model dependencies for consumers that do not need them."
+      ],
+      "disposition": "rejected"
+    },
+    {
+      "optionId": "DIAGNOSTICS-B",
+      "name": "NoSharedDiagnosticContract",
+      "description": "Keep every diagnostic representation entirely inside each specialized Error Model, exception, or operational contract.",
+      "advantages": [
+        "No additional Core module or generic value type.",
+        "Maximum freedom for specialized consumers."
+      ],
+      "disadvantages": [
+        "Duplicates basic descriptive evidence structure across otherwise independent contracts.",
+        "Publisher and lifecycle protocol violations cannot reuse a stable descriptive value without importing a specialized Error Model.",
+        "Makes it harder to preserve consistent typed diagnostic payloads across independent contract boundaries."
+      ],
+      "disposition": "not-selected"
+    },
+    {
+      "optionId": "DIAGNOSTICS-C",
+      "name": "GenericErrorAndFailureModel",
+      "description": "Introduce generic Error, Failure, Severity, Resolution, Retryability, and Outcome types shared across the framework.",
+      "advantages": [
+        "Appears to provide a common vocabulary."
+      ],
+      "disadvantages": [
+        "Conflates domain error occurrence, invocation failure, descriptive evidence, and execution outcome.",
+        "Imposes a universal taxonomy and control policy unsupported by specialized contracts.",
+        "Risks recreating the Generator Error Model as a mandatory generic framework dependency."
+      ],
+      "disposition": "rejected"
+    },
+    {
+      "optionId": "DIAGNOSTICS-D",
+      "name": "NarrowOptionalDiagnosticValue",
+      "description": "Introduce one optional reusable Diagnostic[TDetails] value contract containing only a producer-owned namespaced code, human-readable message, and typed details. Keep all error/failure/outcome semantics specialized.",
+      "advantages": [
+        "Provides a small reusable descriptive value without a universal Error Model.",
+        "Supports typed details without untyped dictionaries.",
+        "Can be used by specialized contracts without making it mandatory for all results.",
+        "Does not prescribe severity, retryability, resolution, or flow control."
+      ],
+      "disadvantages": [
+        "Adds an optional Core module and one more public value contract.",
+        "Consumers must decide whether its descriptive structure is useful for their specialized contracts."
+      ],
+      "disposition": "recommended"
+    }
+  ],
+  "selectedDesign": {
+    "decision": "Provide an optional, independently importable core.diagnostics module containing a narrow generic Diagnostic[TDetails] value contract. Do not introduce a generic Error Model, Failure type, universal Outcome, severity model, or control-flow semantics.",
+    "module": {
+      "moduleId": "MOD-CORE-DIAGNOSTICS",
+      "package": "core.diagnostics",
+      "classification": "optional_reusable",
+      "dependencyProfile": "Python standard library only; no dependency on Stage, Step, SPU, Error Handling, Prefect, or consumer packages.",
+      "publicApi": "gpwcf.public_api.core.diagnostics",
+      "requiredAlignment": "Add MOD-CORE-DIAGNOSTICS to Framework_Module_Boundary_Model.json and core/diagnostics to Filesystem_Architecture.json during governing-artifact reconciliation."
+    },
+    "diagnosticCode": {
+      "name": "DiagnosticCode",
+      "meaning": "A producer-owned machine-readable code identifying a descriptive diagnostic category within the producer's declared namespace.",
+      "conceptualFields": [
+        {
+          "name": "namespace",
+          "type": "NonEmptyString",
+          "meaning": "Identifies the producer/contract namespace that owns the code."
+        },
+        {
+          "name": "value",
+          "type": "NonEmptyString",
+          "meaning": "Identifies the diagnostic code within that namespace."
+        }
+      ],
+      "rules": [
+        "The producer owns the code namespace and its stability.",
+        "No global diagnostic-code registry is introduced.",
+        "Code equality is scoped by both namespace and value.",
+        "A code is descriptive and must not silently encode a universal severity, retry, resolution, or flow-control policy.",
+        "Changing the meaning of an existing code requires producer-owned versioning/deprecation rules."
+      ]
+    },
+    "diagnosticValue": {
+      "name": "Diagnostic[TDetails]",
+      "meaning": "An immutable descriptive value associated with a specialized parent occurrence, result, failure report, or protocol violation.",
+      "fields": [
+        {
+          "name": "code",
+          "type": "DiagnosticCode",
+          "required": true,
+          "meaning": "Producer-owned descriptive code."
+        },
+        {
+          "name": "message",
+          "type": "NonEmptyString",
+          "required": true,
+          "meaning": "Human-readable explanation. It is not a machine control instruction."
+        },
+        {
+          "name": "details",
+          "type": "TDetails",
+          "required": true,
+          "meaning": "Producer/consumer-specialized typed detail payload. Use None as the TDetails value when no additional structured details are needed; do not use an untyped dictionary."
+        }
+      ],
+      "deliberatelyOmitted": [
+        "Diagnostic identity: the containing occurrence/result/protocol record owns correlation identity; the Diagnostic value is descriptive evidence.",
+        "Severity: no universal severity scale is established.",
+        "Retryability: retry policy belongs to the operation that owns the failed obligation.",
+        "Resolution status: the Diagnostic does not own error resolution.",
+        "Timestamp: timing/observation metadata belongs to the containing operational or domain record.",
+        "Origin identity: the containing specialized record carries producer and invocation provenance.",
+        "Cause chain: any causal relationship is defined by the specialized parent contract."
+      ],
+      "immutability": "Diagnostic is immutable after construction. Its TDetails payload must obey the containing specialized contract's custody/immutability rules.",
+      "noBehavior": "Diagnostic has no execute, classify, retry, resolve, publish, or transition operation."
+    },
+    "attachmentRules": {
+      "optionalUse": "A specialized contract may include Diagnostic[TDetails] when descriptive evidence is useful. No Stage, Step, SPU, Supporting Pattern, or consumer is required to use it.",
+      "parentOwnership": "The parent specialized contract remains responsible for the Diagnostic's identity context, retention, and custody.",
+      "noAutomaticAttachment": [
+        "A thrown exception does not automatically create a Diagnostic.",
+        "A domain Error Occurrence does not automatically require a Diagnostic.",
+        "A Prefect failure/state does not automatically create a Diagnostic.",
+        "A failed publication does not automatically become a Diagnostic without the specialized Publisher/Step contract deciding to include one."
+      ],
+      "noResultEnvelopeDependency": [
+        "StageResult does not acquire a mandatory diagnostics field.",
+        "StepExecutionResult does not acquire a mandatory diagnostics field.",
+        "SPUExecutionResult does not acquire a mandatory diagnostics field.",
+        "OptionalResultContributions does not acquire a generic diagnostics slot."
+      ],
+      "typedSpecialization": "If a specialized contract uses Diagnostic, it chooses TDetails and preserves the specialized schema. Core does not inspect or interpret TDetails."
+    },
+    "relationshipToErrorHandling": {
+      "errorModel": "The specialized Error Model continues to own Error Type Definitions, Error Occurrences, their registries/references, and ErrorResult semantics.",
+      "failure": "The operation contract continues to own whether an obligation failed and what recovery/settlement follows.",
+      "errorHandling": "The Error Handling capability continues to execute authorized handling operations against specialized error occurrence targets.",
+      "diagnostics": "Diagnostic may accompany an Error Occurrence, failure report, Publisher Contract Violation, or recovery record as explanatory evidence. It does not replace any of them.",
+      "outcome": "The owning Stage/Step/SPU/Supporting Pattern defines its domain outcome. Diagnostic does not determine that outcome."
+    },
+    "integrationWithExistingContracts": [
+      {
+        "contract": "SPUError[TErrorOccurrenceContext] / StageError[TErrorOccurrenceContext]",
+        "integration": "A consumer may include Diagnostic[TDetails] inside its specialized occurrence context. The generic Error Model remains consumer-owned."
+      },
+      {
+        "contract": "PublisherContractViolation",
+        "integration": "A concrete Step may use Diagnostic[TDetails] for the required diagnostic evidence while preserving acceptance knowledge, violated invariant, custody, and Recovery Owner fields."
+      },
+      {
+        "contract": "Invocation/lifecycle failure evidence",
+        "integration": "A specialized contract may attach Diagnostic as explanatory data without converting the failure into a universal Error or Outcome."
+      }
+    ]
+  },
+  "dependencyRules": {
+    "allowed": [
+      "A selected specialized contract may depend on core.diagnostics when it chooses to use Diagnostic.",
+      "Consumer implementations may depend on gpwcf.public_api.core.diagnostics.",
+      "An optional Error Handling specialization may use Diagnostic as typed explanatory evidence."
+    ],
+    "forbidden": [
+      "core.diagnostics must not depend on Error Handling, Stage, Step, SPU, Prefect, or consumer packages.",
+      "StageResult, StepExecutionResult, and SPUExecutionResult must not require core.diagnostics.",
+      "core.diagnostics must not define or import Error Type Definition, Error Occurrence, ErrorResult, Failure, Outcome, or Severity taxonomies.",
+      "No global diagnostic registry, logger, collector, event bus, or storage service is introduced.",
+      "The Generator Common Error Model must not be moved into or imported by core.diagnostics."
+    ]
+  },
+  "requiredGoverningContractChanges": [
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Framework_Module_Boundary_Model.json",
+      "change": "Add MOD-CORE-DIAGNOSTICS as optional_reusable with no runtime dependencies and no dependency edge from mandatory Stage/Step/SPU result modules.",
+      "reason": "A narrow Diagnostic value is reusable across independent specialized contracts but is not required by every Core result.",
+      "changeType": "module-catalog-addition",
+      "approval": "Requires architecture acceptance and cross-artifact reconciliation."
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Filesystem_Architecture.json",
+      "change": "Add core/diagnostics and its curated Public API submodule gpwcf.public_api.core.diagnostics.",
+      "reason": "The optional generic diagnostic value requires one canonical package location.",
+      "changeType": "filesystem-allocation-addition",
+      "approval": "Requires architecture acceptance and cross-artifact reconciliation."
+    },
+    {
+      "source": ".docs/Architecture/Common/Error_Model.json",
+      "change": "No change. Keep this Generator-specific model outside baseline GPWCF Core.",
+      "reason": "Its structural error families, registry ownership, and pipeline registry matrix are consumer-specific and must not be promoted.",
+      "changeType": "explicitly-no-change",
+      "approval": "No source contract modification proposed."
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.01_Step_Error_Model/Step_Error_Model_Contract.json",
+      "change": "No semantic change. A Step specialization may optionally include Diagnostic[TDetails] in its occurrence context after the generic contract is accepted.",
+      "reason": "Diagnostic is descriptive evidence and must not redefine Step Error Model semantics.",
+      "changeType": "optional-typed-integration",
+      "approval": "Any source contract edit requires separate explicit approval."
+    }
+  ],
+  "conformanceRequirements": [
+    {
+      "id": "DIAG-001",
+      "requirement": "Diagnostic is descriptive evidence only and does not determine success, failure, retry, resolution, or flow control."
+    },
+    {
+      "id": "DIAG-002",
+      "requirement": "DiagnosticCode is producer-owned and namespaced; no global registry is required."
+    },
+    {
+      "id": "DIAG-003",
+      "requirement": "Diagnostic details are typed through TDetails and are not stored in an untyped dictionary."
+    },
+    {
+      "id": "DIAG-004",
+      "requirement": "Diagnostic is optional and independently importable."
+    },
+    {
+      "id": "DIAG-005",
+      "requirement": "A Diagnostic is not an Error Type Definition, Error Occurrence, ErrorResult, Failure, Exception, or domain Outcome."
+    },
+    {
+      "id": "DIAG-006",
+      "requirement": "The parent specialized contract owns diagnostic provenance, identity, retention, and custody."
+    },
+    {
+      "id": "DIAG-007",
+      "requirement": "No mandatory diagnostics field is added to StageResult, StepExecutionResult, SPUExecutionResult, or OptionalResultContributions."
+    },
+    {
+      "id": "DIAG-008",
+      "requirement": "Core diagnostics imports no Prefect, Error Handling, Stage, Step, SPU, or consumer package."
+    },
+    {
+      "id": "DIAG-009",
+      "requirement": "The Generator Common Error Model remains consumer-specific and is not promoted into Core."
+    },
+    {
+      "id": "DIAG-010",
+      "requirement": "No logger, collector, event bus, global registry, severity taxonomy, or failure manager is introduced."
+    }
+  ],
+  "traceability": [
+    {
+      "source": ".docs/Architecture/Common/Error_Model.json",
+      "supports": [
+        "Error Type Definition and Error Occurrence are distinct.",
+        "SPU-level and Stage-level error families remain distinct.",
+        "Occurrence context is specialized and may carry diagnostics.",
+        "Exceptions are not automatically converted into Error Occurrences.",
+        "The model is owned by the Generator Pipeline and is not a generic GPWCF contract."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.01_Step_Error_Model/Step_Error_Model_Contract.json",
+      "supports": [
+        "Step Error Model semantics remain specialized.",
+        "The generic diagnostics design must not replace Step Error Model or ErrorResult semantics."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/OperationEntryPublisher_Contract.json",
+      "supports": [
+        "Publisher Contract Violation requires explanatory diagnostic evidence while separately retaining acceptance knowledge and custody facts."
+      ]
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/05.00_Detailed_Design_Waves/Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/05.00_Step_Execution_Result.json",
+      "supports": [
+        "StepExecutionResult deliberately omits diagnostics until an independently owned contract is established.",
+        "Optional contribution types remain specialized."
+      ]
+    }
+  ],
+  "acceptanceCriteria": [
+    "The generic Diagnostic contract is narrow, descriptive, typed, and optional.",
+    "Error, Failure, Exception, Outcome, and Diagnostic semantics remain distinct.",
+    "No Generator-specific Error Model dependency is introduced into Core.",
+    "No mandatory result envelope or optional contribution depends on core.diagnostics.",
+    "Specialized contracts may opt in without losing their own identity, error, failure, or custody semantics.",
+    "The new module is independent of workflow runtime and optional Supporting Pattern packages.",
+    "The design requires a corresponding module/filesystem allocation update before implementation.",
+    "No source contract is modified by this artifact."
+  ],
+  "changeControl": {
+    "authority": "Wave 4 detailed design proposal. It becomes an implementation constraint only after architecture review and explicit acceptance.",
+    "sourceContractPolicy": "This artifact does not modify Error_Model.json, Step_Error_Model_Contract.json, or Publisher/Reservation contracts.",
+    "implementationGate": "Do not implement core.diagnostics or attach Diagnostic to production result/error contracts until Wave 4 and the overall Architecture Closure Design are reviewed and accepted.",
+    "nextStep": "Design 10.00_Error_Handling.json. It must preserve specialized Error Model ownership and specify only the reusable optional Error Handling capability and its dependency boundary."
+  }
+}

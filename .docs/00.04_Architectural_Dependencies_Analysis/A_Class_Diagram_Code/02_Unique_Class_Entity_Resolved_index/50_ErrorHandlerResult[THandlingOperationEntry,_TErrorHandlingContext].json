@@ -1,0 +1,10 @@
+{
+  "serialNumber": 50,
+  "name": "ErrorHandlerResult[THandlingOperationEntry, TErrorHandlingContext]",
+  "category": "Class / Generic Type",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlerResult_Contract.json",
+  "description": "Aggregate of one or more error-handling operation executions produced by an Error Handling Unit; preserves producing Unit identity, Association/target provenance, invocation/attempt/operation identities, target occurrence references, and per-operation structured results; carried as an independent optional errorHandlerResult element of StepExecutionResult.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

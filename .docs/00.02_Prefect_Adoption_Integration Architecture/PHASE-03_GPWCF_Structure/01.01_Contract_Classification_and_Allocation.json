@@ -1,0 +1,1273 @@
+{
+  "documentType": "GPWCFContractClassificationAndAllocation",
+  "documentId": "gpwcf.phase03.contract-classification-and-allocation",
+  "documentVersion": "0.3.0",
+  "status": "accepted-for-filesystem-skeleton",
+  "phase": "PHASE-03 — GPWCF Framework Filesystem & Package Architecture",
+  "assessmentDate": "2026-11-09",
+  "purpose": "Provide the evidence-based classification and logical module allocation of the existing GPWCF architecture artifacts and contracts before defining module boundaries, dependency/public API architecture, or changing the filesystem.",
+  "scope": {
+    "project": "SMRB.GenericPipelineWorkflowComponentsFramework",
+    "projectRoot": "C:\\Trading\\Projects\\Shared_Memory_Reqgion_Broker\\SMRB\\SMRB.GenericPipelineWorkflowComponentsFramework",
+    "inventoryRoot": ".docs/00.00_Primary_Architecture",
+    "referenceConsumer": "SMRB.PayloadDescriptionGenerator",
+    "referenceConsumerRole": "Genericity validation reference only; not the source of GPWCF module names, stage decomposition, or framework-specific contracts.",
+    "excludedWork": [
+      "No movement, renaming or deletion of existing source architecture documents.",
+      "No implementation classes or business logic.",
+      "No edits to specialized source contracts.",
+      "No reopening of the accepted Prefect 3.9.2 adoption decision.",
+      "The separately authorized initial filesystem skeleton is limited to approved directories and minimal package markers."
+    ]
+  },
+  "governingSources": [
+    {
+      "path": ".docs/Identity.json",
+      "role": "Framework identity, ownership, scope, exclusions and declared runtime dependency baseline"
+    },
+    {
+      "path": ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-00/ADR-GPWCF-PREFECT-001.json",
+      "role": "Accepted decision to adopt Prefect 3.9.2 as initial pinned external workflow runtime"
+    },
+    {
+      "path": ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-00/PHASE-00_Contract_Inventory.json",
+      "role": "Frozen integration contract baseline and callable-contract gaps"
+    },
+    {
+      "path": ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-01/PHASE-01_Qualification_Report.md",
+      "role": "Native hierarchy qualification evidence and its limits"
+    },
+    {
+      "path": ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Topology_Decision_Record.json",
+      "role": "Qualified same-host deployment-backed Stage execution topology"
+    },
+    {
+      "path": ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Open_Integration_Questions.json",
+      "role": "Open technical qualification limits; not grounds to reopen Prefect adoption"
+    },
+    {
+      "path": ".docs/00.00_Primary_Architecture/Common/Supporting_Patterns_Integration_Review.md",
+      "role": "Nine specialized supporting-pattern contracts and the two cross-cutting guidance contracts"
+    },
+    {
+      "path": ".docs/00.00_Primary_Architecture/Step_Termination_Integration_Review.md",
+      "role": "Stage/Step/Step Composition lifecycle and settlement ownership"
+    },
+    {
+      "path": ".docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+      "role": "Normative Stage Aggregate ownership, Step coordination and Stage-specific Flow Result boundaries."
+    },
+    {
+      "path": ".docs/00.00_Primary_Architecture/Stage_Step_Level/Stage_Step_Level_Architecture.json",
+      "role": "Normative Step Aggregate, SPU and optional Supporting Pattern ownership boundaries."
+    },
+    {
+      "path": ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "role": "Current Stage-facing Step callable and Step Aggregate boundary."
+    },
+    {
+      "path": ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+      "role": "Current Step Composition ownership and internal invocation/result/lifecycle coordination."
+    },
+    {
+      "path": ".docs/00.03_Architecture_Closure_Design/03.00_Functional_Gaps_Closure.md",
+      "role": "Functional gap proposals and their PHASE-03 dispositions."
+    },
+    {
+      "path": ".docs/00.03_Architecture_Closure_Design/04.00_Suggested_ADRs.md",
+      "role": "Accepted PHASE-03 decisions and remaining architecture/release gates."
+    },
+    {
+      "path": ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-03_GPWCF_Structure/PHASE-03_Cross_Artifact_Consistency_Review.md",
+      "role": "Accepted PHASE-03 cross-artifact reconciliation and implementation limits."
+    }
+  ],
+  "inventoryMethod": {
+    "inspectedArtifactCount": 44,
+    "counts": {
+      "jsonArchitectureAndContractArtifacts": 41,
+      "markdownReviewOrConsumerContractArtifacts": 3
+    },
+    "jsonParseStatus": "All 41 JSON files under .docs/00.00_Primary_Architecture were parsed. The 25 baseline architecture/contract JSON artifacts are allocated in artifactAllocations; the 16 detailed design-wave JSON artifacts are separately recorded as draft proposals and are not implementation authority.",
+    "markdownReviewStatus": "All 3 Markdown artifacts under .docs/00.00_Primary_Architecture are enumerated and allocated; their normative role is distinguished from executable contracts.",
+    "classificationRule": "Classify by semantic responsibility, owner, applicability, genericity and dependency closure—not by current directory name or filename.",
+    "implementationEvidenceRule": "A documented contract is not evidence that a runtime class, package module, or production Prefect binding has been implemented.",
+    "gitSafety": "The project has its own local .git repository. Documentation and source skeleton changes remain uncommitted. No commit, reset, checkout, clean, or unrelated project modification is authorized.",
+    "enumeratedArtifactCount": 44,
+    "detailedDesignProposalStatus": "All 16 detailed design-wave proposals were inspected for purpose, selected design, required governing-artifact changes and implementation gates. All remain draft-for-architecture-review and are not adopted by this PHASE-03 closure."
+  },
+  "classificationTaxonomy": [
+    {
+      "classification": "mandatory_standalone",
+      "meaning": "A reusable entity, callable boundary, or typed result with an independently identifiable responsibility and supported contract boundary.",
+      "filesystemEffect": "A distinct logical module or contract surface; it may still participate in an owning Aggregate.",
+      "applicability": "Framework baseline; consumers specialize or implement it as required."
+    },
+    {
+      "classification": "mandatory_aggregate",
+      "meaning": "A required responsibility whose semantic ownership belongs to a specific Entity/Aggregate and whose completeness depends on that owner.",
+      "filesystemEffect": "Allocated inside the owning Aggregate boundary; internal files/submodules may be separated without transferring ownership.",
+      "applicability": "Required for every instance of the owning Aggregate."
+    },
+    {
+      "classification": "optional_reusable",
+      "meaning": "A reusable specialized capability or contract selected only when a concrete consumer/Step needs that pattern.",
+      "filesystemEffect": "An optional cohesive submodule/package; no mandatory dependency for consumers that do not select it.",
+      "applicability": "Mandatory only after the concrete specialization selects the pattern and its applicable contracts."
+    },
+    {
+      "classification": "advisory_guidance",
+      "meaning": "Cross-cutting architectural invariants, conformance obligations, or review material that does not define a standalone runtime component.",
+      "filesystemEffect": "Documentation/conformance material; do not create runtime managers, services, interfaces or state machines merely to represent the guidance.",
+      "applicability": "Applicable rules may be binding when the corresponding pattern or lifecycle behavior is selected."
+    },
+    {
+      "classification": "consumer_specific",
+      "meaning": "A contract or model whose domain, workflow, artifact semantics or explicit scope belongs to one reference consumer.",
+      "filesystemEffect": "Excluded from GPWCF Core and its generic Public API; retained with the consumer.",
+      "applicability": "Only the named consumer."
+    }
+  ],
+  "governingAllocationDecisions": [
+    "Stage and Step are separate architectural Entities/Aggregates with distinct callable boundaries and ownership.",
+    "Stage Composition is a mandatory responsibility owned by Stage; it coordinates Steps only through their public Step contracts.",
+    "Step Composition is a mandatory responsibility owned by Step; it coordinates SPUs and selected Supporting Units internally.",
+    "SPU is a mandatory standalone processing boundary with its own specialized input/output and SPUExecutionResult.",
+    "SPUExecutionResult and StepExecutionResult are distinct standalone typed result contracts with different producers, consumers and scopes.",
+    "Stage Flow Result is an independent Stage-owned result contract, but its concrete structure is Stage-specific; no universal FlowResult schema is established.",
+    "Validator, Observation and Error Handling are optional reusable patterns. Their behavioral, association, lifecycle and result contracts remain specialized.",
+    "No universal SupportingUnit base type, common behavioral contract, plugin manager, loader, association manager, lifecycle manager, registry, scheduler or generic result model is justified by this inventory.",
+    "The two Common Step Composition coordination contracts are conformance guidance, not runtime components. Their applicable obligations can be mandatory without creating common runtime infrastructure.",
+    "The Common Error Model is Generator-scoped despite its Common folder location and is excluded from generic Core.",
+    "The Step Error Model is semantic rather than executable; its current generic reuse is conditional because it directly depends on the Generator-scoped Common Error Model.",
+    "The Stage and SPU architecture documents contain generic responsibilities alongside error-model clauses tied to the consumer-scoped Common Error Model; their generic sections and error-specific sections must be separated in subsequent boundary work.",
+    "Prefect is the accepted initial integration target. Prefect-specific execution realization belongs only in the Prefect Integration boundary; its adoption is not under reconsideration."
+  ],
+  "artifactAllocations": [
+    {
+      "artifactId": "ART-STAGE-ARCH-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+      "documentId": "pipeline.stage-level.architecture",
+      "documentVersion": "0.4.0",
+      "artifactType": "architectural_contract_specification",
+      "title": "Pipeline Stage-Level Architecture",
+      "classification": "mandatory_aggregate",
+      "architecturalOwner": "Stage Aggregate",
+      "logicalAllocation": [
+        "core.stage"
+      ],
+      "runtimeNature": "Defines Stage facade, Stage Composition ownership, Step coordination, Stage flow semantics and Stage-owned Flow Result; it does not mandate a separate facade or composition class.",
+      "genericity": "partially_generic; StageError and StageErrorTypeDefinitionRegistry clauses depend on the currently Generator-scoped Common Error Model",
+      "allocationDisposition": "Allocate generic Stage aggregate semantics to Core; isolate or generalize StageError/registry-specific clauses before treating the entire document as a generic Core dependency.",
+      "prefectAlignment": "Stage semantic ownership and Step-facing boundaries remain Core; native Stage Parent Workflow execution and runtime mapping belong to integrations.prefect.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/Stage_Step_Level_Architecture.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+        ".docs/00.00_Primary_Architecture/Common/Error_Model.json"
+      ],
+      "allocationRationale": "Stage is a generic aggregate that owns Step membership, coordination and flow-result semantics. Its error-model integration is not generic merely because it appears in the Stage architecture."
+    },
+    {
+      "artifactId": "ART-STAGE-STEP-ARCH-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/Stage_Step_Level_Architecture.json",
+      "documentId": "pipeline.stage-step-level.architecture",
+      "documentVersion": "0.3.0",
+      "artifactType": "architectural_contract_specification",
+      "title": "Pipeline Stage Step-Level Architecture",
+      "classification": "mandatory_aggregate",
+      "architecturalOwner": "Step Aggregate and its internal processing boundary",
+      "logicalAllocation": [
+        "core.step",
+        "core.processing_units.spu",
+        "core.supporting_patterns"
+      ],
+      "runtimeNature": "Structural architecture for Step, Step Composition, SPUs, optional supporting patterns and distinct result boundaries; not itself a runtime component.",
+      "genericity": "mostly_generic; individual error-model clauses inherit the conditional genericity of their referenced error contracts",
+      "allocationDisposition": "Use as the structural source for multiple modules; do not allocate it as one executable component or treat every listed supporting pattern as mandatory.",
+      "prefectAlignment": "Preserve Stage -> Step public invocation and Step-owned internal composition; Prefect realizes native nested execution but does not own GPWCF semantics.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json"
+      ],
+      "allocationRationale": "This document describes the Step aggregate and its specialized collaborators; its content must be decomposed by actual ownership rather than copied into a single package."
+    },
+    {
+      "artifactId": "ART-STEP-CONTRACT-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "documentId": "pipeline.step.contract",
+      "documentVersion": "0.4.0",
+      "artifactType": "specialized_callable_contract",
+      "title": "Step Contract",
+      "classification": "mandatory_standalone",
+      "architecturalOwner": "Step Entity / Step Aggregate Root",
+      "logicalAllocation": [
+        "core.step"
+      ],
+      "runtimeNature": "Stable Stage-facing callable boundary; execute(input: TInput) -> StepExecutionResult[TOutput].",
+      "genericity": "generic_core_contract",
+      "allocationDisposition": "Core standalone entity contract; its public supported form is exposed through Core Public API, while concrete Step implementations remain consumer specializations.",
+      "prefectAlignment": "Integration binds the Step public callable boundary to a native Step Subworkflow; native execution does not replace the Step contract.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.05_StepExecutionResult/StepExecutionResult_Contract.json"
+      ],
+      "allocationRationale": "Step has an independently consumable Stage-facing boundary and owns its internal composition; it must not be buried as an implementation detail of Stage."
+    },
+    {
+      "artifactId": "ART-STEP-COMPOSITION-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+      "documentId": "pipeline.step-composition.contract",
+      "documentVersion": "0.3.0",
+      "artifactType": "aggregate_responsibility_contract",
+      "title": "Step Composition Contract",
+      "classification": "mandatory_aggregate",
+      "architecturalOwner": "Concrete Step Aggregate",
+      "logicalAllocation": [
+        "core.step.composition"
+      ],
+      "runtimeNature": "Mandatory internal composition responsibility for SPU/supporting-unit selection, invocation coordination, Step-specific flow decisions, evidence retention and result assembly; a separate public runtime class is not mandated.",
+      "genericity": "generic_aggregate_contract_with_pattern_specific_refinements",
+      "allocationDisposition": "Place within the Step-owned module boundary; internal submodules may be split by cohesion, but ownership remains with Step.",
+      "prefectAlignment": "Prefect may execute the native Step Subworkflow and its child tasks; Step Composition retains semantic authority and does not become a second scheduler.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+        ".docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+        ".docs/00.00_Primary_Architecture/Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json"
+      ],
+      "allocationRationale": "Composition is an obligatory responsibility owned by the Step Aggregate, not a peer standalone component or universal composition framework."
+    },
+    {
+      "artifactId": "ART-SPU-CONTRACT-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      "documentId": "pipeline.step-processing-unit.contract",
+      "documentVersion": "0.2.0",
+      "artifactType": "specialized_callable_contract",
+      "title": "Step Processing Unit Contract",
+      "classification": "mandatory_standalone",
+      "architecturalOwner": "Concrete SPU Entity / Processing Unit",
+      "logicalAllocation": [
+        "core.processing_units.spu"
+      ],
+      "runtimeNature": "Actual specialized processing boundary; execute(input: TInput) -> SPUExecutionResult[TOutput].",
+      "genericity": "partially_generic; generic callable/result semantics are Core candidates, while error type definitions, SPUError production and Pipeline-owned Registry clauses depend on Common/Error_Model.json",
+      "allocationDisposition": "Allocate the generic SPU callable contract to Core. Treat errorOwnershipAndProduction and dependent errorHandlingResultProduction as a conditional extension until the error model is generalized or decoupled.",
+      "prefectAlignment": "Bind the SPU's executable responsibility to a native task within its owning Step execution; Prefect Task Run identity/state remains operational evidence.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+        ".docs/00.00_Primary_Architecture/Common/Error_Model.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlingUnit_Contract.json"
+      ],
+      "allocationRationale": "SPU is a real independently specialized processing unit, not a delegation-only wrapper. Its current error-specific clauses must not silently make the entire Core contract depend on Generator-specific registries."
+    },
+    {
+      "artifactId": "ART-SPU-RESULT-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+      "documentId": "pipeline.spu-execution-result.contract",
+      "documentVersion": "0.1.0",
+      "artifactType": "execution_result_contract",
+      "title": "SPUExecutionResult Contract",
+      "classification": "mandatory_standalone",
+      "architecturalOwner": "SPU invocation result boundary",
+      "logicalAllocation": [
+        "core.processing_units.spu.results"
+      ],
+      "runtimeNature": "Independent typed result for one normally completed SPU invocation; produced by the concrete SPU and consumed by Step Composition.",
+      "genericity": "generic_core_contract",
+      "allocationDisposition": "Core result type; retain its per-SPU invocation scope and do not merge it with StepExecutionResult.",
+      "prefectAlignment": "Integration transports/maps the typed domain result across native task execution; Prefect Task state does not replace it.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json"
+      ],
+      "allocationRationale": "The result has an independent semantic boundary and producer, and is not an internal field of the Step aggregate result."
+    },
+    {
+      "artifactId": "ART-STEP-RESULT-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "documentId": "pipeline.step-execution-result.contract",
+      "documentVersion": "0.2.0",
+      "artifactType": "execution_result_contract",
+      "title": "StepExecutionResult Contract",
+      "classification": "mandatory_standalone",
+      "architecturalOwner": "Step Aggregate result boundary",
+      "logicalAllocation": [
+        "core.step.results"
+      ],
+      "runtimeNature": "Independent Stage-facing result for one Step invocation; assembled by the concrete Step/Step Composition.",
+      "genericity": "generic_core_contract_with_optional_pattern_specific_result_slots; errorResult currently depends on the conditional Step Error Model and its Generator-scoped error-model dependency",
+      "allocationDisposition": "Core result boundary is mandatory and standalone. Keep each optional result slot independently optional and preserve specialized result contracts; resolve whether slots remain direct fields or are specialized generically during Public API design.",
+      "prefectAlignment": "Integration retrieves/maps this domain result from native Step execution; Prefect operational State is never a substitute.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.01_Step_Error_Model/Step_Error_Model_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlerResult_Contract.json"
+      ],
+      "allocationRationale": "The Step result is an independent contract with a different scope from SPUExecutionResult. Optional result fields do not make the supporting patterns mandatory."
+    },
+    {
+      "artifactId": "ART-STEP-ERROR-MODEL-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.01_Step_Error_Model/Step_Error_Model_Contract.json",
+      "documentId": "pipeline.step-error-model.contract",
+      "documentVersion": "0.2.0",
+      "artifactType": "semantic_result_contract",
+      "title": "Step Error Model Contract",
+      "classification": "optional_reusable",
+      "architecturalOwner": "Step-specific Error Model semantics; physical ErrorResult assembly remains with Step Composition",
+      "logicalAllocation": [
+        "core.step.error_model (conditional allocation)"
+      ],
+      "runtimeNature": "Semantic contract defining ErrorResult structure and occurrence aggregation; explicitly not an executable node or separate aggregation runtime object.",
+      "genericity": "conditionally_reusable; directly references SPUError, SPUErrorTypeDefinitionReference and Registry concepts from the currently Generator-scoped Common Error Model",
+      "allocationDisposition": "Do not admit its current dependency closure into generic Core as-is. Retain as an optional pattern contract and generalize/detach the referenced error model before Core allocation.",
+      "prefectAlignment": "Remains a domain result/semantic contract; it is not bound to a Prefect task or node.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Common/Error_Model.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.05_StepExecutionResult/StepExecutionResult_Contract.json"
+      ],
+      "allocationRationale": "A Step may choose this model; it does not apply to every Step. Its semantic generality is constrained by a direct dependency on a consumer-scoped error vocabulary and registry."
+    },
+    {
+      "artifactId": "ART-EH-BEHAVIOR-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Contract.json",
+      "documentId": "pipeline.step-supporting-error-handling-unit.behavioral.contract",
+      "documentVersion": "0.1.0",
+      "artifactType": "specialized_behavioral_contract",
+      "title": "Step Supporting Error Handling Unit Behavioral Contract",
+      "classification": "optional_reusable",
+      "architecturalOwner": "Selected Error Handling Unit pattern under Step Composition",
+      "logicalAllocation": [
+        "core.supporting_patterns.error_handling.behavior"
+      ],
+      "runtimeNature": "Optional executable supporting-unit behavior with its own invocation, operation-result, provenance and custody semantics; not a universal SupportingUnit base type.",
+      "genericity": "pattern_specific_reusable",
+      "allocationDisposition": "Optional reusable pattern; include only when selected by a concrete Step.",
+      "prefectAlignment": "When selected, bind its executable operation to a native executable element under the owning Step; keep its specialized result/custody semantics in Core.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlingUnit_Contract.json"
+      ],
+      "allocationRationale": "Behavior and result semantics are specialized and differ from Validator and Observation; no common behavioral abstraction is justified."
+    },
+    {
+      "artifactId": "ART-EH-OPERATION-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlingUnit_Contract.json",
+      "documentId": "pipeline.error-handling-unit.contract",
+      "documentVersion": "0.1.5",
+      "artifactType": "specialized_callable_contract",
+      "title": "Error Handling Unit Operation Execution Contract",
+      "classification": "optional_reusable",
+      "architecturalOwner": "Concrete Error Handling Unit; Step Composition owns association/lifecycle coordination",
+      "logicalAllocation": [
+        "core.supporting_patterns.error_handling.operation_execution"
+      ],
+      "runtimeNature": "Detailed callable/input/operation-result/attempt identity/target access/publication protocol for a selected Error Handling Unit.",
+      "genericity": "pattern_specific_reusable; publication/occurrence references are coupled to the optional Step Error Model and its current error vocabulary",
+      "allocationDisposition": "Optional pattern module; preserve specialized operation and publication semantics. Keep Common Error Model dependency conditional rather than imposing it on Core consumers that do not select this pattern.",
+      "prefectAlignment": "Bind actual handling operations only when selected; Prefect supplies execution mechanics, not operation-result meaning or custody rules.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/OperationEntryPublisher_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/PublicationReservation_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.01_Step_Error_Model/Step_Error_Model_Contract.json"
+      ],
+      "allocationRationale": "This is a specialized executable behavior contract, not a general-purpose error manager or global pipeline service."
+    },
+    {
+      "artifactId": "ART-EH-ASSOCIATION-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Association_Contract.json",
+      "documentId": "pipeline.step-supporting-error-handling-unit.association.contract",
+      "documentVersion": "0.1.2",
+      "artifactType": "specialized_association_contract",
+      "title": "Step Supporting Error Handling Unit Association Contract",
+      "classification": "optional_reusable",
+      "architecturalOwner": "Concrete Step Composition",
+      "logicalAllocation": [
+        "core.supporting_patterns.error_handling.association"
+      ],
+      "runtimeNature": "Specialized relationship contract governing applicability to Step-defined targets, identity, multiplicity, invocation binding, change, dissociation and history; not an Association Manager.",
+      "genericity": "pattern_specific_reusable",
+      "allocationDisposition": "Include only for Error Handling specializations that use the defined target association model.",
+      "prefectAlignment": "Use native relationship/invocation constructs only where semantically appropriate; the contract's Association meaning remains GPWCF-owned.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Contract.json"
+      ],
+      "allocationRationale": "Association is a specialized mechanism for this pattern, not the general functional-binding objective."
+    },
+    {
+      "artifactId": "ART-EH-LIFECYCLE-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Lifecycle_Contract.json",
+      "documentId": "pipeline.step-supporting-error-handling-unit.lifecycle.contract",
+      "documentVersion": "0.1.1",
+      "artifactType": "specialized_lifecycle_contract",
+      "title": "Step Supporting Error Handling Unit Lifecycle Contract",
+      "classification": "optional_reusable",
+      "architecturalOwner": "Concrete Step Composition for decisions; Error Handling Unit for its technical lifecycle mechanics",
+      "logicalAllocation": [
+        "core.supporting_patterns.error_handling.lifecycle"
+      ],
+      "runtimeNature": "Pattern-specific readiness/admission/operation/publication custody/quiescence/reuse/release obligations; no generic LifecycleManager.",
+      "genericity": "pattern_specific_reusable",
+      "allocationDisposition": "Applicable only when an Error Handling Unit instance is selected and lifecycle-managed under this specialization.",
+      "prefectAlignment": "Prefect run/task lifecycle is operational and cannot replace Unit-specific lifecycle, custody or release semantics.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Contract.json"
+      ],
+      "allocationRationale": "The specialized contract adds operation and Publisher/Reservation lifetimes that cannot be generalized into a common lifecycle implementation."
+    },
+    {
+      "artifactId": "ART-EH-RESULT-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlerResult_Contract.json",
+      "documentId": "pipeline.error-handler-result.contract",
+      "documentVersion": "0.1.5",
+      "artifactType": "specialized_result_contract",
+      "title": "ErrorHandlerResult Contract",
+      "classification": "optional_reusable",
+      "architecturalOwner": "Step-specific Error Handling Composition",
+      "logicalAllocation": [
+        "core.supporting_patterns.error_handling.results"
+      ],
+      "runtimeNature": "Distinct result aggregating accepted error-handling operation entries and targeted occurrence references; it is not ErrorResult.",
+      "genericity": "pattern_specific_reusable; occurrence references depend on the Step Error Model's occurrence identity vocabulary",
+      "allocationDisposition": "Optional pattern result; preserve independent identity and custody semantics and do not merge with ErrorResult.",
+      "prefectAlignment": "Map as a domain result across native execution; Prefect State does not replace it.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlingUnit_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.01_Step_Error_Model/Step_Error_Model_Contract.json"
+      ],
+      "allocationRationale": "It represents handling activity results, not the original error occurrences; it belongs with the optional Error Handling pattern."
+    },
+    {
+      "artifactId": "ART-EH-PUBLISHER-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/OperationEntryPublisher_Contract.json",
+      "documentId": "pipeline.operation-entry-publisher.contract",
+      "documentVersion": "0.1.2",
+      "artifactType": "specialized_publication_contract",
+      "title": "OperationEntryPublisher Contract",
+      "classification": "optional_reusable",
+      "architecturalOwner": "Step-specific Error Handling Composition",
+      "logicalAllocation": [
+        "core.supporting_patterns.error_handling.publication"
+      ],
+      "runtimeNature": "Composition-owned publication capability defining reservation-backed atomic acceptance, status resolution, release, failure, concurrency, ordering and invocation closure; not a global publisher service.",
+      "genericity": "pattern_specific_reusable",
+      "allocationDisposition": "Optional Error Handling sub-capability; mandatory only for concrete Steps selecting this publication protocol.",
+      "prefectAlignment": "Prefect may execute the Unit and transport returned state, but does not replace atomic publication acceptance, ownership transfer or recovery semantics.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/PublicationReservation_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json"
+      ],
+      "allocationRationale": "The Publisher is owned by the Step-specific Error Handling Composition and is not an independent global framework manager."
+    },
+    {
+      "artifactId": "ART-EH-RESERVATION-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/PublicationReservation_Contract.json",
+      "documentId": "pipeline.publication-reservation.contract",
+      "documentVersion": "0.1.2",
+      "artifactType": "specialized_capability_contract",
+      "title": "PublicationReservation Contract",
+      "classification": "optional_reusable",
+      "architecturalOwner": "Step-specific Operation Entry Publisher",
+      "logicalAllocation": [
+        "core.supporting_patterns.error_handling.publication"
+      ],
+      "runtimeNature": "Opaque single-use publication capability binding one reservation to exactly one operation entry; not a general reservation manager.",
+      "genericity": "pattern_specific_reusable",
+      "allocationDisposition": "Allocate with the optional Error Handling publication protocol; never expose as a general GPWCF resource reservation abstraction.",
+      "prefectAlignment": "Native Prefect execution cannot be treated as proof that a reservation was consumed or ownership was transferred.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/OperationEntryPublisher_Contract.json"
+      ],
+      "allocationRationale": "Its semantics are inseparable from the specialized Publisher protocol and complete-entry custody transfer."
+    },
+    {
+      "artifactId": "ART-EH-SINGLE-STEP-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json",
+      "documentId": "pipeline.single-step-publication-specialization.contract",
+      "documentVersion": "0.1.1",
+      "artifactType": "specialization_contract",
+      "title": "Single Step Publication and Result-Retention Specialization Contract",
+      "classification": "optional_reusable",
+      "architecturalOwner": "Concrete Single Step specialization; Step-specific Recovery Owner and publication implementation",
+      "logicalAllocation": [
+        "core.supporting_patterns.error_handling.publication.specialization_contract",
+        "consumer.step_specializations"
+      ],
+      "runtimeNature": "Reusable specialization obligations, instantiated by a concrete Single Step only when it selects ErrorHandlingUnit plus OperationEntryPublisher publication.",
+      "genericity": "reusable_specialization_rule; concrete protocol types, recovery procedure, identity and retention policies are consumer-Step-specific",
+      "allocationDisposition": "Keep the generic specialization requirements as a pattern contract; concrete instances and their operational choices remain with the consumer's Step specialization.",
+      "prefectAlignment": "Prefect does not own recovery custody or publication identity; integration must preserve the Step-defined protocol across native execution.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/OperationEntryPublisher_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/PublicationReservation_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlerResult_Contract.json"
+      ],
+      "allocationRationale": "The specialization contract is reusable, but the actual specialization values and Recovery Owner belong to the concrete Single Step. It is not mandatory for Steps that do not use this path."
+    },
+    {
+      "artifactId": "ART-VALIDATOR-BEHAVIOR-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Contract.json",
+      "documentId": "pipeline.step-supporting-validator-unit.behavioral.contract",
+      "documentVersion": "0.1.0",
+      "artifactType": "specialized_behavioral_contract",
+      "title": "Step Supporting Validator Unit Behavioral Contract",
+      "classification": "optional_reusable",
+      "architecturalOwner": "Selected Validator Unit pattern under Step Composition",
+      "logicalAllocation": [
+        "core.supporting_patterns.validation.behavior"
+      ],
+      "runtimeNature": "Optional executable validation behavior with its own invocation, validation result and provenance semantics.",
+      "genericity": "pattern_specific_reusable",
+      "allocationDisposition": "Optional reusable pattern; not required for every Step or SPU.",
+      "prefectAlignment": "When selected, bind validation execution to a native executable element while preserving validation result semantics and owning Step coordination.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json"
+      ],
+      "allocationRationale": "Validation behavior is distinct from processing and observation; its specialized result must not be unified with other Supporting Unit outputs."
+    },
+    {
+      "artifactId": "ART-VALIDATOR-ASSOCIATION-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Association_Contract.json",
+      "documentId": "pipeline.step-supporting-validator-unit.association.contract",
+      "documentVersion": "0.1.3",
+      "artifactType": "specialized_association_contract",
+      "title": "Step Supporting Validator Unit Association Contract",
+      "classification": "optional_reusable",
+      "architecturalOwner": "Concrete Step Composition",
+      "logicalAllocation": [
+        "core.supporting_patterns.validation.association"
+      ],
+      "runtimeNature": "Specialized relationship contract between a Validator Unit instance and Step-defined processing target scope(s).",
+      "genericity": "pattern_specific_reusable",
+      "allocationDisposition": "Applicable only when the selected Validator specialization uses target associations.",
+      "prefectAlignment": "Association is realized through a semantically suitable native relationship or invocation binding; it is not a mandatory Prefect construct.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Contract.json"
+      ],
+      "allocationRationale": "The association is Validator-specific and remains owned/coordinated by Step Composition."
+    },
+    {
+      "artifactId": "ART-VALIDATOR-LIFECYCLE-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Lifecycle_Contract.json",
+      "documentId": "pipeline.step-supporting-validator-unit.lifecycle.contract",
+      "documentVersion": "0.1.1",
+      "artifactType": "specialized_lifecycle_contract",
+      "title": "Step Supporting Validator Unit Lifecycle Contract",
+      "classification": "optional_reusable",
+      "architecturalOwner": "Concrete Step Composition for lifecycle decisions; Validator Unit for technical mechanics",
+      "logicalAllocation": [
+        "core.supporting_patterns.validation.lifecycle"
+      ],
+      "runtimeNature": "Validator-specific readiness, invocation, quiescence, reuse, release and evidence custody obligations.",
+      "genericity": "pattern_specific_reusable",
+      "allocationDisposition": "Applicable only when the Validator Unit pattern is selected and lifecycle obligations apply.",
+      "prefectAlignment": "Native task completion is not equivalent to Validator instance release or evidence custody settlement.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Contract.json"
+      ],
+      "allocationRationale": "The Validator has its own technical lifecycle semantics; common guidance supplies invariants, not a shared lifecycle manager."
+    },
+    {
+      "artifactId": "ART-OBSERVATION-BEHAVIOR-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Contract.json",
+      "documentId": "pipeline.step-supporting-observation-unit.behavioral.contract",
+      "documentVersion": "0.1.0",
+      "artifactType": "specialized_behavioral_contract",
+      "title": "Step Supporting Observation Unit Behavioral Contract",
+      "classification": "optional_reusable",
+      "architecturalOwner": "Selected Observation Unit pattern under Step Composition",
+      "logicalAllocation": [
+        "core.supporting_patterns.observation.behavior"
+      ],
+      "runtimeNature": "Optional observation activity with its own output/event, provenance and custody semantics; observation records are not part of StepExecutionResult by default.",
+      "genericity": "pattern_specific_reusable",
+      "allocationDisposition": "Optional reusable pattern; keep observation outputs separate from processing and validation results.",
+      "prefectAlignment": "Bind only the selected observation activity; preserve event/activity identity and result destination independently of Prefect task state.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json"
+      ],
+      "allocationRationale": "Observation may emit zero, one or many records and may use callbacks/subscriptions; it cannot share a generic result model with Validator or Error Handling."
+    },
+    {
+      "artifactId": "ART-OBSERVATION-ASSOCIATION-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Association_Contract.json",
+      "documentId": "pipeline.step-supporting-observation-unit.association.contract",
+      "documentVersion": "0.1.2",
+      "artifactType": "specialized_association_contract",
+      "title": "Step Supporting Observation Unit Association Contract",
+      "classification": "optional_reusable",
+      "architecturalOwner": "Concrete Step Composition",
+      "logicalAllocation": [
+        "core.supporting_patterns.observation.association"
+      ],
+      "runtimeNature": "Specialized association to Step-owned observation target scopes with historical identity and provenance preservation.",
+      "genericity": "pattern_specific_reusable",
+      "allocationDisposition": "Applicable only when the selected Observation Unit uses target associations.",
+      "prefectAlignment": "Use native relationship mechanisms only when their semantics match; preserve capture-time context and association provenance.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Contract.json"
+      ],
+      "allocationRationale": "Observation association has its own target, activity and historical-provenance semantics."
+    },
+    {
+      "artifactId": "ART-OBSERVATION-LIFECYCLE-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Lifecycle_Contract.json",
+      "documentId": "pipeline.step-supporting-observation-unit.lifecycle.contract",
+      "documentVersion": "0.1.1",
+      "artifactType": "specialized_lifecycle_contract",
+      "title": "Step Supporting Observation Unit Lifecycle Contract",
+      "classification": "optional_reusable",
+      "architecturalOwner": "Concrete Step Composition for lifecycle decisions; Observation Unit for technical activity mechanics",
+      "logicalAllocation": [
+        "core.supporting_patterns.observation.lifecycle"
+      ],
+      "runtimeNature": "Observation-specific readiness, activation, ongoing activity/subscription, quiescence, callback/queue reconciliation, reuse and release obligations.",
+      "genericity": "pattern_specific_reusable",
+      "allocationDisposition": "Applicable only when the Observation Unit pattern is selected and lifecycle-managed.",
+      "prefectAlignment": "Prefect Flow/Task termination does not by itself prove observation subscriptions, callbacks, queued records or evidence custody are settled.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Contract.json"
+      ],
+      "allocationRationale": "Long-lived observation activity and output retention require specialized lifecycle semantics rather than a universal lifecycle interface."
+    },
+    {
+      "artifactId": "ART-COMMON-ASSOCIATION-GUIDANCE-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+      "documentId": "pipeline.step-composition.association-coordination.contract",
+      "documentVersion": "0.1.0",
+      "artifactType": "cross_cutting_conformance_guidance",
+      "title": "Step Composition Association Coordination Contract",
+      "classification": "advisory_guidance",
+      "architecturalOwner": "Concrete Step Composition as conformance authority; framework documentation owns the shared invariants",
+      "logicalAllocation": [
+        "architectural_guidance.step_composition.association"
+      ],
+      "runtimeNature": "Documentation-level cross-cutting invariants for identity roles, target scope, multiplicity, invocation binding and dissociation; explicitly not an Association Manager, registry or runtime component.",
+      "genericity": "generic_guidance",
+      "allocationDisposition": "Place in architectural guidance/conformance material. Applicable invariants are binding when a selected specialized contract uses associations, but no runtime module is created.",
+      "prefectAlignment": "Relationship mechanisms are chosen by semantics; Functional Binding and Hierarchical Nesting do not require Association.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Association_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Association_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Association_Contract.json"
+      ],
+      "allocationRationale": "It defines reusable conformance invariants and coordination ownership, not a standalone executable capability."
+    },
+    {
+      "artifactId": "ART-COMMON-LIFECYCLE-GUIDANCE-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+      "documentId": "pipeline.step-composition.internal-component-lifecycle-coordination.contract",
+      "documentVersion": "0.1.0",
+      "artifactType": "cross_cutting_conformance_guidance",
+      "title": "Step Composition Internal Component Lifecycle Coordination Contract",
+      "classification": "advisory_guidance",
+      "architecturalOwner": "Concrete Step Composition as lifecycle decision authority",
+      "logicalAllocation": [
+        "architectural_guidance.step_composition.lifecycle"
+      ],
+      "runtimeNature": "Documentation-level lifecycle invariants for readiness, admission, identity/lifetimes, quiescence, reuse, release and evidence independence; explicitly rejects a universal lifecycle manager/interface/state machine.",
+      "genericity": "generic_guidance",
+      "allocationDisposition": "Place in architectural guidance/conformance material. Its applicable rules may be mandatory for a selected component specialization, without creating a runtime lifecycle module.",
+      "prefectAlignment": "Prefect operational state/lifecycle is not a substitute for GPWCF component lifecycle, custody or safe settlement.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Lifecycle_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Lifecycle_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Lifecycle_Contract.json"
+      ],
+      "allocationRationale": "The obligations are cross-cutting conformance rules; specialized units retain their own technical lifecycle mechanics."
+    },
+    {
+      "artifactId": "ART-COMMON-ERROR-MODEL-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Common/Error_Model.json",
+      "documentId": "pipeline.common.error-model",
+      "documentVersion": "0.1.0",
+      "artifactType": "consumer_scoped_error_model_contract",
+      "title": "Pipeline Common Error Model",
+      "classification": "consumer_specific",
+      "architecturalOwner": "SMRB.PayloadDescriptionGenerator Pipeline",
+      "logicalAllocation": [
+        "consumer_specific.payload_description_generator.error_model"
+      ],
+      "runtimeNature": "Defines Stage/SPU error definitions, occurrences, registries and Pipeline ownership for Generator Pipeline participants.",
+      "genericity": "explicitly_consumer_scoped; scope.appliesTo says every Stage and SPU participating in a Generator Pipeline",
+      "allocationDisposition": "Exclude from generic GPWCF Core. Any future generalization requires a separate reviewed contract and explicit dependency-closure analysis; do not promote it based on the Common folder name.",
+      "prefectAlignment": "Neither a Prefect runtime component nor a Prefect result/state model; domain error semantics remain consumer-owned unless generalized by an approved GPWCF contract.",
+      "dependencies": [],
+      "allocationRationale": "The declared scope is Generator Pipeline-specific. Its location under Common does not make it a framework-wide contract."
+    },
+    {
+      "artifactId": "ART-REVIEW-SUPPORTING-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Common/Supporting_Patterns_Integration_Review.md",
+      "documentId": null,
+      "documentVersion": null,
+      "artifactType": "architecture_review",
+      "title": "Supporting Pattern Integration Review",
+      "classification": "advisory_guidance",
+      "architecturalOwner": "Framework architecture/conformance guidance",
+      "logicalAllocation": [
+        "architectural_guidance.supporting_patterns"
+      ],
+      "runtimeNature": "Review record establishing that the three behavioral patterns remain specialized and that only association/lifecycle coordination invariants are shared.",
+      "genericity": "generic_architecture_guidance",
+      "allocationDisposition": "Retain as design rationale/conformance guidance, not a runtime package or executable contract.",
+      "prefectAlignment": "Supports binding selected executable supporting functions to native elements while preserving each specialized contract; no common plugin or SupportingUnit runtime.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json"
+      ],
+      "allocationRationale": "A review explains and justifies allocation decisions; it does not itself define an executable capability."
+    },
+    {
+      "artifactId": "ART-REVIEW-TERMINATION-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Step_Termination_Integration_Review.md",
+      "documentId": null,
+      "documentVersion": null,
+      "artifactType": "architecture_review",
+      "title": "Step Termination and Lifecycle-Boundary Integration Review",
+      "classification": "advisory_guidance",
+      "architecturalOwner": "Step Aggregate conformance guidance",
+      "logicalAllocation": [
+        "architectural_guidance.step_termination"
+      ],
+      "runtimeNature": "Review consolidating ownership of Stage disposition, Step public lifecycle boundary, Step Composition internal settlement and specialized unit obligations.",
+      "genericity": "generic_architecture_guidance",
+      "allocationDisposition": "Use as conformance/review evidence; do not create a LifecycleManager or treat the review as a separate runtime module.",
+      "prefectAlignment": "Prefect cancellation/termination is operational evidence; GPWCF Step settlement and release confirmation remain domain obligations.",
+      "dependencies": [
+        ".docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json"
+      ],
+      "allocationRationale": "The review clarifies existing ownership and specialization obligations without adding a new runtime contract."
+    },
+    {
+      "artifactId": "ART-GENERATOR-PIPELINE-001",
+      "sourcePath": ".docs/00.00_Primary_Architecture/Pipeline_Architecture_and_Stage_Interface_Contract.md",
+      "documentId": null,
+      "documentVersion": null,
+      "artifactType": "consumer_specific_pipeline_contract",
+      "title": "Pipeline Architecture and Stage Interface Contract",
+      "classification": "consumer_specific",
+      "architecturalOwner": "SMRB.PayloadDescriptionGenerator",
+      "logicalAllocation": [
+        "consumer_specific.payload_description_generator.pipeline"
+      ],
+      "runtimeNature": "Normative cross-stage contract for the Generator's thirteen-stage artifact pipeline, data ownership, identities, artifacts and stage dependencies.",
+      "genericity": "explicitly_consumer_specific",
+      "allocationDisposition": "Exclude from GPWCF Core, its public API and generic package tree. It remains a reference-consumer artifact.",
+      "prefectAlignment": "Its Stage numbering, artifacts and execution dependencies must not be mapped mechanically to GPWCF Steps/SPUs or Prefect deployment topology.",
+      "dependencies": [],
+      "allocationRationale": "The contract explicitly defines the Generator's Stage 1–13 workflow and artifact domain; it is not a generic Pipeline/Root contract for GPWCF."
+    }
+  ],
+  "identifiedContractGaps": [
+    {
+      "gapId": "GAP-STAGE-CALLABLE-001",
+      "subject": "Stage public callable contract",
+      "evidence": [
+        ".docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+        ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-00/PHASE-00_Contract_Inventory.json"
+      ],
+      "finding": "Stage facade is defined as an architectural role and Stage owns its composition, but no separate Stage callable contract, concrete callable signature or production facade type is identified.",
+      "impact": "Do not claim that a complete standalone Stage callable contract already exists. The Stage Core module boundary must expose the Stage role while a dedicated callable contract/specialization is defined in a later contract-design step.",
+      "classification": "mandatory_standalone_contract_gap",
+      "disposition": "Track for Stage Public API and module-boundary design; do not invent a signature in this classification document."
+    },
+    {
+      "gapId": "GAP-STAGE-FLOW-RESULT-001",
+      "subject": "Stage Flow Result specialization",
+      "evidence": [
+        ".docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json"
+      ],
+      "finding": "Flow Result is explicitly independent of StepExecutionResult and owned by Stage Composition, but its exact structure and composition policy are intentionally Stage-specific; no common schema is defined.",
+      "impact": "Represent the responsibility as mandatory within each Stage Aggregate, but do not create a universal generic FlowResult type or schema.",
+      "classification": "mandatory_aggregate_specialization",
+      "disposition": "Each concrete Stage specialization defines its own Flow Result contract and mapping."
+    },
+    {
+      "gapId": "GAP-PIPELINE-ROOT-CONTRACT-001",
+      "subject": "Generic GPWCF Pipeline Root callable contract",
+      "evidence": [
+        ".docs/Identity.json",
+        ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-00/PHASE-00_Contract_Inventory.json"
+      ],
+      "finding": "No separate generic GPWCF Pipeline Root callable/composition contract is identified. The selected external workflow runtime owns native Root Flow and pipeline-level orchestration.",
+      "impact": "Do not create a GPWCF Root Entity, Root Composition package or root-association runtime merely because Prefect has a Root Flow.",
+      "classification": "not_established_and_not_assumed",
+      "disposition": "Keep Pipeline Root orchestration in the consumer/external workflow runtime unless a future generic GPWCF requirement establishes otherwise."
+    },
+    {
+      "gapId": "GAP-ERROR-MODEL-GENERICITY-001",
+      "subject": "Genericity of Stage/SPU/Step error semantics",
+      "evidence": [
+        ".docs/00.00_Primary_Architecture/Common/Error_Model.json",
+        ".docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.01_Step_Error_Model/Step_Error_Model_Contract.json"
+      ],
+      "finding": "The Common Error Model explicitly applies to Generator Pipeline Stages/SPUs. Stage-Level Architecture and SPU Contract include error-definition/occurrence/Registry responsibilities that reference it; Step Error Model depends on SPUError and its Registry reference.",
+      "impact": "A naive move of these entire documents into Core would import consumer-specific semantics and dependencies into the generic framework.",
+      "classification": "genericity_and_dependency_closure_gap",
+      "disposition": "In Framework_Module_Boundary_Model, separate generic callable/composition semantics from error-model-specific clauses. Generalize or detach the error contracts only through an explicit later contract decision; do not modify specialized contracts in this phase."
+    },
+    {
+      "gapId": "GAP-STEP-RESULT-OPTIONAL-SLOTS-001",
+      "subject": "StepExecutionResult optional specialized result slots",
+      "evidence": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.05_StepExecutionResult/StepExecutionResult_Contract.json"
+      ],
+      "finding": "The mandatory StepExecutionResult contract includes independently optional processingArtifact, validatorResult, errorResult and errorHandlerResult fields. Their detailed schemas remain Step/pattern-specialized, and observation outputs are excluded by default.",
+      "impact": "The Core result boundary is mandatory, but optional pattern result types must not force installation/import of every supporting pattern. ErrorResult additionally inherits the current Common Error Model genericity issue.",
+      "classification": "public_api_and_dependency_design_constraint",
+      "disposition": "Resolve lazy/optional typing and extension boundaries in Dependency_and_Public_API_Architecture without changing the existing specialized result semantics here."
+    },
+    {
+      "gapId": "GAP-SINGLE-STEP-PUBLICATION-001",
+      "subject": "Concrete Single Step publication specialization",
+      "evidence": [
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json",
+        ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json"
+      ],
+      "finding": "A concrete Single Step that selects ErrorHandlingUnits and OperationEntryPublisher must instantiate protocol result types, non-throwing ownership transfer, named Recovery Owner/procedure, identity rules and publication-status retention. A Step that does not select this path records non-applicability instead.",
+      "impact": "The generic framework contract is reusable, but concrete specialization instances and recovery policy remain consumer Step responsibilities.",
+      "classification": "conditional_specialization_completion_gate",
+      "disposition": "Do not create artificial Publisher infrastructure for Steps that do not select the publication path."
+    },
+    {
+      "gapId": "GAP-IMPLEMENTATION-BASELINE-001",
+      "subject": "Documented contracts versus executable GPWCF implementation",
+      "evidence": [
+        ".docs/Identity.json",
+        ".docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-00/PHASE-00_Contract_Inventory.json"
+      ],
+      "finding": "The current baseline records no executable production Stage/Step/SPU runtime classes; the Python project entry point is empty and Core requirements declare standard-library-only dependencies.",
+      "impact": "This matrix allocates documented responsibilities and contracts, not existing implementation files or verified production capabilities.",
+      "classification": "implementation_evidence_gap",
+      "disposition": "Filesystem implementation and structural/import verification occur only after the PHASE-03 design artifacts are reviewed and accepted."
+    }
+  ],
+  "prefectIntegrationAllocation": {
+    "decision": "Prefect 3.9.2 is the accepted initial pinned external workflow runtime under ADR-GPWCF-PREFECT-001; this classification does not reopen that decision.",
+    "coreResponsibilities": [
+      "Stage and Step domain identities and callable semantics",
+      "Stage and Step composition ownership and transition meanings",
+      "SPU and selected Supporting Unit specialized behavior and typed results",
+      "Domain result, exception, event, provenance, custody and lifecycle semantics"
+    ],
+    "prefectIntegrationResponsibilities": [
+      "Bind Stage facade to native Stage Parent Workflow/Deployment invocation",
+      "Bind Step public callable to native nested Step Subworkflow",
+      "Bind executable SPUs and selected Supporting Unit functions to native executable elements",
+      "Map native execution context, parent/child correlation, operational identity and result retrieval without replacing domain identities",
+      "Translate Prefect operational state separately from GPWCF domain results"
+    ],
+    "prefectNativeResponsibilities": [
+      "Native Root/Stage/Step Flow execution and nesting",
+      "Scheduling, dispatch, worker assignment and native run/task records",
+      "Native evaluation/enactment of GPWCF-defined transition conditions within the declared integration boundary"
+    ],
+    "consumerResponsibilities": [
+      "Concrete Stage/Step/SPU and Supporting Unit specializations",
+      "Business inputs/outputs and workflow-specific policies/topology",
+      "Concrete Stage Flow Result contract and any required Step-specific result specializations",
+      "Concrete recovery, cancellation, retry and lifecycle policies not defined by reusable GPWCF contracts"
+    ],
+    "evidenceLimits": [
+      "PHASE-01 qualified native hierarchy and identity correlation using contract-shaped fixtures; it did not prove production GPWCF class binding.",
+      "PHASE-02 qualified a same-host two-Process-Worker deployment profile for sibling Stage overlap, parent linkage and Stage domain-result retrieval.",
+      "PHASE-02 does not qualify multi-host distribution/storage, more than two concurrent Stages, production GPWCF binding, supporting-unit binding, failure/recovery, or sibling Step concurrency.",
+      "Prefect operational State is execution evidence, not a replacement for SPUExecutionResult, StepExecutionResult or Stage Flow Result.",
+      "Prefect Flow Run, Task Run and Deployment identities remain distinct from GPWCF domain identities.",
+      "The 106-package Prefect environment snapshot is not a minimized GPWCF Prefect Integration dependency closure."
+    ]
+  },
+  "dependencyAndOwnershipConstraints": [
+    "Python development/build/verification dependencies remain managed through the existing SMRB solution and .dependencies arrangement; this matrix does not create a parallel dependency directory.",
+    "GPWCF Core currently declares Python standard-library-only runtime dependencies; do not add Prefect to Core.",
+    "Prefect-specific third-party dependencies belong to the Prefect Integration package/extra and require a verified minimal dependency closure.",
+    "Generator-specific dependencies and runtime assets remain owned by PayloadDescriptionGenerator/SMRB and are not GPWCF package dependencies.",
+    "A file's current location under Architecture/Common does not establish generic ownership.",
+    "No dependency on Generator-private environment or assets is permitted from GPWCF Core or Prefect Integration."
+  ],
+  "openDesignQuestions": [
+    "How will the generic Stage callable contract and Stage identity be made explicit without introducing a universal Pipeline Root abstraction?",
+    "How will Stage-specific Flow Result contracts be represented through the Core API without imposing a universal schema?",
+    "Which exact error-model clauses must be detached from Stage/SPU generic contracts, and whether a genuinely reusable error contract is needed, requires separate approval and is not decided by this matrix.",
+    "How will StepExecutionResult expose optional specialized result fields without making all optional supporting patterns mandatory imports or runtime dependencies?",
+    "What is the final logical module granularity for contracts tightly coupled to their Entity versus separately cohesive specialized pattern modules? This is resolved in Framework_Module_Boundary_Model, not by directory convention."
+  ],
+  "acceptanceCriteria": [
+    "Every JSON and Markdown artifact under .docs/Architecture is represented in artifactAllocations or explicitly identified as a consumer-specific/review artifact.",
+    "Every classified artifact has an identified owner, classification, logical allocation and rationale.",
+    "Consumer-specific error and Generator pipeline contracts are excluded from generic Core allocation.",
+    "Stage Composition and Step Composition remain owned by their respective Aggregates.",
+    "SPUExecutionResult and StepExecutionResult remain distinct typed result contracts.",
+    "Optional supporting patterns remain optional and retain their specialized contracts.",
+    "Common Association/Lifecycle coordination remains guidance/conformance material and does not create runtime managers.",
+    "Prefect remains the accepted integration target, with Prefect-specific responsibilities isolated from Core.",
+    "No filesystem changes or specialized contract edits are authorized by this document.",
+    "All 44 current Primary Architecture artifacts are accounted for: 28 baseline allocations and 16 separately tracked draft detailed-design proposals.",
+    "Draft detailed-design proposals are not silently promoted to accepted module boundaries, dependency edges, Public API exports or filesystem elements.",
+    "Every governing source path points to an artifact that exists in the current GPWCF checkout; absent historical references are explicitly separated."
+  ],
+  "changeControl": {
+    "documentAuthority": "Accepted PHASE-03 contract classification and allocation baseline for filesystem skeleton creation.",
+    "sourceContractPolicy": "This document classifies and allocates existing source artifacts. It does not amend their semantic content or versions.",
+    "laterChangePolicy": "Any proposed contract generalization, split, merge or semantic change must be recorded explicitly, reviewed against dependent contracts and approved before editing source contracts.",
+    "implementationGate": "User authorized directory/package-marker skeleton creation on 2026-11-09. Specialized source contracts remain unchanged and unresolved contract semantics must not be invented."
+  },
+  "historicalReferencesNotPresentInCheckout": [
+    {
+      "path": ".docs/01.00_Capability_Open_Source_Integration_Assessment/01.01_Existing_Architecture_Inventory.json",
+      "disposition": "Legacy source reference retained for provenance only; this path is not present in the current GPWCF .docs tree and is not treated as a governing source."
+    },
+    {
+      "path": ".docs/01.00_Capability_Open_Source_Integration_Assessment/01.02_Framework_Capability_Model.json",
+      "disposition": "Legacy source reference retained for provenance only; this path is not present in the current GPWCF .docs tree and is not treated as a governing source."
+    },
+    {
+      "path": ".docs/01.00_Capability_Open_Source_Integration_Assessment/01.04_Build_vs_Adopt_vs_Adapt_Decisions.json",
+      "disposition": "Legacy source reference retained for provenance only; this path is not present in the current GPWCF .docs tree and is not treated as a governing source."
+    },
+    {
+      "path": ".docs/01.00_Capability_Open_Source_Integration_Assessment/01.05_Dependency_Architecture/01.05_Dependency_Architecture.json",
+      "disposition": "Legacy source reference retained for provenance only; this path is not present in the current GPWCF .docs tree and is not treated as a governing source."
+    },
+    {
+      "path": ".docs/01.00_Capability_Open_Source_Integration_Assessment/PoC_Implementation/hierarchical_thim/04_Contract_Alignment_Approval_and_Change_Record.md",
+      "disposition": "Legacy source reference retained for provenance only; this path is not present in the current GPWCF .docs tree and is not treated as a governing source."
+    }
+  ],
+  "pendingDetailedDesignProposals": [
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/03.00_Pipeline_Invocation.json",
+      "documentId": "gpwcf.architecture-closure.wave1.pipeline-invocation",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 1,
+      "waveName": "Stage Callable, Stage Result, Pipeline Invocation",
+      "artifactNumber": 3,
+      "purpose": "Close the pipeline-invocation correlation gap without creating a GPWCF Pipeline Root Entity, Root Composition, pipeline runtime, or orchestration API. Define the minimal domain identity and propagation contract needed to correlate multiple Stage invocations that participate in one consumer-owned pipeline invocation.",
+      "selectedDesignSummary": "Define PipelineInvocationIdentity as a small immutable nominal Core value object, while leaving creation, lifecycle, root orchestration, topology, and pipeline-level policy with the consumer.",
+      "requiredGoverningArtifactChanges": [],
+      "implementationGate": "Do not implement identity types or alter package structure until the Wave 1 design set and the overall Architecture Closure Design are reviewed and accepted.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Common/08.00_Supporting_Pattern_Functional_Binding.json",
+      "documentId": "gpwcf.architecture-closure.wave3.supporting-pattern-functional-binding",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 3,
+      "waveName": "SPU and Supporting Pattern Functional Binding",
+      "artifactNumber": 2,
+      "purpose": "Define how each optional Supporting Pattern is functionally bound to Prefect without flattening distinct behavior, result, association, lifecycle, identity, and custody contracts into a universal Supporting Unit abstraction.",
+      "selectedDesignSummary": "Define how each optional Supporting Pattern is functionally bound to Prefect without flattening distinct behavior, result, association, lifecycle, identity, and custody contracts into a universal Supporting Unit abstraction.",
+      "requiredGoverningArtifactChanges": [],
+      "implementationGate": "Do not implement pattern-specific Prefect bindings until Wave 3 and the overall Architecture Closure Design are reviewed and accepted.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Common/09.00_Generic_Diagnostics.json",
+      "documentId": "gpwcf.architecture-closure.wave4.generic-diagnostics",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 4,
+      "waveName": "Generic Diagnostics, Error Handling, and Publication",
+      "artifactNumber": 1,
+      "purpose": "Determine whether GPWCF needs a reusable generic diagnostic value contract, define its deliberately narrow semantics if adopted, and prevent descriptive diagnostics from becoming a universal Error Model, Failure taxonomy, execution outcome, or control-flow policy.",
+      "selectedDesignSummary": "Provide an optional, independently importable core.diagnostics module containing a narrow generic Diagnostic[TDetails] value contract. Do not introduce a generic Error Model, Failure type, universal Outcome, severity model, or control-flow semantics.",
+      "requiredGoverningArtifactChanges": [],
+      "implementationGate": "Do not implement core.diagnostics or attach Diagnostic to production result/error contracts until Wave 4 and the overall Architecture Closure Design are reviewed and accepted.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Common/10.00_Error_Handling.json",
+      "documentId": "gpwcf.architecture-closure.wave4.generic-error-handling",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 4,
+      "waveName": "Generic Diagnostics, Error Handling, and Publication",
+      "artifactNumber": 2,
+      "purpose": "Define the reusable optional Error Handling capability as a specialized Supporting Pattern, including its generic type boundaries, unit/association/lifecycle ownership, operation-result aggregation, and dependency isolation, without promoting any consumer Error Model into GPWCF Core.",
+      "selectedDesignSummary": "Retain Error Handling as an optional specialized Supporting Pattern. Reuse the existing generic callable/operation/publication contracts; keep all Error Model semantics and concrete publication policy outside the generic Core Error Handling module.",
+      "requiredGoverningArtifactChanges": [],
+      "implementationGate": "Do not implement or promote generic Error Handling package dependencies until Wave 4 and the concrete publication design are reviewed and accepted.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Common/11,00_Publication.json",
+      "documentId": "gpwcf.architecture-closure.wave4.publication-architecture",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 4,
+      "waveName": "Generic Diagnostics, Error Handling, and Publication",
+      "artifactNumber": 3,
+      "purpose": "Define the architecture of the reservation-backed OperationEntryPublisher protocol, its atomic acceptance/custody boundary, the mandatory per-Step specialization proof, and its Prefect integration boundary without selecting one universal storage, allocator, synchronization, or recovery implementation.",
+      "selectedDesignSummary": "Retain the existing reservation-backed, Step-owned OperationEntryPublisher protocol as the generic contract. Treat Single_Step_Publication_Specialization_Contract as a mandatory per-Step proof/implementation specialization whenever the protocol is selected.",
+      "requiredGoverningArtifactChanges": [],
+      "implementationGate": "Do not implement a Publisher or Reservation mechanism until the owning Step specialization has completed and passed the no-fail transfer, Recovery Owner, identity, retention, and end-to-end branch proof.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+      "documentId": "gpwcf.architecture-closure.wave6-dependency",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 6,
+      "waveName": "Dependency, Packaging, and Public API Architecture",
+      "artifactNumber": 1,
+      "purpose": "Finalize GPWCF dependency ownership and allowed/forbidden dependency directions across Core, optional Supporting Patterns, Prefect Integration, consumers, and the SMRB development environment, including the newly justified identity and diagnostics modules.",
+      "selectedDesignSummary": "Finalize GPWCF dependency ownership and allowed/forbidden dependency directions across Core, optional Supporting Patterns, Prefect Integration, consumers, and the SMRB development environment, including the newly justified identity and diagnostics modules.",
+      "requiredGoverningArtifactChanges": [
+        {
+          "target": "Framework_Module_Boundary_Model.json",
+          "changes": [
+            "Add MOD-CORE-IDENTITIES as mandatory_standalone and dependency-free.",
+            "Add MOD-CORE-DIAGNOSTICS as optional_reusable and dependency-free.",
+            "Add StageResult under MOD-CORE-STAGE and StepExecutionResult/OptionalResultContributions under MOD-CORE-STEP-RESULTS.",
+            "Record allowed dependency edges from Stage, Step, SPU, and selected Supporting Patterns to core.identities.",
+            "Record the optional dependency edge to core.diagnostics only when a specialized contract selects it.",
+            "Keep MOD-CORE-SHARED-CONTRACTS not_established and do not create a broad shared package."
+          ]
+        },
+        {
+          "target": "Filesystem_Architecture.json",
+          "changes": [
+            "Add src/gpwcf/core/identities.",
+            "Add optional src/gpwcf/core/diagnostics.",
+            "Add Stage-owned core/stage/results and invocation/contracts/lifecycle allocations justified by Wave 1.",
+            "Add Step contracts/invocation/lifecycle/results allocations justified by Wave 2.",
+            "Add SPU generic result type allocations justified by Wave 3.",
+            "Add core/supporting_patterns/error_handling/publication.",
+            "Align Prefect integration subpackages to Wave 5 binding/correlation/results/configuration allocations.",
+            "Make pyproject.toml required because the selected packaging design uses PEP 621 and setuptools PEP 517 build metadata."
+          ]
+        },
+        {
+          "target": "Dependency_and_Public_API_Architecture.json",
+          "changes": [
+            "Update dependency owner/module lists and dependency graph with core.identities and core.diagnostics.",
+            "Replace the unresolved distribution arrangement with one distribution and optional Prefect extra for the initial release.",
+            "Record setuptools==84.2.1 / setuptools.build_meta as isolated build-system dependency.",
+            "Preserve Prefect 3.9.2 as optional runtime extra and keep minimal transitive lock as a release gate.",
+            "Update Public API readiness gaps resolved by Waves 1-4 while retaining production integration/failure qualification gates."
+          ]
+        }
+      ],
+      "implementationGate": "Do not create pyproject.toml or install new project build dependencies until all Wave 6 artifacts and governing-artifact reconciliation are accepted.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+      "documentId": "gpwcf.architecture-closure.wave6-packaging",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 6,
+      "waveName": "Dependency, Packaging, and Public API Architecture",
+      "artifactNumber": 2,
+      "purpose": "Define the initial Python distribution model, build backend, project metadata, optional Prefect installation extra, dependency lock strategy, package discovery, and clean installation/build verification profiles for GPWCF.",
+      "selectedDesignSummary": "Use one gpwcf distribution for the initial release with a rigorously optional Prefect extra. Preserve the logical Core and Prefect Integration package/API boundaries, and split distributions only when independent release/dependency needs are demonstrated.",
+      "requiredGoverningArtifactChanges": [
+        {
+          "target": "Filesystem_Architecture.json",
+          "changes": [
+            "Keep pyproject.toml as required project/build metadata.",
+            "Record setuptools.build_meta and the pinned build-system requirement.",
+            "Record the single gpwcf distribution with optional Prefect extra.",
+            "Add py.typed and package discovery configuration.",
+            "Add proposed lock files as dependency manifests only; do not create a dependency bundle."
+          ]
+        },
+        {
+          "target": "Dependency_and_Public_API_Architecture.json",
+          "changes": [
+            "Resolve the distribution arrangement as one distribution plus optional Prefect extra for the initial release.",
+            "Record setuptools==84.2.1 as build-only and prefect==3.9.2 as optional runtime.",
+            "Retain Prefect transitive closure as a release gate.",
+            "Separate build/dev/test locks from runtime requirements."
+          ]
+        }
+      ],
+      "implementationGate": "Create the actual pyproject.toml only after all Wave 6 artifacts and governing-artifact reconciliation are accepted.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "documentId": "gpwcf.architecture-closure.wave5-prefect-integration-binding",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 5,
+      "waveName": "Prefect Integration Binding and Operational Mapping",
+      "artifactNumber": 1,
+      "purpose": "Define the Prefect 3.9.2 integration boundary that binds GPWCF's runtime-independent Stage, Step, SPU, and selected Supporting Pattern contracts to Prefect-native Flows, Deployments, Subflows, and Tasks while preserving domain ownership, identities, results, and operational evidence.",
+      "selectedDesignSummary": "Define the Prefect 3.9.2 integration boundary that binds GPWCF's runtime-independent Stage, Step, SPU, and selected Supporting Pattern contracts to Prefect-native Flows, Deployments, Subflows, and Tasks while preserving domain ownership, identities, results, and operational evidence.",
+      "requiredGoverningArtifactChanges": [],
+      "implementationGate": "Do not implement the production Prefect binding until Wave 5 artifacts and the Wave 6 dependency/packaging/Public API design are reviewed and accepted.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+      "documentId": "gpwcf.architecture-closure.wave5-operational-mapping",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 5,
+      "waveName": "Prefect Integration Binding and Operational Mapping",
+      "artifactNumber": 2,
+      "purpose": "Define the operational mapping between GPWCF domain invocations/results/identities/lifecycle/custody and Prefect-native execution records/identities/States, explicitly preventing operational status from being mistaken for domain outcome or safe settlement.",
+      "selectedDesignSummary": "Define the operational mapping between GPWCF domain invocations/results/identities/lifecycle/custody and Prefect-native execution records/identities/States, explicitly preventing operational status from being mistaken for domain outcome or safe settlement.",
+      "requiredGoverningArtifactChanges": [],
+      "implementationGate": "Do not implement state/correlation/result mapping helpers until Wave 5 and Wave 6 designs are accepted and the exact supported Prefect API surface is pinned.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+      "documentId": "gpwcf.architecture-closure.wave6-public-api",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 6,
+      "waveName": "Dependency, Packaging, and Public API Architecture",
+      "artifactNumber": 3,
+      "purpose": "Define the stable, supported consumer-facing Public API surfaces of GPWCF Core and the optional Prefect Integration, including what consumers may implement/customize/compose, how they invoke Stage, how optional Supporting Patterns are accessed, and how Prefect-specific binding is used without exposing private implementation paths.",
+      "selectedDesignSummary": "Define the stable, supported consumer-facing Public API surfaces of GPWCF Core and the optional Prefect Integration, including what consumers may implement/customize/compose, how they invoke Stage, how optional Supporting Patterns are accessed, and how Prefect-specific binding is used without exposing private implementation paths.",
+      "requiredGoverningArtifactChanges": [
+        {
+          "target": "Dependency_and_Public_API_Architecture.json",
+          "changes": [
+            "Update Core Public API contract groups to include StageCallable/StageInvocation/StageResult, StepInvocation/StepExecutionResult/OptionalResultContributions, generic SPU result types, and canonical identities.",
+            "Add optional Diagnostics and separate Supporting Pattern public sub-surfaces.",
+            "Update Prefect Integration API to the binding/configuration/correlation/result retrieval contract groups defined here.",
+            "Resolve the prior Stage Callable, Stage Flow Result, and Step optional result slot readiness gaps according to Waves 1-4.",
+            "Keep production Prefect binding/failure recovery qualification as a separate implementation/test gate."
+          ]
+        },
+        {
+          "target": "Filesystem_Architecture.json",
+          "changes": [
+            "Allocate the explicit public_api/core and public_api/integrations/prefect source packages.",
+            "Allocate the documented optional public sub-surfaces for identities, diagnostics, and Supporting Patterns.",
+            "Keep internal modules outside public_api and do not wildcard re-export them."
+          ]
+        },
+        {
+          "target": "Framework_Module_Boundary_Model.json",
+          "changes": [
+            "Add MOD-CORE-IDENTITIES and MOD-CORE-DIAGNOSTICS.",
+            "Map each Public API surface/sub-surface to its logical module owner.",
+            "Keep consumer and Prefect Integration ownership boundaries separate."
+          ]
+        }
+      ],
+      "implementationGate": "Do not create public_api package files or export symbols until the six-wave design set and governing PHASE-03 artifacts are reconciled and accepted.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+      "documentId": "gpwcf.architecture-closure.wave1.stage-callable",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 1,
+      "waveName": "Stage Callable, Stage Result, Pipeline Invocation",
+      "artifactNumber": 1,
+      "purpose": "Define the framework-owned, workflow-runtime-independent callable boundary of a GPWCF Stage. The contract makes a concrete Stage invocable as one bounded functional unit by a consuming workflow or by a native external workflow element, while preserving Stage ownership of its internal Step composition and Stage-specific flow semantics.",
+      "selectedDesignSummary": "Adopt a runtime-independent, typed Stage invocation contract implemented by each concrete Stage Aggregate and exposed through the Stage public boundary.",
+      "requiredGoverningArtifactChanges": [],
+      "implementationGate": "Do not create or modify GPWCF source packages from this artifact until the Wave 1 design set and the overall Architecture Closure Design are reviewed and accepted.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Level/02.00_Stage_Result.json",
+      "documentId": "gpwcf.architecture-closure.wave1.stage-result",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 1,
+      "waveName": "Stage Callable, Stage Result, Pipeline Invocation",
+      "artifactNumber": 2,
+      "purpose": "Define a generic Stage invocation result envelope that enables a caller and an external workflow integration to retrieve and correlate a Stage result while preserving the Stage-specific output, Stage Flow Result, and Stage domain outcome as distinct typed values.",
+      "selectedDesignSummary": "Adopt a generic StageResult envelope with three distinct type parameters for Stage outputs, Stage Flow Result, and Stage-specific domain outcome.",
+      "requiredGoverningArtifactChanges": [],
+      "implementationGate": "Do not implement StageResult source classes until Wave 1 and the overall Architecture Closure Design are reviewed and accepted.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/04.00_Step_Callable.json",
+      "documentId": "gpwcf.architecture-closure.wave2.step-callable",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 2,
+      "waveName": "Step Callable, StepExecutionResult, Optional Result Contributions",
+      "artifactNumber": 1,
+      "purpose": "Define the stable Stage-facing callable boundary of a Step, including explicit invocation identity and parent Stage correlation, while preserving the Step Aggregate as the owner of its internal Step Composition and the sole public boundary for Step execution and StepExecutionResult.",
+      "selectedDesignSummary": "Adopt an explicit StepInvocation envelope as the sole normative input to the Stage-facing Step execution operation.",
+      "requiredGoverningArtifactChanges": [],
+      "implementationGate": "Do not implement StepInvocation or change the public Step signature until the Wave 2 design set and the required governing contract changes are accepted.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/05.00_Step_Execution_Result.json",
+      "documentId": "gpwcf.architecture-closure.wave2.step-execution-result",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 2,
+      "waveName": "Step Callable, StepExecutionResult, Optional Result Contributions",
+      "artifactNumber": 2,
+      "purpose": "Define the Step-level structured result returned to Stage, preserving the existing processing artifact and independently optional Step-specialized aggregates while adding explicit invocation provenance and a type-safe optional-result contribution boundary that does not make Supporting Pattern packages mandatory Core dependencies.",
+      "selectedDesignSummary": "Adopt a typed StepExecutionResult envelope containing the Step processing-artifact slot, invocation provenance, and one required OptionalResultContributions value object whose three known contribution slots are independently typed and independently present/absent.",
+      "requiredGoverningArtifactChanges": [],
+      "implementationGate": "Do not implement StepExecutionResult source classes or alter specialized contracts until the Wave 2 design set is complete and accepted.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/06.00_Optional_Result_Contributions.json",
+      "documentId": "gpwcf.architecture-closure.wave2.optional-result-contributions",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 2,
+      "waveName": "Step Callable, StepExecutionResult, Optional Result Contributions",
+      "artifactNumber": 3,
+      "purpose": "Define a closed, typed, independently optional contribution model for the Step-level validation, error, and error-handling aggregates. The design preserves specialized result ownership and keeps optional Supporting Pattern dependencies out of the mandatory Core import path.",
+      "selectedDesignSummary": "Adopt a closed generic OptionalResultContributions value object with three named optional result slots, each represented through OptionalResultSlot[T] = Absent | Present[T].",
+      "requiredGoverningArtifactChanges": [],
+      "implementationGate": "Do not implement OptionalResultSlot or OptionalResultContributions until all Wave 2 artifacts and required governing contract changes are reviewed and accepted.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    },
+    {
+      "sourcePath": ".docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/07.00_SPU.json",
+      "documentId": "gpwcf.architecture-closure.wave3.spu-functional-binding",
+      "documentVersion": "1.0.0",
+      "status": "draft-for-architecture-review",
+      "wave": 3,
+      "waveName": "SPU and Supporting Pattern Functional Binding",
+      "artifactNumber": 1,
+      "purpose": "Define how a concrete Step Processing Unit is functionally bound to Prefect's native execution model while preserving the SPU as the actual domain processing entity, its specialized callable/result contract, and Step Composition ownership of invocation coordination and Step-level flow.",
+      "selectedDesignSummary": "Use a Prefect Task binding as the default native realization of one bounded SPU invocation. The Task wrapper invokes the SPU's existing runtime-independent execute(input) contract and returns the exact SPUExecutionResult value.",
+      "requiredGoverningArtifactChanges": [],
+      "implementationGate": "Do not implement the Prefect SPU binding until both Wave 3 artifacts and required governing contract alignment are accepted.",
+      "disposition": "pending-architecture-acceptance",
+      "filesystemRule": "Do not materialize proposed modules, source files, package markers or public exports from this draft until explicit architecture acceptance and PHASE-03 reconciliation."
+    }
+  ]
+}

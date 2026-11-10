@@ -1,0 +1,2 @@
+# Direct third-party dependencies owned by this framework.
+# The current framework baseline uses the Python standard library only.

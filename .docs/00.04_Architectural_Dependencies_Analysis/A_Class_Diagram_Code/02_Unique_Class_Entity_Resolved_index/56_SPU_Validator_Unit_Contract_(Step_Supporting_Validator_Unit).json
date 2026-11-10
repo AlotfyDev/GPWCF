@@ -1,0 +1,10 @@
+{
+  "serialNumber": 56,
+  "name": "SPU Validator Unit Contract (Step Supporting Validator Unit)",
+  "category": "Class / Component",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Contract.json",
+  "description": "Optional supporting pattern selected by a concrete Step for validation responsibilities; retains specialized behavioral and result semantics; validation conclusions remain domain results, not automatic invocation failures; SPUValidatorResult carried independently in SPUExecutionResult/StepExecutionResult optional slots.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

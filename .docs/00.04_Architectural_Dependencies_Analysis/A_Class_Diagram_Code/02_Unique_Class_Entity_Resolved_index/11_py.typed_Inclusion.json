@@ -1,0 +1,10 @@
+{
+  "serialNumber": 11,
+  "name": "py.typed Inclusion",
+  "category": "Feature / Package Policy",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "The wheel includes py.typed; package markers and exports not created before Wave 6 Public API design acceptance.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}

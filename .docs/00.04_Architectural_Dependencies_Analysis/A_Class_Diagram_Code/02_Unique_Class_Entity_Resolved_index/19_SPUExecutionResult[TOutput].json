@@ -1,0 +1,10 @@
+{
+  "serialNumber": 19,
+  "name": "SPUExecutionResult[TOutput]",
+  "category": "Class / Generic Type",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+  "description": "Structured aggregate result produced by StepProcessingUnit[TInput,TOutput] and consumed by the owning Step Composition; carries the processing artifact and SPU-invocation-scoped structured results/evidence.",
+  "resolvedFrom": "02,00_Step_SPU_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "step-spu-level-domain-features-entities-classes-components-index"
+}

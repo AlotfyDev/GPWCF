@@ -1,0 +1,10 @@
+{
+  "serialNumber": 23,
+  "name": "Synthetic Deployment/Subflow Invocation Records",
+  "category": "Feature / Mechanism",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+  "description": "Prefect-generated synthetic Task Runs that link deployment/subflow invocations to parent dispatch Task Runs; Stage Flow Run.parent_task_run_id points to the synthetic Task Run, not directly to the user-defined Root dispatch Task Run; task_inputs.__parents__ contains the Root dispatch Task Run ID.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

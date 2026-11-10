@@ -1,0 +1,63 @@
+@startuml
+title Error Handling Associations
+skinparam monochrome true
+skinparam roundcorner 0
+
+class "Error Handling Unit" as EHU <<Component>> {
+  + perform handling operation
+  + produce THandlingOperationResult
+}
+class "ErrorHandlingOperationEntry[THandlingOperationResult]" as EOE <<Class>> {
+  errorHandlingUnitIdentity
+  handlingOperationAttemptIdentity
+  handlingOperationIdentity
+  targetOccurrenceReferences
+  operationResult
+  stepInstanceIdentity
+  association identities
+  invocation identity
+}
+class "ErrorHandlerResult[THandlingOperationEntry,TErrorHandlingContext]" as EHR <<Class>> {
+  handlingOperations: Collection[THandlingOperationEntry]
+  errorHandlingContext: TErrorHandlingContext
+}
+class "OperationEntryPublisher" as Pub <<Contract>> {
+  + reserve(attemptIdentity)
+  + publish(reservation, entry)
+  + get_publication_status
+  + release(reservation)
+}
+class "PublicationReservation" as Res <<Class>> {
+  state: Reserved/Consumed/Released
+  publisherIdentity
+  invocationIdentity
+  errorHandlingUnitIdentity
+  handlingOperationAttemptIdentity
+  association identities
+}
+class "SPUError occurrence" as SE <<Entity>> {
+  producerSPUIdentity
+  occurrenceIdentity
+}
+class "Recovery Owner" as RO <<Component>> {
+  + ambiguous-acceptance escrow
+  + status reconciliation
+}
+class "Step-specific Error Handling Composition" as Comp <<Component>> {
+  + assembles ErrorHandlerResult
+}
+
+EHU --> EOE : produces operation entry
+EOE --> EHR : forms aggregate
+Pub ..> Res : issues & validates & consumes
+EHU --> Pub : requests reservation / publishes
+Res --> EOE : authorizes acceptance of at most one entry
+EHR --> SE : related through occurrence references only
+EHR ..> RO : unresolved custody transfer
+Comp .> EHR : assembles & integrates into StepExecutionResult
+
+note right of Pub : Atomic acceptance: Reserved <-> Consumed / Released
+No partial acceptance
+Reservation cardinality: one per Handling Operation Attempt
+
+@enduml

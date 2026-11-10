@@ -1,0 +1,10 @@
+{
+  "serialNumber": 15,
+  "name": "Conformance Requirement PKG-001",
+  "category": "Feature / Conformance Rule",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "The initial release uses one gpwcf distribution with a rigorously optional Prefect extra.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,42 @@
+{
+  "taskId": "06_Observation_Unit",
+  "serialNumber": 6,
+  "target": "SPU Observation Unit",
+  "category": "Supporting Pattern",
+  "description": "Implement the optional SPU Observation Unit supporting pattern for observation activity (call, callback, sampling, subscription) against Step-owned target scopes. Observation Records remain independent of StepExecutionResult and preserve provenance/custody. Association establishes applicability only without guaranteeing active observation. Implement Observation Unit Association and Lifecycle contracts.",
+  "implementationClasses": [
+    "Observation Record",
+    "Observation Unit Association",
+    "Observation Unit Lifecycle",
+    "observationUnitIdentity",
+    "observationUnitAssociationIdentity",
+    "observationInvocationIdentity",
+    "observationRecordIdentity"
+  ],
+  "relatedDiagrams": {
+    "class": "03_Diagrams_Codes_Files/01_SPU_Step_Processing_Unit.dot",
+    "sequence": "B_Sequencial_Diagram_Code/04_Observation_Unit_Sequence.puml",
+    "association": "C_Association_Diagram_Code/06_Observation_Unit_Associations.puml",
+    "dependency": "D_Architectural_Dependency_Diagram_Code/04_Supporting_Pattern_Optional_Dependency.dot"
+  },
+  "dependencies": [
+    "02_Step"
+  ],
+  "acceptanceCriteria": [
+    "Observation activity against target scopes implemented",
+    "Observation Records independent of StepExecutionResult",
+    "Observation Record provenance: stepInstanceIdentity, observationUnitIdentity, observationUnitAssociationIdentity, associationTargetIdentity, observationInvocationIdentity, observationRecordIdentity",
+    "Association = applicability only; does not guarantee active observation",
+    "Step Composition sole authority for association establishment/change/dissociation",
+    "Dissociation does not erase observation records; historical provenance retained"
+  ],
+  "definitionOfDone": [
+    "Observation record provenance tests",
+    "Association lifecycle tests (establish/change/dissociate)",
+    "Architecture test: no automatic observation guarantee from association"
+  ],
+  "priority": "medium",
+  "status": "pending",
+  "estimatedEffort": "medium",
+  "testStrategy": "Observation record tests; association lifecycle tests; provenance audit tests"
+}

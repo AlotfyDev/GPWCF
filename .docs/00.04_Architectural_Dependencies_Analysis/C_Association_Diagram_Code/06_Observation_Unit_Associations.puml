@@ -1,0 +1,39 @@
+@startuml
+title Observation Unit Associations
+skinparam monochrome true
+skinparam roundcorner 0
+
+class "SPU Observation Unit (SPUObU)" as OU <<Component>> {
+  + observe(call, callback, sampling, subscription)
+}
+class "Observation Record" as OR <<Class>> {
+  observationRecordIdentity
+  observationInvocationIdentity
+}
+class "Observation Unit Association" as OA <<Association>> {
+  observationUnitIdentity
+  associationTargetIdentity
+  observationUnitAssociationIdentity
+  stepInstanceIdentity
+}
+class "Observation Target Scope" as TS <<Entity>> {
+  target scope kind
+  observation surface / events / state
+}
+class "Step Composition" as SC <<Component>> {
+  + creates/changes/ends associations
+  + sole authority
+}
+
+OU .. OA : participates
+OA .. TS : observes exactly one scope
+OA .. SC : managed by
+OU --> OR : produces observation records
+OR .. OA : retains association provenance historically
+SC .> TS : target within owning Step
+
+note right of OA : Association = applicability only
+Does not guarantee active observation
+Dissociation does not erase observation records
+
+@enduml

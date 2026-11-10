@@ -1,0 +1,52 @@
+{
+  "documentType": "PrefectNativeIntegrationOpenQuestions",
+  "documentVersion": "1.0.1",
+  "status": "open-before-production-stage-binding",
+  "questions": [
+    {
+      "id": "PREF-P01-OPEN-01",
+      "question": "What Prefect-native execution profile guarantees concurrent sibling Stage Parent Flow runs while retaining Stage Flow identity and Root-to-Stage parent/correlation semantics?",
+      "evidence": "Under four repeated runs with the supported SQLite single-worker API server, sibling Stage Flow overlap occurred in 3/4 runs; one run serialized both child Flows. Root dispatch Task submission does not guarantee child Flow overlap.",
+      "requiredProof": [
+        "Two or more Stage Flow Runs overlap deterministically across repeated runs.",
+        "Each Stage remains a native Flow Run with a stable Stage specialization identity.",
+        "Root invocation context and parent-child correlation remain available or are explicitly preserved without conflating identities.",
+        "Inputs, outputs, failures and completion are observable by the Root Flow."
+      ],
+      "candidateInvestigation": "Qualify process/worker/deployment-backed Prefect Flow invocation only if native hierarchy semantics are preserved. Do not assume run_deployment is equivalent to a native subflow. Prefect API-server multi-worker mode is not supported with SQLite; it requires PostgreSQL."
+    },
+    {
+      "id": "PREF-P01-OPEN-02",
+      "question": "Do any concrete Generator Stage specializations require concurrent sibling Step Subflows?",
+      "evidence": "Sibling Step Subflows were serialized in all eight Stage sibling pairs across four supported-profile runs.",
+      "requiredProof": [
+        "Derive actual Step membership and dependency/transition semantics from specialized Stage and Step contracts.",
+        "Identify which Steps are independent and which are sequential or conditional.",
+        "Only where parallel sibling Steps are required, qualify the exact native Prefect pattern and parent correlation."
+      ],
+      "candidateInvestigation": "Do not introduce a general concurrency mechanism or extra hierarchy layer before the concrete Step Composition topology demonstrates a need."
+    },
+    {
+      "id": "PREF-P01-OPEN-03",
+      "question": "Can a worker/deployment-backed Stage Flow invocation preserve the required parent-child identity and result semantics?",
+      "evidence": "The local direct child-Flow call pattern does not provide deterministic sibling Flow overlap.",
+      "requiredProof": [
+        "Native Stage Flow Run identity and invocation context remain distinct from GPWCF Stage identity.",
+        "Root can correlate the dispatched Stage Flow Run and receive its typed result/failure.",
+        "No hidden global scheduler or universal adapter is added to GPWCF.",
+        "Operational State remains separate from GPWCF domain result."
+      ],
+      "candidateInvestigation": "Compare Prefect run_deployment / worker execution against direct nested Flow calls using an explicit parent invocation envelope; record any loss of native parent_task_run_id as a limitation. If multi-worker API-server mode is evaluated, use a PostgreSQL-backed profile and include its operational/dependency costs."
+    },
+    {
+      "id": "PREF-P01-OPEN-04",
+      "question": "Which Generator Stage branches actually require sibling Stage concurrency?",
+      "evidence": "The native hierarchy proves Stage invocation but sibling Stage overlap was observed in only three of four runs.",
+      "requiredProof": [
+        "Map STG-01..STG-13 dependencies and branch/fan-in relationships.",
+        "Identify actual concurrent Stage pairs from their specialized contracts, not by assumption.",
+        "Link each concurrency requirement to the corresponding Prefect execution acceptance test."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 17,
+  "name": "Conformance Requirement PKG-003",
+  "category": "Feature / Conformance Rule",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "Prefect is declared only under the prefect optional extra as prefect==3.9.2.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}

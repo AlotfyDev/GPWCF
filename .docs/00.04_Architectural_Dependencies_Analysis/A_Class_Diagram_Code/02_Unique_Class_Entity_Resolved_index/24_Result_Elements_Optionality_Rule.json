@@ -1,0 +1,10 @@
+{
+  "serialNumber": 24,
+  "name": "Result Elements Optionality Rule",
+  "category": "Feature / Contract Rule",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+  "description": "All elements are independently optional; absence is not a success/failure status. Absence means the corresponding value was not included; the concrete Step defines applicability and interpretation.",
+  "resolvedFrom": "02,00_Step_SPU_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "step-spu-level-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 6,
+  "name": "Generator Extraction Dependencies",
+  "category": "Feature / Dependency Rule",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "Generator extraction dependencies remain consumer-owned; GPWCF does not own or impose Generator-specific dependency closures.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

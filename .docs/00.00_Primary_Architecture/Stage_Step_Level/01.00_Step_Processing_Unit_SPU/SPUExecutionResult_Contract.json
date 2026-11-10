@@ -1,0 +1,147 @@
+{
+  "documentId": "pipeline.spu-execution-result.contract",
+  "documentVersion": "0.1.0",
+  "status": "design-baseline",
+  "title": "SPUExecutionResult Contract",
+  "scope": {
+    "architecturalLevel": "step-component",
+    "component": "SPUExecutionResult",
+    "owningLevel": "Step",
+    "purpose": "Define the structured result returned by one normally completed Step Processing Unit invocation to its owning Step Composition.",
+    "appliesTo": "Every concrete StepProcessingUnit[TInput,TOutput]."
+  },
+  "contract": {
+    "name": "SPUExecutionResult",
+    "genericType": "SPUExecutionResult[TOutput]",
+    "producedBy": "StepProcessingUnit[TInput,TOutput]",
+    "consumedBy": "The owning Step Composition.",
+    "responsibility": "Carry the processing artifact and SPU-invocation-scoped structured results/evidence that the concrete SPU contract assigns to its invocation.",
+    "nonResponsibilities": [
+      "Represent the aggregate result of the complete Step.",
+      "Define the Stage-facing Step result contract.",
+      "Own Step-level flow control or Step-level result composition.",
+      "Represent Stage or Pipeline status.",
+      "Absorb all Step-level ErrorResult or ErrorHandlerResult aggregation merely because an SPU produced source occurrences or operation entries."
+    ]
+  },
+  "typeParameters": [
+    {
+      "name": "TOutput",
+      "meaning": "The type of processing artifact produced by this concrete SPU invocation, when one is produced.",
+      "specialization": "Selected by the concrete SPU."
+    },
+    {
+      "name": "TErrorOccurrenceContext",
+      "meaning": "The SPU-specialized context type carried by SPUError occurrences made available in this SPU invocation result, when applicable."
+    }
+  ],
+  "elements": [
+    {
+      "name": "processingArtifact",
+      "type": "Optional[TOutput]",
+      "absentValue": "null",
+      "producer": "Concrete SPU",
+      "meaning": "The artifact produced by this SPU invocation.",
+      "constraints": [
+        "When present, conforms exactly to the SPU's TOutput specialization.",
+        "Its semantics are defined by the concrete SPU and owning Step.",
+        "It is not automatically the Step's final TOutput."
+      ]
+    },
+    {
+      "name": "spuErrorOccurrences",
+      "type": "Optional[Collection[SPUError[TErrorOccurrenceContext]]]",
+      "absentValue": "null",
+      "producer": "Concrete SPU",
+      "meaning": "Original SPUError occurrences created by this SPU for errors arising within its own processing responsibility and made available to Step Composition.",
+      "constraints": [
+        "Each occurrence preserves its occurrence identity and exact error-type-definition reference.",
+        "The producing SPU identity is associated with each occurrence when incorporated into Step-level aggregation or references.",
+        "No occurrence is synthesized merely because an exception prevented SPUExecutionResult from being returned.",
+        "The concrete Step defines whether and how these occurrences are included in its Step-level ErrorResult."
+      ]
+    },
+    {
+      "name": "validatorResult",
+      "type": "Optional[SPUValidatorResult]",
+      "absentValue": "null",
+      "producer": "Applicable validator unit or SPU-specific validator composition",
+      "meaning": "The validation result associated specifically with this SPU invocation, when the Step's design assigns such validation to this SPU scope.",
+      "constraints": [
+        "Optional and independently absent/present.",
+        "Its concrete structure and composition are defined by the applicable validator contracts and Step specialization.",
+        "It is not a universal status for the SPU or Step."
+      ]
+    }
+  ],
+  "optionality": {
+    "rule": "All elements are independently optional; absence is not a success/failure status.",
+    "semantics": [
+      "Absence means the corresponding value was not included in this SPUExecutionResult.",
+      "Absence alone does not establish that a component was inapplicable, not executed, successful, or failed.",
+      "The concrete Step defines applicability and interpretation."
+    ]
+  },
+  "preservation": {
+    "invariant": "Every result element actually produced and available under the SPU invocation contract must be preserved in the returned SPUExecutionResult.",
+    "rules": [
+      "A later internal failure must not discard an earlier result that the SPU contract requires to be returned.",
+      "No result is fabricated for an operation that did not produce one.",
+      "If an exception prevents SPUExecutionResult from being returned, previously produced evidence and results are subject to the concrete Step's separately defined recovery/retention contract; they must not be mislabeled as a returned SPUExecutionResult."
+    ]
+  },
+  "assembly": {
+    "owner": "Concrete SPU.",
+    "rules": [
+      "The SPU assembles only its own invocation-level result according to its specialized SPU contract.",
+      "The SPU does not assemble StepExecutionResult.",
+      "The SPU does not decide the Step's next flow transition.",
+      "The Step Composition consumes returned SPUExecutionResult values and performs any cross-SPU or Step-level aggregation.",
+      "The contract does not mandate a constructor, builder, serialization format, or memory ownership model."
+    ]
+  },
+  "exceptionBoundary": {
+    "rules": [
+      "An exception that prevents execute from returning is not an SPUExecutionResult.",
+      "The exception is recorded/handled according to the concrete Step and SPU exception contracts.",
+      "No universal conversion from exceptions to SPUError occurrences or structured result elements is imposed."
+    ]
+  },
+  "explicitNonGoals": [
+    "No universal SPU success boolean or status is introduced.",
+    "No Step-level ErrorResult or ErrorHandlerResult aggregate is required in this contract.",
+    "No fixed order of processing, validation, error production, or observation is imposed.",
+    "No Stage-level or Pipeline-level flow policy is defined."
+  ],
+  "relationships": [
+    {
+      "from": "StepProcessingUnit[TInput,TOutput]",
+      "to": "SPUExecutionResult[TOutput]",
+      "relationship": "returns-per-normal-invocation"
+    },
+    {
+      "from": "Step Composition",
+      "to": "SPUExecutionResult[TOutput]",
+      "relationship": "consumes-and-uses-in-Step-flow-and-result-composition"
+    },
+    {
+      "from": "SPUError occurrences",
+      "to": "Step Error Model",
+      "relationship": "made-available-for-Step-level-representation-and-aggregation-when-applicable"
+    }
+  ],
+  "references": [
+    {
+      "document": "Step_Processing_Unit_SPU_Contract.json",
+      "relationship": "producer callable contract"
+    },
+    {
+      "document": "../01.01_Step_Error_Model/Step_Error_Model_Contract.json",
+      "relationship": "Step-level occurrence aggregation contract"
+    },
+    {
+      "document": "../01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "relationship": "distinct Stage-facing Step result contract"
+    }
+  ]
+}

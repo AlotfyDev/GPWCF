@@ -1,0 +1,10 @@
+{
+  "serialNumber": 16,
+  "name": "Dependency Graph Acyclicity",
+  "category": "Feature / Constraint",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "Dependency graph is acyclic and all forbidden dependency directions remain prohibited across Core, optional Supporting Patterns, Prefect Integration, consumers, and SMRB development environment.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

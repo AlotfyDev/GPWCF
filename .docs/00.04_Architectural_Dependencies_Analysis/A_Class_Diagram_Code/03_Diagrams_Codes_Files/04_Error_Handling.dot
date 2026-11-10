@@ -1,0 +1,35 @@
+digraph "04_Error_Handling" {
+  rankdir=TB;
+  node [shape=record, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=8];
+  label="04 Error Handling Class Diagram";
+  labelloc=t;
+
+  "Error_Handling_Unit" [label="{Error Handling Unit|Class / Component|THandlingOperationResult}", tooltip="Step-owned optional Supporting Unit callable that executes one or more authorized handling operations against target occurrences/resources and produces THandlingOperationResult values until the public"];
+  "Supporting_Pattern_Public_Sub_Surfaces" [label="{Supporting Pattern Public Sub-Surfaces|Feature / API Sub-Surface}", tooltip="Separate Supporting Pattern public sub-surfaces under Core Public API; Validation, Observation, and Error Handling patterns remain separately importable and opt-in."];
+  "THandlingOperationResult" [label="{THandlingOperationResult|Class / Generic Type|ErrorResult\lErrorHandlerResult}", tooltip="Per-operation result model produced by the Error Handling Unit; explicitly typed to match existing contract generic parameters, distinct from ErrorResult and ErrorHandlerResult."];
+  "ErrorResult" [label="{ErrorResult|Class / Entity|ErrorHandlerResult}", tooltip="Source Error Occurrence result type, kept separate from the Error Handling Unit's per-operation results and from ErrorHandlerResult; Error Model ownership remains with the concrete Step/consumer."];
+  "ErrorHandlerResult" [label="{ErrorHandlerResult|Class / Entity|ErrorResult}", tooltip="Aggregate of accepted operation entries produced by Error Handling; distinct from ErrorResult and does not assert error resolution."];
+  "Step_Specialized_Target_Occurrence_Reference_Boundary" [label="{Step-Specialized Target Occurrence Reference Boundary|Feature / Boundary|Association}", tooltip="Boundary defining how the Error Handling Unit references target occurrences/resources made available by the owning Step, keeping operation attempt/execution identities and Association/target provenanc"];
+  "OperationEntryPublisher_Protocol" [label="{OperationEntryPublisher Protocol|Class / Contract|OperationEntryPublisher\lErrorHandlingOperationEntry}", tooltip="Wave 4 detailed design (artifact 3) defining the reservation-backed OperationEntryPublisher protocol; the Step-specific Error Handling Composition-owned invocation-scoped capability that accepts and r"];
+  "PublicationReservation" [label="{PublicationReservation|Class / Entity}", tooltip="Opaque, Publisher-issued capability that authorizes one complete entry for one specific handling operation attempt and secures the resources needed for the promised handoff; enforces the one-attempt/o"];
+  "Single_Step_Publication_Specialization" [label="{Single Step Publication Specialization|Class / Contract}", tooltip="Per-Step concrete policy/implementation contract defining mandatory no-fail transfer proof, Recovery Owner, identity generation, status retention, and end-to-end publication traces."];
+  "Supporting_Pattern_Functional_Binding" [label="{Supporting Pattern Functional Binding|Architectural Design / Feature|Association}", tooltip="Wave 3 detailed design (artifact 2) defining how each optional Supporting Pattern (Validation, Error Handling, Observation) is functionally bound to Prefect native execution without flattening distinc"];
+  "Error_Handling_Functional_Binding" [label="{Error Handling Functional Binding|Feature / Pattern Binding}", tooltip="Binding of the Error Handling Unit pattern to Prefect native execution, preserving operation identity, reservation, atomic publication acceptance, and Recovery Owner custody as distinct from Prefect T"];
+  "Nine_Specialized_Supporting_Pattern_Contracts" [label="{Nine Specialized Supporting Pattern Contracts|Feature / Contract Set|Association}", tooltip="The nine Behavioral, Association, and Lifecycle contracts for Validator Unit, Observation Unit, and Error Handling Unit (3 patterns x 3 contracts), each retaining its own specialized behavior, result,"];
+  "Prefect_Operational_State_versus_Pattern_Domain_Results_Publication_Acceptance" [label="{Prefect Operational State versus Pattern Domain Results / Publication Acceptance|Feature / Relationship}", tooltip="Distinction between Prefect operational run/task records and pattern-specific domain results/publication acceptance; Prefect does not redefine validation, observation, error handling, publication acce"];
+  "Core_Diagnostics_Module" [label="{Core Diagnostics Module|Class / Module|Diagnostic}", tooltip="core.diagnostics is optional and does not become a universal Error Model; dependency closure analysis determines which contracts require diagnostics versus specialized error handling."];
+  "Generic_Error_Handling_Capability" [label="{Generic Error Handling Capability|Architectural Design / Feature|Association}", tooltip="Wave 4 detailed design (artifact 2) defining the reusable optional Error Handling capability as a specialized Supporting Pattern, including generic type boundaries, unit/association/lifecycle ownershi"];
+  "Supporting_Pattern_Task_Binding" [label="{Supporting Pattern Task Binding|Feature / Pattern Binding|Association}", tooltip="Native Prefect realization of selected Supporting Pattern (Validation, Error Handling, Observation) execution as Prefect Tasks, preserving each pattern's specialized behavior, result, identity, associ"];
+
+  "Error_Handling_Unit" -> "THandlingOperationResult" [label="assoc", style=dashed];
+  "THandlingOperationResult" -> "Error_Handling_Unit" [label="assoc", style=dashed];
+  "THandlingOperationResult" -> "ErrorResult" [label="assoc", style=dashed];
+  "THandlingOperationResult" -> "ErrorHandlerResult" [label="assoc", style=dashed];
+  "ErrorResult" -> "Error_Handling_Unit" [label="assoc", style=dashed];
+  "ErrorResult" -> "ErrorHandlerResult" [label="assoc", style=dashed];
+  "ErrorHandlerResult" -> "ErrorResult" [label="assoc", style=dashed];
+  "Step_Specialized_Target_Occurrence_Reference_Boundary" -> "Error_Handling_Unit" [label="assoc", style=dashed];
+  "Error_Handling_Functional_Binding" -> "Error_Handling_Unit" [label="assoc", style=dashed];
+  "Nine_Specialized_Supporting_Pattern_Contracts" -> "Error_Handling_Unit" [label="assoc", style=dashed];
+}

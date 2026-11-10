@@ -1,0 +1,12 @@
+digraph "07_Publication" {
+  rankdir=TB;
+  node [shape=record, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=8];
+  label="07 Publication Class Diagram";
+  labelloc=t;
+
+  "Atomic_Acceptance_Custody_Transfer_Boundary" [label="{Atomic Acceptance / Custody Transfer Boundary|Feature / Boundary}", tooltip="The equivalence between reservation consumption and complete-entry retention, with one unambiguous linearization point; no-fail ownership transfer and complete-entry capacity reservation before operat"];
+  "Recovery_Owner_and_Ambiguous_Acceptance_Escrow" [label="{Recovery Owner and Ambiguous-Acceptance Escrow|Class / Entity}", tooltip="Recovery Owner obligations for ambiguous-acceptance escrow and status reconciliation; every concrete Step names a Recovery Owner and defines escrow/reconciliation and status retention for unresolved p"];
+  "Domain_Result_vs_Prefect_State_Interpretation" [label="{Domain Result vs Prefect State Interpretation|Feature / Conceptual Distinction}", tooltip="Distinction between domain result and Prefect State interpretation: no Prefect State value by itself proves a GPWCF domain success/failure/cancellation settlement/result acceptance/publication accepta"];
+
+}

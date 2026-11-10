@@ -1,0 +1,10 @@
+{
+  "serialNumber": 17,
+  "name": "Structured Results versus Exceptions versus Prefect Operational State",
+  "category": "Feature / Conceptual Distinction",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/07.00_SPU.json",
+  "description": "Separation of returned structured results, thrown exceptions, and Prefect operational State; exceptions that prevent SPUExecutionResult return are not an SPUExecutionResult.",
+  "resolvedFrom": "02,00_Step_SPU_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "step-spu-level-domain-features-entities-classes-components-index"
+}

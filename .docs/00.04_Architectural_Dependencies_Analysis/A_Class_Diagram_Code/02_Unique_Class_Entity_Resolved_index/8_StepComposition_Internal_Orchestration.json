@@ -1,0 +1,10 @@
+{
+  "serialNumber": 8,
+  "name": "StepComposition Internal Orchestration",
+  "category": "Feature / Responsibility",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+  "description": "Owns internal component composition and Step-specific orchestration decisions; selects and coordinates SPUs and supporting-unit instances; preserves invocation-scoped facts/results/exceptions/custody; applies Step-specific flow decisions.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

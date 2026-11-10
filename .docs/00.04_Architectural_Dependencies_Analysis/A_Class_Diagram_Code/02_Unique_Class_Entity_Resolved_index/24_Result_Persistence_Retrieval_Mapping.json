@@ -1,0 +1,10 @@
+{
+  "serialNumber": 24,
+  "name": "Result Persistence/Retrieval Mapping",
+  "category": "Feature / Mapping",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+  "description": "Mapping of result persistence/retrieval across the integration boundary; persisted Stage domain results retrieved separately from Prefect State; serialization/persistence failures remain operational failures and do not fabricate domain results.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

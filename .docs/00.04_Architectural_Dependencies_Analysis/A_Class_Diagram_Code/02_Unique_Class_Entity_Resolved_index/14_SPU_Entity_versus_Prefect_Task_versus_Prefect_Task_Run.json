@@ -1,0 +1,10 @@
+{
+  "serialNumber": 14,
+  "name": "SPU Entity versus Prefect Task versus Prefect Task Run",
+  "category": "Feature / Conceptual Distinction",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/07.00_SPU.json",
+  "description": "The deliberate distinction among SPU Entity (domain processing entity), SPU callable implementation, Prefect Task (native execution element), and Prefect Task Run (operational record).",
+  "resolvedFrom": "02,00_Step_SPU_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "step-spu-level-domain-features-entities-classes-components-index"
+}

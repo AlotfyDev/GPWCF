@@ -1,0 +1,17 @@
+digraph "Build vs Runtime Dependency Separation" {
+  rankdir=LR;
+  node [shape=box, style=filled, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=8, len=1.5];
+  label="Build vs Runtime Dependency Separation";
+  labelloc=t;
+  BuildBackend [fillcolor="#f0f0f0", tooltip="setuptools==84.2.1 / build_meta"];
+  Core [fillcolor="#e6f3ff", tooltip="Core runtime (standard-library-only)"];
+  Prefect [fillcolor="#ffe6e6", tooltip="Prefect 3.9.2 runtime (opt-in)"];
+  BuildDependencies [fillcolor="#f0f0f0", tooltip="isolated from runtime"];
+  RuntimeDependencies [fillcolor="#e6f3ff", tooltip="Core: none external; Integration: Prefect optional"];
+  BuildBackend -> BuildDependencies [label="isolated", color="#666666"];
+  Core -> RuntimeDependencies [label="none external", color="#0066cc"];
+  PrefectIntegration -> RuntimeDependencies [label="Prefect optional", color="#cc6600"];
+  BuildBackend -> Core [label="NO runtime dep", style=dashed, color="#ff0000"];
+  BuildDependencies -> RuntimeDependencies [label="isolated", style=dashed, color="#666666"];
+}

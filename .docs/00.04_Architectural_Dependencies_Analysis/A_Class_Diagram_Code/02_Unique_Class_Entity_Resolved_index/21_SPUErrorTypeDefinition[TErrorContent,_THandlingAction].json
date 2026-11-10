@@ -1,0 +1,10 @@
+{
+  "serialNumber": 21,
+  "name": "SPUErrorTypeDefinition[TErrorContent, THandlingAction]",
+  "category": "Class / Generic Type",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+  "description": "SPU-level error type definition owned by one concrete SPU; TErrorContent describes the error type's meaning/domain characteristics, THandlingAction describes the associated handling action.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

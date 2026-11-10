@@ -1,0 +1,420 @@
+{
+  "documentType": "GPWCFDetailedArchitectureDesign",
+  "documentId": "gpwcf.architecture-closure.wave3.spu-functional-binding",
+  "documentVersion": "1.0.0",
+  "status": "draft-for-architecture-review",
+  "designSequence": {
+    "wave": 3,
+    "waveName": "SPU and Supporting Pattern Functional Binding",
+    "artifactNumber": 1,
+    "predecessorArtifacts": [
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/04.00_Step_Callable.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/05.00_Step_Execution_Result.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/06.00_Optional_Result_Contributions.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json"
+    ],
+    "nextArtifact": "08.00_Supporting_Pattern_Functional_Binding.json"
+  },
+  "purpose": "Define how a concrete Step Processing Unit is functionally bound to Prefect's native execution model while preserving the SPU as the actual domain processing entity, its specialized callable/result contract, and Step Composition ownership of invocation coordination and Step-level flow.",
+  "scope": {
+    "included": [
+      "The SPU domain callable boundary and its native Prefect execution realization.",
+      "The distinction between SPU Entity, SPU callable implementation, Prefect Task, and Prefect Task Run.",
+      "SPU identity and invocation correlation across the Step Subworkflow boundary.",
+      "The mapping and preservation of SPUExecutionResult.",
+      "The separation of returned structured results, thrown exceptions, and Prefect operational State.",
+      "Step Composition and Prefect Integration responsibilities for invocation, concurrency, result collection, and provenance.",
+      "Dependency and Public API boundaries."
+    ],
+    "excluded": [
+      "A universal SPU base class or common executable-unit runtime.",
+      "A generic SPU scheduler, plugin manager, loader, registry, or execution engine.",
+      "A universal SPU input/output schema or processing topology.",
+      "A universal synchronous/asynchronous, concurrency, cancellation, timeout, or retry policy.",
+      "A generic Error Model or promotion of Generator-specific SPUError registry semantics into Core.",
+      "Any direct Stage-to-SPU invocation path.",
+      "Prefect types or imports in Core SPU contracts."
+    ]
+  },
+  "governingArchitecture": {
+    "entityRole": "An SPU is the actual specialized processing unit that performs one assigned processing responsibility inside its owning Step. It is not a delegation-only wrapper and is not the Step Aggregate.",
+    "ownership": "The concrete Step selects its SPUs. Step Composition owns their invocation coordination, internal flow decisions, result collection, association coordination where selected, and applicable lifecycle decisions.",
+    "callableBoundary": "The existing generic SPU operation remains execute(input: TInput) -> SPUExecutionResult[TOutput, TSPUErrorOccurrences, TSPUValidatorResult]. The SPU contract does not gain a mandatory universal execution-context parameter in this design.",
+    "executionAuthority": "Prefect executes the native Task representing one bounded SPU invocation. Step Composition remains authoritative for the meaning and permitted conditions of that invocation and for how its result affects the Step.",
+    "resultAuthority": "The SPU constructs and returns its own SPUExecutionResult. Step Composition consumes that result and determines its contribution to StepCompositionFlowResult and StepExecutionResult.",
+    "hierarchy": "The native SPU Task executes within the owning native Step Subworkflow. Stage Composition invokes the Step boundary only and never invokes an SPU Task directly."
+  },
+  "architecturalOptions": [
+    {
+      "optionId": "SPU-BINDING-A",
+      "name": "SPUAsNativePrefectFlow",
+      "description": "Represent every SPU as a Prefect Flow or Subflow.",
+      "advantages": [
+        "Uses a native workflow construct for each SPU."
+      ],
+      "disadvantages": [
+        "Overstates the workflow-level responsibility of an SPU that is a bounded processing operation.",
+        "Adds unnecessary nested workflow layers and Flow Run identities for ordinary processing calls.",
+        "Risks confusing SPU domain identity with a native workflow boundary."
+      ],
+      "disposition": "rejected-as-default"
+    },
+    {
+      "optionId": "SPU-BINDING-B",
+      "name": "SPUCallableBoundToNativeTask",
+      "description": "Bind each bounded SPU invocation to a Prefect Task wrapper that invokes the concrete SPU callable and returns its SPUExecutionResult.",
+      "advantages": [
+        "Matches the SPU's bounded processing responsibility.",
+        "Keeps the SPU contract independent of Prefect.",
+        "Uses native Task execution and result handling within the owning Step Subworkflow.",
+        "Preserves Step Composition ownership of internal topology and result aggregation.",
+        "Supports fan-out/fan-in where the concrete Step permits it."
+      ],
+      "disadvantages": [
+        "Requires an integration-owned binding wrapper and correlation mapping.",
+        "Requires explicit treatment for SPUs whose specialized behavior is long-lived or not a bounded invocation."
+      ],
+      "disposition": "recommended-default"
+    },
+    {
+      "optionId": "SPU-BINDING-C",
+      "name": "GenericExecutableUnitAdapter",
+      "description": "Introduce a universal executable-unit interface and adapter that wraps SPUs and all Supporting Units.",
+      "advantages": [
+        "Appears to provide one common binding surface."
+      ],
+      "disadvantages": [
+        "Collapses distinct specialized callable, result, event, identity, and lifecycle contracts.",
+        "Creates a universal abstraction unsupported by the reviewed architecture.",
+        "Encourages a runtime adapter/registry subsystem."
+      ],
+      "disposition": "rejected"
+    },
+    {
+      "optionId": "SPU-BINDING-D",
+      "name": "InProcessOnly",
+      "description": "Execute SPU callables directly inside the Step implementation without a native Prefect executable element.",
+      "advantages": [
+        "Minimal runtime binding."
+      ],
+      "disadvantages": [
+        "Does not realize the qualified Prefect hierarchy where SPU Tasks execute inside the native Step Subworkflow.",
+        "Would prevent Prefect from owning native task execution, task records, and scheduling for those SPU invocations."
+      ],
+      "disposition": "not-selected-for-prefect-profile"
+    }
+  ],
+  "selectedDesign": {
+    "decision": "Use a Prefect Task binding as the default native realization of one bounded SPU invocation. The Task wrapper invokes the SPU's existing runtime-independent execute(input) contract and returns the exact SPUExecutionResult value.",
+    "domainContract": {
+      "name": "StepProcessingUnit[TInput, TOutput, TSPUErrorOccurrences, TSPUValidatorResult]",
+      "operation": "execute(input: TInput) -> SPUExecutionResult[TOutput, TSPUErrorOccurrences, TSPUValidatorResult]",
+      "owner": "Concrete SPU implementation.",
+      "caller": "Owning Step Composition, directly or through the Prefect integration binding.",
+      "inputOwnership": "Concrete SPU specialization defines TInput meaning, mutability, lifetime, and ownership. Core does not prescribe a universal input model.",
+      "resultOwnership": "The SPU assembles only its own SPUExecutionResult. It does not assemble StepExecutionResult or determine Step transitions."
+    },
+    "spuResultTypeDecoupling": {
+      "currentContractIssue": "SPUExecutionResult_Contract currently refers directly to SPUError[TErrorOccurrenceContext] and SPUValidatorResult. Those concrete result types may be supplied by consumer-specific Error Model and optional Validator specializations; Core must not import them unconditionally.",
+      "recommendedGenericForm": "SPUExecutionResult[TOutput, TSPUErrorOccurrences, TSPUValidatorResult]",
+      "callableGenericForm": "StepProcessingUnit[TInput, TOutput, TSPUErrorOccurrences, TSPUValidatorResult]",
+      "genericParameters": [
+        {
+          "name": "TSPUErrorOccurrences",
+          "meaning": "The concrete SPU-owned error occurrence collection/value type made available by the selected Step Error Model specialization, or typing.Never when no such contribution is selected."
+        },
+        {
+          "name": "TSPUValidatorResult",
+          "meaning": "The concrete SPU-scope validator result type when validation is assigned to this SPU, or typing.Never when no such contribution is selected."
+        }
+      ],
+      "resultSlots": [
+        "processingArtifact remains specialized as TOutput.",
+        "spuErrorOccurrences remains optional and carries TSPUErrorOccurrences without importing a concrete SPUError/Generator Error Model type.",
+        "validatorResult remains optional and carries TSPUValidatorResult without importing a concrete Validator Unit result package."
+      ],
+      "specializationRule": "A concrete SPU supplies the exact error-occurrence and validator-result types selected by its Step specialization. When a capability is not selected, use typing.Never and do not import its optional package.",
+      "semanticBoundary": "This genericization changes only type ownership/dependency direction. It does not generalize error occurrence semantics, ErrorResult aggregation, validation semantics, or supporting-unit behavior; those remain with their specialized contracts and Wave 4 design.",
+      "dependencyRule": "core.processing_units.spu depends only on generic type/value primitives and its own result contract. It must not depend on Generator Common Error Model or concrete optional Validator Unit result types."
+    },    "nativeBinding": {
+      "nativeElement": "Prefect Task",
+      "placement": "Inside the native Step Subworkflow Flow Run.",
+      "wrapperOwnership": "integrations.prefect",
+      "bindingMeaning": "The Prefect Task is the native execution realization of one SPU invocation; it is not the SPU domain Entity and does not replace the SPU callable contract.",
+      "taskInput": "The concrete SPU TInput value plus integration-owned invocation correlation metadata required to attribute the call.",
+      "taskOperation": "Invoke the bound SPU instance's execute(input) method and return the exact SPUExecutionResult[TOutput, TSPUErrorOccurrences, TSPUValidatorResult].",
+      "taskOutput": "The domain SPUExecutionResult plus an integration-owned execution record/correlation association. The integration record is not merged into SPUExecutionResult.",
+      "noDomainWrapperRequirement": "Do not add a universal Core SPUInvocationEnvelope merely to satisfy Prefect. An integration-private binding envelope may carry domain IDs and native correlation while leaving the SPU callable signature unchanged."
+    },
+    "identityAndCorrelation": {
+      "domainIdentities": [
+        {
+          "name": "SPUIdentity",
+          "owner": "Concrete SPU identity scope and its owning Step specialization.",
+          "purpose": "Identifies the concrete SPU instance."
+        },
+        {
+          "name": "SPUInvocationIdentity",
+          "owner": "Step Composition invocation coordination.",
+          "purpose": "Identifies one actual SPU invocation attempt within the owning Step."
+        },
+        {
+          "name": "StepIdentity",
+          "owner": "Step Aggregate.",
+          "purpose": "Identifies the owning Step instance."
+        },
+        {
+          "name": "StepInvocationIdentity",
+          "owner": "Step Aggregate accepted invocation boundary.",
+          "purpose": "Identifies the accepted Step invocation within which the SPU invocation occurs."
+        },
+        {
+          "name": "PipelineInvocationIdentity",
+          "owner": "Consumer.",
+          "purpose": "Optional pipeline-wide correlation value propagated through the invocation hierarchy."
+        }
+      ],
+      "identityRule": "SPU identity and SPU invocation identity are distinct from Step identity, Step invocation identity, and every Prefect native identifier.",
+      "correlationPlacement": "Step Composition creates/obtains the SPUInvocationIdentity and associates it with the selected SPU instance and input. The Prefect binding carries that correlation as explicit task parameters or integration-owned invocation metadata; the SPU callable itself receives only its declared TInput unless its specialized contract explicitly includes additional data.",
+      "resultAttribution": "The Step Composition records the exact SPU identity and SPUInvocationIdentity alongside the returned SPUExecutionResult in its internal StepCompositionFlowResult. The integration records the corresponding Prefect Task Run ID separately.",
+      "noAmbientState": "The binding must not depend on thread-local state, global mutable context, a hidden registry, or an implicit Prefect context lookup to reconstruct domain invocation identity."
+    },
+    "executionAndFlowRules": {
+      "stepCompositionAuthority": [
+        "Selects the SPU instance and its specialized callable contract.",
+        "Determines when the SPU invocation is permitted by the concrete Step flow.",
+        "Creates or obtains the SPUInvocationIdentity and associates the exact input/context.",
+        "Coordinates invocation and any concurrency/ordering constraints.",
+        "Consumes the returned SPUExecutionResult and records it in StepCompositionFlowResult.",
+        "Determines how the result contributes to Step-level output and optional aggregates."
+      ],
+      "prefectAuthority": [
+        "Schedules/dispatches the native Task under the owning Step Subworkflow.",
+        "Produces native Task Run identity and operational State.",
+        "Enacts native task concurrency constraints configured by the integration/Step specialization.",
+        "Makes the native execution record available for operational observation and correlation."
+      ],
+      "spuAuthority": [
+        "Performs its assigned specialized processing responsibility.",
+        "Constructs and returns its own SPUExecutionResult for a normally completed invocation.",
+        "Creates only the SPU error occurrences or other evidence assigned to its own specialized contract.",
+        "Does not choose Step-level transitions or assemble StepExecutionResult."
+      ],
+      "topologyRule": "No fixed one-SPU-per-Step, linear sequence, or universal fan-out is imposed. The concrete Step defines its topology; Prefect executes the corresponding native Task graph.",
+      "fanOutFanIn": "Where a concrete Step permits parallel SPU execution, Prefect Task submission and result collection may realize fan-out/fan-in. The integration must preserve producer identity, invocation identity, result provenance, and deterministic aggregation requirements where the Step contract requires them."
+    },
+    "resultAndFailureMapping": {
+      "normalReturn": "A normally completed SPU callable returns one SPUExecutionResult[TOutput, TSPUErrorOccurrences, TSPUValidatorResult] according to its specialized contract.",
+      "returnedResult": "The integration returns the exact domain SPUExecutionResult to Step Composition without substituting Prefect State or wrapping it as StepExecutionResult.",
+      "thrownException": "An exception that prevents execute from returning SPUExecutionResult remains a thrown invocation exception. No SPUExecutionResult is fabricated.",
+      "taskFailure": "Prefect Task failure is operational evidence. The integration maps it to the Step Composition's exception/failure boundary while preserving the native Task Run record.",
+      "domainOutcome": "An SPUExecutionResult may contain a domain-specific negative/partial artifact or optional evidence without that automatically becoming a Prefect task failure.",
+      "custody": "Results produced and accepted into Step custody remain preserved even if a later SPU or Supporting Unit fails. If a task terminates after producing evidence but before returning the structured result, the concrete Step recovery contract governs that evidence; the integration must not fabricate a returned SPUExecutionResult.",
+      "errorModelBoundary": "The SPU contract's current SPUErrorTypeDefinitionRegistry and SPUError occurrence clauses require genericity/dependency-closure review. This binding does not promote the Generator Common Error Model or its registry semantics into Core."
+    },
+    "prefectEvidence": {
+      "phase01": [
+        "The qualified fixture hierarchy used native SPU Tasks inside the owning Step Subflow.",
+        "SPU Task fan-out/fan-in overlap was observed in all 16 of 16 measured Step invocations.",
+        "StepExecutionResult was assembled from two distinct SPUExecutionResult values in the fixture."
+      ],
+      "phase02": [
+        "Forty SPU Task Runs were recorded across five Root invocations.",
+        "Every SPU Task Run was correlated to its owning Step Flow Run.",
+        "The Stage did not bypass the Step boundary."
+      ],
+      "notQualified": [
+        "Production GPWCF SPU class binding.",
+        "Production SPU identity/value-object binding.",
+        "Production SPUExecutionResult serialization for arbitrary consumer payload types.",
+        "SPU failure, cancellation, timeout, retry, worker-loss, recovery, and custody settlement.",
+        "Any universal SPU concurrency profile beyond the measured fixtures."
+      ],
+      "interpretation": "The Prefect native Task realization and fixture hierarchy are supported by PHASE-01/02 evidence. Production binding and failure/lifecycle behavior remain implementation and qualification work."
+    }
+  },
+  "dependencyRules": {
+    "allowed": [
+      "core.step may depend on the SPU callable/result contract surface.",
+      "integrations.prefect may depend inward on the SPU callable/result contract and core.identities.",
+      "Consumer SPU implementations depend on gpwcf.public_api.core for the generic SPU contract and result type.",
+      "Prefect-specific Task wrappers and operational correlation records belong under integrations.prefect."
+    ],
+    "forbidden": [
+      "core.processing_units.spu must not import Prefect.",
+      "core.processing_units.spu must not import Step Composition implementation.",
+      "core.processing_units.spu must not depend on consumer-specific Generator error models or private dependency bundles.",
+      "Stage Composition must not depend directly on SPU callable or result implementation types.",
+      "No universal ExecutableUnit, SupportingUnit, TaskAdapter, PluginManager, or runtime registry is introduced.",
+      "Native Prefect Task Run identity must not replace SPUIdentity or SPUInvocationIdentity."
+    ]
+  },
+  "publicApiRequirements": {
+    "coreSurface": "gpwcf.public_api.core",
+    "coreExports": [
+      "StepProcessingUnit callable contract.",
+      "SPUExecutionResult generic result contract.",
+      "SPUIdentity and SPUInvocationIdentity value types through core.identities."
+    ],
+    "prefectSurface": "gpwcf.public_api.integrations.prefect",
+    "integrationExportsAfterBindingImplementation": [
+      "The supported SPU-to-Prefect Task binding facility, if it is intended as a consumer-facing configuration surface.",
+      "The supported operational correlation/evidence access contract, if consumers are allowed to inspect it."
+    ],
+    "privateIntegrationDetails": [
+      "Internal Task wrapper functions.",
+      "Internal Prefect Task Run lookup and mapping helpers.",
+      "Internal execution-record storage mechanics."
+    ]
+  },
+  "requiredGoverningContractChanges": [
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+      "change": "Generalize SPUExecutionResult to carry TSPUErrorOccurrences and TSPUValidatorResult as explicit type parameters rather than importing concrete SPUError and SPUValidatorResult types into the mandatory SPU result module.",
+      "reason": "The SPU module must remain independently importable without the consumer-specific Error Model or optional Validator packages.",
+      "changeType": "proposed-result-genericity-revision",
+      "approval": "Requires explicit architecture acceptance before source contract editing."
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      "change": "Extend the StepProcessingUnit generic specialization/return signature to bind TSPUErrorOccurrences and TSPUValidatorResult in SPUExecutionResult, while retaining execute(input: TInput).",
+      "reason": "Keeps concrete optional result types explicit without making optional Supporting Pattern packages mandatory Core imports.",
+      "changeType": "proposed-callable-result-type-alignment",
+      "approval": "Requires explicit architecture acceptance before source contract editing."
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+      "change": "Clarify the SPUInvocationIdentity lifecycle and the exact mapping between each Step Composition invocation entry, SPUExecutionResult, and Prefect Task Run operational record.",
+      "reason": "The integration must preserve producer/invocation provenance without changing the SPU callable's input-only contract.",
+      "changeType": "coordination-and-correlation-clarification",
+      "approval": "Requires explicit architecture acceptance before source contract editing."
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Framework_Module_Boundary_Model.json",
+      "change": "Add the core.identities dependency edge and keep SPU Core independent of Prefect and consumer error-model implementations.",
+      "reason": "SPU and integration require distinct domain identity values without reverse dependencies.",
+      "changeType": "module-boundary-alignment",
+      "approval": "Required during governing-artifact reconciliation."
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Filesystem_Architecture.json",
+      "change": "Allocate SPU identity value types under the canonical core.identities package and keep Prefect binding wrappers under integrations.prefect.",
+      "reason": "Prevents duplicate identity definitions and runtime leakage into Core.",
+      "changeType": "filesystem-allocation-alignment",
+      "approval": "Required during governing-artifact reconciliation."
+    }
+  ],
+  "conformanceRequirements": [
+    {
+      "id": "SPU-BIND-001",
+      "requirement": "Each bounded SPU invocation is realized as a Prefect Task inside the owning Step Subworkflow by default."
+    },
+    {
+      "id": "SPU-BIND-002",
+      "requirement": "The Prefect Task wrapper invokes the SPU's existing execute(TInput) contract and returns its exact SPUExecutionResult[TOutput, TSPUErrorOccurrences, TSPUValidatorResult]."
+    },
+    {
+      "id": "SPU-BIND-003",
+      "requirement": "The SPU remains the actual processing implementation and is not replaced by a delegation-only adapter."
+    },
+    {
+      "id": "SPU-BIND-004",
+      "requirement": "Stage Composition never invokes SPUs directly; Step Composition owns SPU selection and invocation."
+    },
+    {
+      "id": "SPU-BIND-005",
+      "requirement": "SPUIdentity and SPUInvocationIdentity remain distinct from Step/Stage domain identities and Prefect native IDs."
+    },
+    {
+      "id": "SPU-BIND-006",
+      "requirement": "The Step Composition records each returned SPUExecutionResult against the exact SPU invocation identity and producer instance."
+    },
+    {
+      "id": "SPU-BIND-007",
+      "requirement": "A thrown exception or failed Prefect Task does not fabricate an SPUExecutionResult."
+    },
+    {
+      "id": "SPU-BIND-008",
+      "requirement": "Prefect State and Task Run IDs remain operational evidence and do not replace domain results or identities."
+    },
+    {
+      "id": "SPU-BIND-009",
+      "requirement": "The concrete Step defines SPU topology, concurrency, ordering, and result aggregation; no universal fan-out is imposed."
+    },
+    {
+      "id": "SPU-BIND-010",
+      "requirement": "Core SPU contracts import and operate without Prefect installed."
+    },
+    {
+      "id": "SPU-BIND-011",
+      "requirement": "SPU error-model clauses remain conditional until their dependency closure and genericity are explicitly approved."
+    }
+  ],
+  "traceability": [
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      "supports": [
+        "SPU is the actual specialized processing unit and exposes execute(TInput) -> SPUExecutionResult[TOutput, TSPUErrorOccurrences, TSPUValidatorResult].",
+        "Step Composition owns invocation coordination and Step-level flow/result assembly.",
+        "SPU does not determine Step flow transitions or assemble StepExecutionResult.",
+        "SPU contract does not impose universal context, sync/async, concurrency, or cancellation behavior."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+      "supports": [
+        "SPUExecutionResult is the structured result of one normally completed SPU invocation.",
+        "It is consumed by Step Composition and remains distinct from StepExecutionResult.",
+        "Exceptions do not fabricate SPUExecutionResult."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+      "supports": [
+        "Step Composition selects/invokes SPUs and retains their returned results and exceptions.",
+        "Step Composition owns Step-specific flow decisions and StepExecutionResult assembly.",
+        "The native Step Subworkflow executes the internal graph without changing domain ownership."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-01/PHASE-01_Acceptance_Results.json",
+      "supports": [
+        "Fixture SPU Tasks execute inside their owning Step Subflows.",
+        "Fixture fan-out/fan-in overlap and typed result aggregation evidence."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Acceptance_Results.json",
+      "supports": [
+        "Forty fixture SPU Task Runs correlate to owning Step Flow Runs.",
+        "The native hierarchy preserves the Step boundary; production binding remains unqualified."
+      ]
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/05.00_Detailed_Design_Waves/Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/04.00_Step_Callable.json",
+      "supports": [
+        "Step Composition is the sole owner of internal SPU invocation.",
+        "The Step public boundary and identity/correlation are explicit."
+      ]
+    }
+  ],
+  "acceptanceCriteria": [
+    "The SPU remains a runtime-independent domain callable and actual processing implementation.",
+    "Each bounded SPU invocation maps to a native Prefect Task inside its owning Step Subworkflow.",
+    "The binding returns the exact SPUExecutionResult without replacing it with Prefect State.",
+    "SPU and invocation identities remain distinct from Step/Stage and native runtime identities.",
+    "Step Composition retains invocation correlation and result custody.",
+    "No Stage-to-SPU bypass, universal executable-unit abstraction, plugin manager, or scheduler is introduced.",
+    "Optional error/validation/observation semantics remain specialized and are not generalized by the SPU binding.",
+    "The design claims only fixture capabilities established by PHASE-01/02 and explicitly records production/failure qualification gaps.",
+    "No source contract or production source package is modified by this artifact."
+  ],
+  "changeControl": {
+    "authority": "Wave 3 detailed design proposal. It becomes an implementation constraint only after architecture review and explicit acceptance.",
+    "sourceContractPolicy": "This artifact does not modify Step_Processing_Unit_SPU_Contract.json, SPUExecutionResult_Contract.json, or Step_Composition_Contract.json.",
+    "implementationGate": "Do not implement the Prefect SPU binding until both Wave 3 artifacts and required governing contract alignment are accepted.",
+    "nextStep": "Design 08.00_Supporting_Pattern_Functional_Binding.json, preserving the distinct executable and non-executable nature of the three Supporting Pattern categories."
+  }
+}

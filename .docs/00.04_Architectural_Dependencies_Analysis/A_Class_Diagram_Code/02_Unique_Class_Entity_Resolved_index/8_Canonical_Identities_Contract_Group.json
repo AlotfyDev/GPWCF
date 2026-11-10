@@ -1,0 +1,10 @@
+{
+  "serialNumber": 8,
+  "name": "Canonical Identities Contract Group",
+  "category": "Feature / API Contract Group",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Core Public API contract group covering canonical identity value types; provided through core.identities module as narrow dependency-free nominal identity types.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

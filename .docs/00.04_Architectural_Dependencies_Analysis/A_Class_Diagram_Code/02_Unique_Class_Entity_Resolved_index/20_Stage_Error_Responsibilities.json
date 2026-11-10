@@ -1,0 +1,10 @@
+{
+  "serialNumber": 20,
+  "name": "Stage Error Responsibilities",
+  "category": "Feature / Responsibility",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+  "description": "Definition ownership, registration, occurrence creation, flow consumption, and exception separation govern Stage-level error handling. Thrown exceptions remain distinct from StageError occurrences unless an explicit Stage-owned contract defines a conversion; no automatic conversion is implied.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

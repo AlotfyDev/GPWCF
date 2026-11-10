@@ -1,0 +1,379 @@
+{
+  "documentId": "pipeline.common.error-model",
+  "documentVersion": "0.1.0",
+  "status": "design-baseline",
+  "title": "Pipeline Common Error Model",
+  "scope": {
+    "architecturalLevel": "pipeline-common",
+    "purpose": "Define the shared structural contracts for SPU-level and Stage-level error type definitions, error occurrences, their registries, and their ownership and association within a Pipeline.",
+    "appliesTo": "Every Stage and Step Processing Unit (SPU) participating in a Generator Pipeline.",
+    "designPrinciple": "The common model standardizes structural contracts and ownership boundaries while leaving error semantics, specialized content, contextual data, and handling-action meaning to the Stage or SPU that owns them."
+  },
+  "conceptualModel": {
+    "levels": [
+      {
+        "name": "SPU",
+        "definitionType": "SPUErrorTypeDefinition[TErrorContent, THandlingAction]",
+        "occurrenceType": "SPUError[TErrorOccurrenceContext]",
+        "registryType": "SPUErrorTypeDefinitionRegistry[TErrorTypeDefinition]"
+      },
+      {
+        "name": "Stage",
+        "definitionType": "StageErrorTypeDefinition[TErrorContent, THandlingAction]",
+        "occurrenceType": "StageError[TErrorOccurrenceContext]",
+        "registryType": "StageErrorTypeDefinitionRegistry[TErrorTypeDefinition]"
+      }
+    ],
+    "separation": [
+      "An Error Type Definition describes a specialized kind of error that may occur within its owning SPU or Stage.",
+      "An Error Occurrence represents one actual occurrence of an error and references the registered Error Type Definition that identifies its kind.",
+      "A Registry stores and resolves Error Type Definitions for exactly one owning SPU or Stage.",
+      "An Error Type Definition is not itself an Error Occurrence.",
+      "An Error Occurrence does not duplicate the complete Error Type Definition; it carries a reference to that definition and occurrence-specific information."
+    ],
+    "levelSeparation": [
+      "SPUErrorTypeDefinition, SPUError, and SPUErrorTypeDefinitionRegistry form the SPU-level family.",
+      "StageErrorTypeDefinition, StageError, and StageErrorTypeDefinitionRegistry form the Stage-level family.",
+      "The SPU-level and Stage-level types are distinct programmatic types. Neither family is an alias or subtype of the other.",
+      "The common model does not introduce a third shared Error, Error Type Definition, Error Occurrence, or Registry type that erases the distinction between the two levels."
+    ]
+  },
+  "errorTypeDefinitions": {
+    "purpose": "Represent the specialized definition of an error kind owned by one SPU or one Stage. The definition is registered before it is referenced by occurrences.",
+    "genericContracts": {
+      "SPUErrorTypeDefinition": {
+        "genericType": "SPUErrorTypeDefinition[TErrorContent, THandlingAction]",
+        "owner": "One concrete SPU",
+        "typeParameters": [
+          {
+            "name": "TErrorContent",
+            "meaning": "The SPU-specific structured content that describes the meaning and domain-specific characteristics of this error type."
+          },
+          {
+            "name": "THandlingAction",
+            "meaning": "The SPU-specific structured description of the handling action associated with this error type."
+          }
+        ]
+      },
+      "StageErrorTypeDefinition": {
+        "genericType": "StageErrorTypeDefinition[TErrorContent, THandlingAction]",
+        "owner": "One concrete Stage",
+        "typeParameters": [
+          {
+            "name": "TErrorContent",
+            "meaning": "The Stage-specific structured content that describes the meaning and domain-specific characteristics of this error type."
+          },
+          {
+            "name": "THandlingAction",
+            "meaning": "The Stage-specific structured description of the handling action associated with this error type."
+          }
+        ]
+      }
+    },
+    "requiredStructuralElements": [
+      {
+        "name": "errorTypeIdentity",
+        "conceptualType": "ErrorTypeDefinitionIdentity",
+        "meaning": "Identifies this error kind within the scope of its owning Registry.",
+        "constraints": [
+          "It identifies the error type, not an individual occurrence.",
+          "It must be unique within its owning Registry.",
+          "It remains stable for as long as the definition is registered and may be referenced."
+        ]
+      },
+      {
+        "name": "errorContent",
+        "conceptualType": "TErrorContent",
+        "meaning": "Carries the specialized content defined by the owning SPU or Stage.",
+        "constraints": [
+          "The common model does not prescribe the fields, schema, or semantics of TErrorContent.",
+          "The owning SPU or Stage is responsible for defining and supplying content appropriate to its own error domain."
+        ]
+      },
+      {
+        "name": "handlingAction",
+        "conceptualType": "THandlingAction",
+        "meaning": "Carries the specialized handling-action description associated with this error type.",
+        "constraints": [
+          "The owning SPU or Stage defines the action description and its semantics.",
+          "The common model does not prescribe a universal action vocabulary, action schema, or handling policy.",
+          "The presence of a handling-action description does not by itself execute that action or mandate a control-flow decision."
+        ]
+      }
+    ],
+    "specializationRules": [
+      "Each concrete SPU defines the specialized TErrorContent and THandlingAction types used by its SPUErrorTypeDefinition instances.",
+      "Each concrete Stage defines the specialized TErrorContent and THandlingAction types used by its StageErrorTypeDefinition instances.",
+      "Different SPUs may use different content and handling-action types; different Stages may also use different content and handling-action types.",
+      "No universal set of domain-specific error fields is imposed across SPUs or across Stages."
+    ],
+    "registrationState": {
+      "rule": "A definition must be registered in the Registry assigned to its owning unit before an occurrence can reference it through that Registry.",
+      "immutability": "A registered definition is treated as an immutable definition for the lifetime of its registration. Changing the meaning or specialized content of an existing definition must not silently alter the meaning of occurrences that already reference it.",
+      "replacementAndVersioning": "The common model does not prescribe definition replacement, versioning, deprecation, or removal operations."
+    }
+  },
+  "errorOccurrences": {
+    "purpose": "Represent an individual, actual occurrence of an error and associate it with the registered definition of the error kind.",
+    "genericContracts": {
+      "SPUError": {
+        "genericType": "SPUError[TErrorOccurrenceContext]",
+        "owner": "The concrete SPU execution that produces the occurrence",
+        "typeParameters": [
+          {
+            "name": "TErrorOccurrenceContext",
+            "meaning": "The SPU-specific data describing the circumstances, runtime context, and diagnostics of this particular occurrence."
+          }
+        ],
+        "definitionReferenceType": "SPUErrorTypeDefinitionReference"
+      },
+      "StageError": {
+        "genericType": "StageError[TErrorOccurrenceContext]",
+        "owner": "The concrete Stage execution or Stage-owned activity that produces the occurrence",
+        "typeParameters": [
+          {
+            "name": "TErrorOccurrenceContext",
+            "meaning": "The Stage-specific data describing the circumstances, runtime context, and diagnostics of this particular occurrence."
+          }
+        ],
+        "definitionReferenceType": "StageErrorTypeDefinitionReference"
+      }
+    },
+    "requiredStructuralElements": [
+      {
+        "name": "occurrenceIdentity",
+        "conceptualType": "ErrorOccurrenceIdentity",
+        "meaning": "Identifies this particular occurrence independently of the identity of its error type.",
+        "constraints": [
+          "Two occurrences of the same error type are distinct occurrences and must be distinguishable.",
+          "The identity scope and concrete representation are defined by the owning Pipeline and execution model; this common contract does not mandate a particular identifier format."
+        ]
+      },
+      {
+        "name": "errorTypeDefinitionReference",
+        "conceptualType": "SPUErrorTypeDefinitionReference or StageErrorTypeDefinitionReference",
+        "meaning": "References the exact registered Error Type Definition that classifies this occurrence.",
+        "constraints": [
+          "The reference must resolve within the Registry assigned to the occurrence-producing unit.",
+          "A reference from one unit's Registry must not be resolved against another unit's Registry merely because the Error Type Definition identities have equal values.",
+          "The reference identifies a definition, not another occurrence."
+        ]
+      },
+      {
+        "name": "occurrenceContext",
+        "conceptualType": "TErrorOccurrenceContext",
+        "meaning": "Carries occurrence-specific contextual and diagnostic information supplied by the owning SPU or Stage.",
+        "constraints": [
+          "The common model does not prescribe the fields or schema of occurrence context.",
+          "The owning SPU or Stage determines which runtime facts and diagnostics are relevant to its occurrence."
+        ]
+      }
+    ],
+    "associationRules": [
+      "An occurrence is associated with exactly one Error Type Definition reference.",
+      "Multiple occurrences may reference the same registered Error Type Definition.",
+      "The Error Type Definition supplies the stable error-kind identity, specialized error content, and associated handling-action description.",
+      "The occurrence supplies its own occurrence identity and occurrence-specific context.",
+      "An occurrence must not be treated as a new or modified Error Type Definition."
+    ]
+  },
+  "registries": {
+    "purpose": "Maintain and resolve the Error Type Definitions belonging to one specific Stage or SPU.",
+    "types": {
+      "SPUErrorTypeDefinitionRegistry": {
+        "genericType": "SPUErrorTypeDefinitionRegistry[TErrorTypeDefinition]",
+        "acceptedDefinitionFamily": "SPUErrorTypeDefinition",
+        "exclusiveUnitScope": "Exactly one concrete SPU"
+      },
+      "StageErrorTypeDefinitionRegistry": {
+        "genericType": "StageErrorTypeDefinitionRegistry[TErrorTypeDefinition]",
+        "acceptedDefinitionFamily": "StageErrorTypeDefinition",
+        "exclusiveUnitScope": "Exactly one concrete Stage"
+      }
+    },
+    "commonCapabilities": [
+      {
+        "name": "register",
+        "purpose": "Register an Error Type Definition belonging to the Registry's owning unit."
+      },
+      {
+        "name": "resolve",
+        "purpose": "Resolve a definition reference to the registered Error Type Definition within this Registry."
+      },
+      {
+        "name": "enumerate",
+        "purpose": "Expose the definitions registered in this Registry to authorized consumers when required."
+      }
+    ],
+    "constraints": [
+      "An SPUErrorTypeDefinitionRegistry accepts only SPUErrorTypeDefinition instances compatible with its specialization.",
+      "A StageErrorTypeDefinitionRegistry accepts only StageErrorTypeDefinition instances compatible with its specialization.",
+      "Each Registry Instance is dedicated to exactly one owning unit and must not be shared as the Registry Instance of another unit.",
+      "An Error Type Definition identity must be unique within its Registry. A registration that conflicts with an existing identity must not silently overwrite the existing definition.",
+      "Definition lookup is scoped to the Registry Instance; an Error Type Definition identity alone is not a globally sufficient lookup key.",
+      "The Registry does not own or store Error Occurrences as part of its definition-registration responsibility.",
+      "The common contract does not prescribe a concrete collection, indexing structure, storage technology, thread-safety model, or public method signature."
+    ],
+    "definitionReference": {
+      "types": [
+        "SPUErrorTypeDefinitionReference",
+        "StageErrorTypeDefinitionReference"
+      ],
+      "conceptualElements": [
+        {
+          "name": "registryIdentity",
+          "meaning": "Identifies the Registry Instance in which the referenced definition is registered."
+        },
+        {
+          "name": "errorTypeIdentity",
+          "meaning": "Identifies the definition within that Registry Instance."
+        }
+      ],
+      "resolutionRule": "A reference resolves only when both its Registry identity and Error Type Definition identity designate the same registered definition. The reference is level-specific and must be compatible with the corresponding SPU or Stage Registry family."
+    }
+  },
+  "pipelineOwnershipAndAllocation": {
+    "owner": "Pipeline",
+    "ownershipModel": "exclusive-ownership",
+    "registryCollections": {
+      "stageRegistries": {
+        "registryType": "StageErrorTypeDefinitionRegistry",
+        "cardinality": "One dedicated Registry Instance for each Stage in the Pipeline."
+      },
+      "spuRegistries": {
+        "registryType": "SPUErrorTypeDefinitionRegistry",
+        "cardinality": "One dedicated Registry Instance for each SPU participating in the Pipeline."
+      }
+    },
+    "pipelineResponsibilities": [
+      "Create and exclusively own every StageErrorTypeDefinitionRegistry and SPUErrorTypeDefinitionRegistry Instance belonging to the Pipeline.",
+      "Maintain the collections or registry matrix that associates each Registry Instance with its designated Stage or SPU.",
+      "Allocate and assign each Registry Instance to exactly one designated unit.",
+      "Maintain Registry Instance identity and unit assignment for the lifetime of the Pipeline.",
+      "Control the lifecycle and final release of all Registry Instances it owns."
+    ],
+    "unitResponsibilities": [
+      "Each Stage defines and registers the Stage error types belonging to that Stage through its assigned StageErrorTypeDefinitionRegistry.",
+      "Each SPU defines and registers the SPU error types belonging to that SPU through its assigned SPUErrorTypeDefinitionRegistry.",
+      "Each unit uses only the Registry Instance assigned to it for its own error type definitions and occurrence references.",
+      "The unit's authority to define and register its error types does not transfer ownership of the Registry Instance from the Pipeline."
+    ],
+    "allocationBinding": {
+      "cardinality": "One Registry Instance to one designated unit.",
+      "stability": "The allocation binding is fixed for the entire lifetime of the Pipeline.",
+      "reassignment": "A Registry Instance must not be reassigned to another Stage or SPU during the lifetime of its owning Pipeline, including after the originally assigned unit ceases active use.",
+      "sharing": "A Registry Instance assigned to one unit is not a shared Registry Instance for another unit.",
+      "termination": "When the Pipeline lifetime ends, the Pipeline's ownership and lifecycle responsibility for all of its Registry Instances end according to the Pipeline teardown contract."
+    },
+    "identityScope": [
+      "Registry Instance identity is distinct from Stage identity, SPU identity, Error Type Definition identity, and Error Occurrence identity.",
+      "The Registry-to-unit assignment is maintained within the owning Pipeline's scope.",
+      "The common model does not prescribe the concrete representation of the Pipeline registry matrix or its indexing mechanism."
+    ]
+  },
+  "executionAndIntegrationBoundaries": {
+    "handlingActionBoundary": [
+      "The handlingAction in an Error Type Definition documents the action associated with that error kind.",
+      "The Error Type Definition and Error Occurrence contracts do not execute handling actions.",
+      "An SPU-specific handling action is interpreted and carried out according to the owning SPU's design and applicable supporting components.",
+      "A Stage-specific handling action is interpreted within the owning Stage's execution design.",
+      "Stage Composition retains responsibility for Stage flow control, transitions, and the Stage-specific response to execution information; the common Error Model does not impose a universal continue, terminate, branch, compensate, or retry policy."
+    ],
+    "StepExecutionResultBoundary": [
+      "SPU error occurrences may be represented through the Step's ErrorResult contribution to StepExecutionResult[TOutput], according to the owning Step Error Model and ErrorResult contract.",
+      "This document does not define the ErrorResult structure, cardinality, or aggregation rules.",
+      "An ErrorOccurrence is not itself defined as StepExecutionResult or ErrorResult; the relevant result contract determines how occurrences are carried."
+    ],
+    "FlowResultBoundary": [
+      "Stage error occurrences may be retained or represented by the Stage-specific Flow Result or another Stage-owned result contract as defined by that Stage.",
+      "This document does not prescribe a universal StageError-to-FlowResult mapping or Flow Result schema."
+    ],
+    "exceptionBoundary": [
+      "A thrown exception is not automatically an SPUError or StageError.",
+      "An invocation exception that prevents an SPU from returning StepExecutionResult remains distinct from any Error Occurrence and is recorded under the Stage's exception-recording and Flow Result contract where applicable.",
+      "Recording an exception does not by itself create an Error Type Definition, an Error Occurrence, or a mandatory Stage flow-control decision.",
+      "Any explicit conversion between an exception and an Error Occurrence must be defined by the owning SPU or Stage contract; no automatic conversion is imposed here."
+    ]
+  },
+  "explicitNonGoals": [
+    "No universal error taxonomy, severity scale, or cross-unit error catalogue is introduced.",
+    "No common domain-specific schema is imposed on TErrorContent, THandlingAction, or TErrorOccurrenceContext.",
+    "No global Registry shared by all Stages or all SPUs is introduced.",
+    "No Registry Instance is owned by its assigned Stage or SPU; Pipeline retains exclusive ownership.",
+    "No Registry Instance may be reassigned during the lifetime of its Pipeline.",
+    "No Registry is responsible for storing Error Occurrences.",
+    "No universal error-handling execution policy or Stage flow-control policy is defined.",
+    "No automatic mapping of thrown exceptions to Error Occurrences is defined.",
+    "No concrete programming-language syntax, class inheritance scheme, storage technology, collection implementation, or concurrency guarantee is mandated."
+  ],
+  "relationships": [
+    {
+      "from": "Pipeline",
+      "to": "StageErrorTypeDefinitionRegistry instances",
+      "relationship": "exclusively-owns-and-allocates-one-to-each-Stage"
+    },
+    {
+      "from": "Pipeline",
+      "to": "SPUErrorTypeDefinitionRegistry instances",
+      "relationship": "exclusively-owns-and-allocates-one-to-each-SPU"
+    },
+    {
+      "from": "Stage",
+      "to": "assigned StageErrorTypeDefinitionRegistry",
+      "relationship": "defines-and-registers-Stage-owned-error-type-definitions-through"
+    },
+    {
+      "from": "SPU",
+      "to": "assigned SPUErrorTypeDefinitionRegistry",
+      "relationship": "defines-and-registers-SPU-owned-error-type-definitions-through"
+    },
+    {
+      "from": "SPUError",
+      "to": "SPUErrorTypeDefinition",
+      "relationship": "references-exactly-one-registered-definition"
+    },
+    {
+      "from": "StageError",
+      "to": "StageErrorTypeDefinition",
+      "relationship": "references-exactly-one-registered-definition"
+    },
+    {
+      "from": "SPUErrorTypeDefinitionRegistry",
+      "to": "SPUErrorTypeDefinition",
+      "relationship": "registers-and-resolves"
+    },
+    {
+      "from": "StageErrorTypeDefinitionRegistry",
+      "to": "StageErrorTypeDefinition",
+      "relationship": "registers-and-resolves"
+    }
+  ],
+  "references": [
+    {
+      "document": "../Stage_Level/Stage_Level_Architecture.json",
+      "relationship": "Stage ownership, Stage Composition flow control, and Flow Result boundary"
+    },
+    {
+      "document": "../Stage_Level/Stage_Step_Level/Stage_Step_Level_Architecture.json",
+      "relationship": "SPU ownership and Step Error Model integration boundary"
+    },
+    {
+      "document": "../Stage_Level/Stage_Step_Level/StepExecutionResult/StepExecutionResult_Contract.json",
+      "relationship": "ErrorResult integration boundary"
+    },
+    {
+      "document": "../Stage_Level/Stage_Step_Level/Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      "relationship": "SPU execution and exception boundary"
+    }
+  ],
+  "openDesignDetails": [
+    "Define the concrete identity value types and identifier-generation rules for Registry Instances, Error Type Definitions, and Error Occurrences.",
+    "Define the exact programming-language interfaces and operations exposed by each Registry, including registration-conflict result semantics and lookup failure semantics.",
+    "Decide whether Registry enumeration is required by runtime consumers or only by Pipeline-level inspection and diagnostics.",
+    "Define whether and how registered definitions can be deprecated or removed without invalidating existing occurrence references.",
+    "Define the concrete Error Type Definition and Error Occurrence serialization contracts if they must cross a process or persistence boundary.",
+    "Define the detailed ErrorResult contract and how SPU Error Occurrences are carried or aggregated within it.",
+    "Define the Stage-specific integration of Stage Error Occurrences with Flow Result and any other Stage-owned result contracts.",
+    "Define any explicit exception-to-error-occurrence conversion rules, if required, within the owning SPU or Stage contracts."
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 2,
+  "name": "Step Processing Unit (SPU) Entity",
+  "category": "Class / Entity",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+  "description": "The actual specialized processing unit that performs one assigned processing responsibility inside its owning Step. Not a delegation-only wrapper and not the Step Aggregate.",
+  "resolvedFrom": "02,00_Step_SPU_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "step-spu-level-domain-features-entities-classes-components-index"
+}

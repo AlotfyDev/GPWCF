@@ -1,0 +1,25 @@
+{
+  "batchId": "GPWCF-PREFECT-PHASE-02-QUALIFIED-BATCH-01",
+  "profile": "same-host Process work pool with exactly two ONLINE worker instances; each worker flow-run limit 1",
+  "workPool": "gpwcf-phase02-stage-qualified-pool",
+  "workers": [
+    "gpwcf-stage-worker-01",
+    "gpwcf-stage-worker-02"
+  ],
+  "stageDelaySeconds": 10,
+  "runCount": 5,
+  "rootRunIds": [
+    "run-e81a0651-871b-4a70-bd06-9f9f155a387e",
+    "run-91a299c2-d5e6-4d31-8507-53e15265d667",
+    "run-8d48cac4-1880-4053-95b2-9103b70e3574",
+    "run-f91028e4-58ee-40b4-92f6-89c8e026bf14",
+    "run-1ce1b293-5c02-4419-b6ac-e85e3d1d6885"
+  ],
+  "acceptance": {
+    "parentLinkPassCount": 5,
+    "nativeHierarchyPassCount": 5,
+    "siblingStageOverlapPassCount": 5
+  },
+  "sourceSummary": "cross-run-summary.json",
+  "scope": "Accepted PHASE-02 repeated-run evidence. Exploratory trials remain in the parent evidence directory."
+}

@@ -1,0 +1,1836 @@
+{
+  "documentType": "PrefectAdoptionAndIntegrationArchitecture",
+  "documentId": "GPWCF-PREFECT-ADOPTION-INTEGRATION-ARCHITECTURE",
+  "documentVersion": "1.0.0",
+  "status": "adopted-for-integration; implementation-and-conformance-in-progress",
+  "decisionDate": "2026-11-08",
+  "project": {
+    "id": "SMRB.GenericPipelineWorkflowComponentsFramework",
+    "name": "Generic Pipeline and Workflow Components Framework",
+    "abbreviation": "GPWCF",
+    "kind": "ReusablePythonFrameworkPackage",
+    "language": "Python",
+    "declaredPythonVersion": "3.15.1"
+  },
+  "referenceConsumer": {
+    "id": "SMRB.PayloadDescriptionGenerator",
+    "role": "Reference consumer for target-specific integration design and end-to-end acceptance",
+    "pipelineSpecificationRoot": ".docs/Payload_Type_Definition_Description_Generator",
+    "stageCount": 13
+  },
+  "purpose": "Establish Prefect as GPWCF's adopted external workflow runtime and define the target-specific integration architecture, responsibility boundaries, mapping of the reference consumer's thirteen specified stages, implementation sequence, and traceable acceptance plan. This document authorizes integration design and implementation; it does not claim that full GPWCF-to-Prefect conformance has already been implemented or verified.",
+  "decisionRecord": {
+    "decisionId": "ADR-GPWCF-PREFECT-001",
+    "title": "Adopt Prefect 3 as the External Workflow Runtime",
+    "status": "accepted",
+    "decision": "Adopt Prefect 3 as the selected external workflow runtime for GPWCF. Use Prefect-native Flows/Subflows and Tasks as execution constructs while preserving GPWCF-owned component contracts, semantic composition, typed outcomes, identity domains, artifact custody, and specialized relationship rules.",
+    "authority": "User-approved technology selection following the candidate assessment and reference-consumer PoC evidence. This decision supersedes the prior open comparative candidate-selection position for the primary GPWCF integration target.",
+    "selectedBaseline": {
+      "product": "Prefect",
+      "majorVersion": 3,
+      "initialPinnedVersion": "3.9.2",
+      "pythonRuntime": "CPython 3.15.1 x64",
+      "hostPlatform": "Windows x64",
+      "executionProfile": "Native local process execution; local Prefect API/server profile selected for initial integration qualification",
+      "packagePin": "prefect==3.9.2",
+      "pinningRule": "The exact version is the initial integration baseline. A complete reproducible lock of all direct/transitive dependencies and selected extras is a required implementation deliverable; do not silently float to latest.",
+      "license": "Apache-2.0; verify exact installed distribution metadata and transitive dependency licenses in the dependency manifest before distribution."
+    },
+    "rationale": [
+      "Prefect is Python-native and permits GPWCF callable implementations and workflow definitions to execute within the same managed CPython environment without a mandatory cross-language worker boundary.",
+      "The local Prefect 3.9.2 reference-consumer report records successful native Windows x64 execution under the managed CPython 3.15.1 runtime.",
+      "The recorded ten-run fixture matrix covered Stage invocation, artifact handoff, independent prerequisite branches, provider fan-out/fan-in, and conditional publication; 32 Request Envelopes and 32 Result Envelopes passed Draft 2020-12 validation.",
+      "Prefect's Flow/Subflow and Task execution model is a credible native realization for the adopted Pipeline Root -> Stage Parent Workflow -> Step Subworkflow -> executable-node hierarchy.",
+      "The adoption decision is based on combined architectural fit and local evidence. Remaining full-hierarchy, lifecycle, and operational acceptance work is converted into explicit implementation gates rather than reopening candidate comparison."
+    ],
+    "evidenceBaseline": {
+      "sourceDocument": ".docs/01.00_Capability_Open_Source_Integration_Assessment/PoC_Implementation/Prefect_Execution_Report.md",
+      "candidateVersionManifest": ".docs/01.00_Capability_Open_Source_Integration_Assessment/PoC_Implementation/candidate-versions.json",
+      "recordedEvidence": [
+        "Prefect 3.9.2 installed and version-verified in an isolated environment based on managed CPython 3.15.1.",
+        "Native Windows execution and temporary loopback API server startup succeeded.",
+        "Ten final flat/hierarchical fixture scenario runs passed.",
+        "All 32 Request Envelopes and 32 Result Envelopes passed Draft 2020-12 validation with format checking.",
+        "Stage 5/6 provider invocations overlapped in the tested task-level dynamic fan-out topology.",
+        "Conditional publication behavior was verified: Stage 13 ran for Publishable and did not run for ValidationFailed."
+      ],
+      "explicitLimits": [
+        "The previous PoC used Stage-opaque fixture invocation and is not proof of real GPWCF Stage/Step/SPU integration.",
+        "A repeated-child-flow fan-out experiment returned both child results but observed serialized execution in that tested local topology; the accepted fixture topology used task-level fan-out for complete Stage invocations. Retest this observation; do not generalize it to every Prefect child-flow deployment pattern.",
+        "Pipeline Root multi-Stage integration, Step-as-independent-Subflow, SPU Functional Binding, and Supporting Unit binding at all permitted scopes were not established by the prior PoC.",
+        "Cancellation/timeout settlement, retry/replay idempotency, process-tree termination, failure isolation, restart/recovery, persistence durability, and production operational profile remain unverified."
+      ],
+      "decisionInterpretation": "The evidence is sufficient to select Prefect as the target technology. It is not evidence that the integration acceptance gates below have passed."
+    },
+    "supersedes": [
+      "The no-final-candidate-selected status in 01.04_Build_vs_Adopt_vs_Adapt_Decisions.json is superseded for the primary workflow-runtime selection by this accepted decision.",
+      "The documentary candidate shortlist remains historical evidence and is not an active requirement to keep comparing Prefect with Dagu, Temporal, or other candidates.",
+      "The Target Hierarchical Integration Model v1.1.0 and its Functional Binding/Hierarchical Nesting objectives remain normative and are not superseded."
+    ],
+    "consequences": {
+      "positive": [
+        "Implementation can target one concrete runtime and its native execution primitives.",
+        "Python-native integration avoids a mandatory separate worker language/runtime for the initial local deployment.",
+        "Existing Prefect fixture PoC artifacts can be reused as regression evidence."
+      ],
+      "tradeoffs": [
+        "GPWCF must implement and maintain Prefect-specific integration code and pin a compatible dependency set.",
+        "Prefect-native run states and identifiers cannot replace GPWCF domain results or identity types.",
+        "The local Prefect service/persistence profile and durability characteristics must be selected explicitly.",
+        "Prefect topology and concurrency behavior must be proven for the exact chosen execution mode; the prior repeated-child-flow fan-out observation is a known design risk."
+      ]
+    }
+  },
+  "governingPrinciples": [
+    {
+      "id": "PREF-PR-01",
+      "name": "External Runtime Owns Execution",
+      "rule": "Prefect owns native workflow definition/execution, scheduling, dispatch, dependency evaluation, and native operational state. GPWCF does not implement a parallel scheduler, workflow engine, or graph executor."
+    },
+    {
+      "id": "PREF-PR-02",
+      "name": "GPWCF Owns Semantics",
+      "rule": "GPWCF remains authoritative for Stage/Step/SPU/Supporting Unit identities, callable contracts, composition meaning, permitted transitions, typed results, Error/Failure semantics, lifecycle obligations, and artifact contracts."
+    },
+    {
+      "id": "PREF-PR-03",
+      "name": "Stage Boundary Preservation",
+      "rule": "Every GPWCF Stage is exposed as a Prefect Parent Flow invocation boundary. Every GPWCF Step is represented by a native nested Flow/Subflow boundary or verified equivalent, invoked through the public Step contract."
+    },
+    {
+      "id": "PREF-PR-04",
+      "name": "Step Boundary Cannot Be Bypassed",
+      "rule": "A Stage Flow invokes Step Subflows through Step[TInput,TOutput].execute and consumes StepExecutionResult. It must not call Step-owned SPU or Supporting Unit tasks directly."
+    },
+    {
+      "id": "PREF-PR-05",
+      "name": "Functional Binding Is Explicit",
+      "rule": "Every executable GPWCF responsibility is mapped through a versioned binding declaration to a native Prefect Flow/Task execution element and its specialized callable contract. No universal plugin protocol or generic component interface is implied."
+    },
+    {
+      "id": "PREF-PR-06",
+      "name": "Relationship Mechanism Is Semantic",
+      "rule": "Use native Flow invocation, Task dependency, containment/composition, reference passing, event/observation mechanisms, or explicit specialized association only when that mechanism preserves the applicable contract semantics. Association is not a universal requirement."
+    },
+    {
+      "id": "PREF-PR-07",
+      "name": "Runtime IDs Are Not Domain IDs",
+      "rule": "Prefect Flow Run and Task Run IDs are operational correlation identifiers. They never replace GPWCF Pipeline, Stage, Step, SPU, Supporting Unit, association, invocation, attempt, or artifact identities."
+    },
+    {
+      "id": "PREF-PR-08",
+      "name": "Runtime State Is Not Domain Outcome",
+      "rule": "Prefect State/StateType and orchestration exceptions are execution evidence. They do not replace SPUExecutionResult, StepExecutionResult, Stage Flow Result, Stage outputs, ErrorResult, ErrorHandlerResult, or domain support decisions."
+    },
+    {
+      "id": "PREF-PR-09",
+      "name": "Artifact References Across Boundaries",
+      "rule": "Use small serializable control envelopes and immutable artifact references at Flow/Task boundaries. Large, binary, or semantically governed artifacts remain in the consumer-owned artifact store with sidecar envelopes and digests."
+    },
+    {
+      "id": "PREF-PR-10",
+      "name": "No In-Place Mutation",
+      "rule": "Published artifacts and accepted results remain immutable. Retries and corrections create new attempt/run/artifact identities; downstream consumers validate exact versions and digests."
+    },
+    {
+      "id": "PREF-PR-11",
+      "name": "No Implied Retry Safety",
+      "rule": "Retry is enabled only for operations whose specialized contract and idempotency/reconciliation strategy explicitly permit replay. Prefect retry configuration alone does not establish safe retry."
+    },
+    {
+      "id": "PREF-PR-12",
+      "name": "Evidence Before Conformance Claims",
+      "rule": "Documented Prefect capability, prior fixture evidence, implemented adapter behavior, and accepted GPWCF conformance are separate evidence levels."
+    },
+    {
+      "id": "PREF-PR-13",
+      "name": "Optional Infrastructure Stays Optional",
+      "rule": "No mandatory Docker, Kubernetes, Redis, PostgreSQL, cloud service, LLM provider, external message broker, universal plugin manager, or global runtime registry is introduced for the initial local profile."
+    },
+    {
+      "id": "PREF-PR-14",
+      "name": "Consumer Owns Business Workflow",
+      "rule": "The Generator owns its actual stage specialization, artifact semantics, tooling choices, and business decisions. GPWCF supplies reusable contracts; Prefect executes the resulting native hierarchy."
+    }
+  ],
+  "goals": [
+    "Adopt Prefect 3 as the single selected external workflow runtime for GPWCF's initial target-specific integration.",
+    "Realize Pipeline Root -> multiple Stage Parent Flows -> Step Subflows -> SPU/Supporting Unit executable elements.",
+    "Preserve GPWCF callable contracts, component identities, typed outcomes, exception distinctions, context, artifact custody, lifecycle, and provenance.",
+    "Map the complete PayloadDescriptionGenerator Stage 1-13 dependency graph and workload multiplicities into Prefect-native execution.",
+    "Provide a Windows x64 / CPython 3.15.1 local execution and persistence profile with reproducible dependency closure.",
+    "Deliver an end-to-end vertical integration with traceable acceptance evidence."
+  ],
+  "nonGoals": [
+    "Replacing Prefect with a GPWCF-owned scheduler, workflow engine, universal graph executor, or state machine.",
+    "Creating a universal adapter across multiple workflow products.",
+    "Creating a universal Plugin Manager, Plugin Registry, or dynamic loader.",
+    "Treating every Stage Model objective or execution_steps entry as a GPWCF Step or SPU without contract-based decomposition.",
+    "Forcing every Supporting Unit to be a Prefect Task or requiring Association for every functional binding.",
+    "Moving Generator domain artifacts, large payloads, or semantic result ownership into Prefect's orchestration database.",
+    "Changing the Generator's Stage specifications, schemas, artifact contracts, or business semantics as a side effect of integration.",
+    "Making Docker/Kubernetes, distributed workers, cloud hosting, LLMs, Redis, or PostgreSQL mandatory for the first local profile."
+  ],
+  "targetArchitecture": {
+    "hierarchy": [
+      {
+        "level": "pipelineRoot",
+        "gpwcfConcept": "Pipeline Root / Root Execution",
+        "prefectRepresentation": "Root Flow",
+        "boundary": "One root invocation coordinates the required Stage Parent Flow runs, shared invocation-wide prerequisites, branch dependencies, final result, and pipeline-level operational evidence.",
+        "mustPreserve": [
+          "Pipeline run identity distinct from Prefect root Flow Run ID",
+          "Multiple independently identifiable Stage invocations",
+          "Stage-specific inputs, outputs, Flow Results, exceptions, and artifacts",
+          "Root-level context, cancellation request, completion/settlement, and final pipeline result"
+        ]
+      },
+      {
+        "level": "stage",
+        "gpwcfConcept": "Stage",
+        "prefectRepresentation": "Stage Parent Flow",
+        "boundary": "The Stage Flow is the external invocation realization of the GPWCF Stage facade. Its internal graph follows Stage-specific composition semantics.",
+        "mustPreserve": [
+          "Stage identity and public callable contract",
+          "Stage-owned Step membership and transition semantics",
+          "StepExecutionResult collection and invocation-exception records",
+          "Stage-specific Flow Result and Stage outputs",
+          "Stage error occurrences and lifecycle facts"
+        ]
+      },
+      {
+        "level": "step",
+        "gpwcfConcept": "Step",
+        "prefectRepresentation": "Nested Step Flow / Subflow",
+        "boundary": "The Step Subflow is independently identifiable and invoked through the public Step.execute contract; it owns its internal composition.",
+        "mustPreserve": [
+          "Step instance and invocation identity",
+          "Typed TInput and TOutput",
+          "StepExecutionResult[TOutput] distinct from Prefect State",
+          "Step Composition flow result and internal evidence",
+          "Internal SPU/Supporting Unit selection, association, lifecycle and custody"
+        ]
+      },
+      {
+        "level": "processing",
+        "gpwcfConcept": "SPU",
+        "prefectRepresentation": "Prefect Task or other native executable element inside the owning Step Flow",
+        "boundary": "A Task binds the actual specialized SPU callable; it does not become the Step or own Step-level aggregation.",
+        "mustPreserve": [
+          "SPU-specific input/output types",
+          "SPUExecutionResult[TOutput]",
+          "SPU identity and invocation/attempt provenance",
+          "SPUError occurrences distinct from thrown exceptions"
+        ]
+      },
+      {
+        "level": "supporting",
+        "gpwcfConcept": "Supporting Unit",
+        "prefectRepresentation": "Native Task/Flow/activity/extension selected for the specialized contract and scope",
+        "boundary": "Executable Supporting Unit responsibilities are bound at a contract-permitted scope; non-executable semantic models are not converted into runtime nodes.",
+        "mustPreserve": [
+          "Pattern-specific callable/event/result semantics",
+          "Independent Supporting Unit identity",
+          "Permitted scope and applicable relationship constraints",
+          "Specialized lifecycle and evidence custody"
+        ]
+      }
+    ],
+    "logicalComponents": [
+      {
+        "id": "INT-ROOT",
+        "name": "Root Integration Boundary",
+        "responsibility": "Translate one consumer pipeline invocation into a Prefect Root Flow invocation; pass invocation context; include/invoke multiple Stage Flows; correlate their run identities and collect the consumer-defined pipeline result."
+      },
+      {
+        "id": "INT-STAGE",
+        "name": "Stage Flow Binding",
+        "responsibility": "Bind a concrete Stage facade and Stage specialization to a Prefect Flow while preserving its public input/output, Stage Flow Result, flow transitions, errors, and artifacts."
+      },
+      {
+        "id": "INT-STEP",
+        "name": "Step Subflow Binding",
+        "responsibility": "Bind each concrete Step public execute contract to a nested Prefect Flow invocation and preserve StepExecutionResult, exceptions, identity, and lifecycle settlement."
+      },
+      {
+        "id": "INT-EXEC",
+        "name": "Executable Functional Binding",
+        "responsibility": "Bind SPU and executable Supporting Unit callables to Prefect Tasks or other native execution elements within the correct owner boundary."
+      },
+      {
+        "id": "INT-MANIFEST",
+        "name": "Functional Binding Manifest",
+        "responsibility": "Versioned declarations of GPWCF role/component/function identity, specialized contract version, native Prefect definition/callable, scope, input/output/result contract, and conformance evidence. This is an explicit integration artifact, not a dynamic plugin registry."
+      },
+      {
+        "id": "INT-ENVELOPE",
+        "name": "Invocation and Context Envelope",
+        "responsibility": "Carry correlation identities, parent/child invocation context, request selectors, artifact references, contract versions, and cancellation/deadline context across native boundaries without erasing specialized inputs."
+      },
+      {
+        "id": "INT-RESULT",
+        "name": "Typed Result and Failure Mapper",
+        "responsibility": "Map native call return, exception, and operational state into GPWCF-owned typed results and separately recorded invocation exceptions; never coerce one category into another."
+      },
+      {
+        "id": "INT-ARTIFACT",
+        "name": "Artifact Reference and Custody Bridge",
+        "responsibility": "Pass immutable artifact references and sidecar envelope identities; verify schema/version/digest and custody transitions; avoid transporting large artifacts as Prefect parameters/results."
+      },
+      {
+        "id": "INT-LIFECYCLE",
+        "name": "Lifecycle and Settlement Mapper",
+        "responsibility": "Translate GPWCF admission, quiescence, retention/reuse, terminal retirement, cancellation, timeout, recovery, and settlement obligations to Prefect operations where compatible, and report unsupported/indeterminate outcomes explicitly."
+      },
+      {
+        "id": "INT-OBS",
+        "name": "Execution Evidence Correlator",
+        "responsibility": "Correlate Prefect Flow/Task run IDs, parent/child run links, logs and states with GPWCF domain identities and immutable result/artifact evidence."
+      }
+    ],
+    "ownership": {
+      "gpwcf": [
+        "Stage, Step, SPU and Supporting Unit semantic identities and public callable contracts.",
+        "Stage and Step composition membership, flow semantics, dependencies, transition conditions, and decision meanings.",
+        "SPUExecutionResult, StepExecutionResult, Stage Flow Result, ErrorResult, ErrorHandlerResult and other specialized result meanings.",
+        "Error Model and specialized Error/Failure/Occurrence contracts.",
+        "Association and lifecycle invariants and pattern-specific specializations.",
+        "Artifact schemas, sidecar envelopes, identity domains, canonicalization, immutability and custody."
+      ],
+      "prefect": [
+        "Native Flow, Subflow, Task and supported deployment/work-pool/worker definitions.",
+        "Native scheduling, dispatch, dependency execution, concurrency primitives, retries/timeouts where selected, and operational state.",
+        "Native Flow Run and Task Run identity and execution history.",
+        "Native runtime execution, supported cancellation operations, and local service/worker lifecycle."
+      ],
+      "integrationBoundary": [
+        "Versioned functional binding and hierarchy mapping.",
+        "Serialization-safe boundary envelopes and correlation mapping.",
+        "Typed result, exception, artifact-reference, event and lifecycle translation.",
+        "Target-specific conformance verification and explicit weaker/unsupported behavior reporting."
+      ],
+      "referenceConsumer": [
+        "Concrete Stage and Step specialization, SPU/Supporting Unit implementation and selection.",
+        "Generator business/artifact semantics, stage-specific topology, tooling and profile decisions.",
+        "Workspace, compiler, provider, registry, schema and artifact-store configuration.",
+        "Consumer-specific retry, concurrency, output and operational policies where not fixed by GPWCF contracts."
+      ]
+    },
+    "prohibitedShortcuts": [
+      "Stage Flow directly invokes an SPU Task belonging to a Step, bypassing the Step Subflow.",
+      "Prefect Completed/Failed/Cancelled state is substituted for a GPWCF domain result.",
+      "A thrown Python exception is automatically converted into SPUError or StageError.",
+      "Prefect run IDs replace GPWCF component/invocation identities.",
+      "A Prefect result backend is treated as the authoritative Generator artifact store without explicit artifact contract approval.",
+      "A generic adapter erases the specialized signatures or result types of SPUs and Supporting Units.",
+      "A Root Association construct or global association registry is added solely to connect multiple Stage Flows.",
+      "A retry is enabled for publication, output, or other side-effecting work without idempotency and reconciliation proof.",
+      "A timeout or cancelled state is treated as proof that an underlying native child process has terminated."
+    ]
+  },
+  "stageMapping": [
+    {
+      "stageId": "STG-01",
+      "name": "Build Context Discovery",
+      "flowRole": "Invocation/environment-wide Stage Parent Flow; execute once per Generator invocation/environment inventory scope, not once per payload type.",
+      "cadence": "oncePerPipelineInvocationOrChangedEnvironment",
+      "objectiveGroups": [
+        "OBJ-INVOCATION-IDENTITY",
+        "OBJ-RUNTIME-PREREQUISITES",
+        "OBJ-REGISTRY-SCHEMA-INVENTORY",
+        "OBJ-CPP-ENVIRONMENT-DISCOVERY",
+        "OBJ-CAPABILITY-INVENTORY-PUBLICATION"
+      ],
+      "objectiveGroupRule": "These are Stage Model objectives, not automatically GPWCF Steps. Derive concrete Step Subflows from the approved Stage specialization and Step contracts.",
+      "dataInputs": [
+        "ART-GEN-INVOCATION-CONTEXT",
+        "ART-PREREQ-BUNDLE-MANIFEST",
+        "ART-GEN-RESOURCE-DESCRIPTOR",
+        "ART-WORKSPACE-SOURCE-ROOTS",
+        "ART-MACHINE-OS-METADATA",
+        "ART-STAGE-CONTRACT-VERSIONS"
+      ],
+      "authoritativeOutputs": [
+        "ART-BUILD-CONTEXT-INVENTORY",
+        "ART-DISCOVERY-SCOPE",
+        "ART-DISCOVERY-DIAGNOSTICS"
+      ],
+      "prefectExecutionNotes": [
+        "Root Flow establishes invocation identity and invokes STG-01 before consumers requiring its inventory.",
+        "Verify the pre-provisioned isolated Python runtime, packages, CastXML/pygccxml resources, schemas, registries and native tools without installing/downloading.",
+        "Compiler/toolchain candidates remain candidates; STG-01 does not select a compiler or resolve Compilation Contexts."
+      ],
+      "acceptanceIds": [
+        "ACC-STG01-01",
+        "ACC-STG01-02",
+        "ACC-STG01-03"
+      ]
+    },
+    {
+      "stageId": "STG-02",
+      "name": "Compilation Context Resolution",
+      "flowRole": "Invocation-wide Stage Parent Flow consuming immutable STG-01 inventory; resolve all relevant Compilation Contexts and TU associations.",
+      "cadence": "oncePerPipelineInvocationForSelectedWorkspaceScope",
+      "objectiveGroups": [
+        "OBJ-STG02-INPUT-VALIDATION",
+        "OBJ-STG02-BUILD-METADATA-SELECTION",
+        "OBJ-STG02-TU-INVOCATION-RESOLUTION",
+        "OBJ-STG02-HEADER-MACRO-PREPROCESSING",
+        "OBJ-STG02-CONTEXT-IDENTITY-GROUPING",
+        "OBJ-STG02-FRESHNESS-FAILURE-HANDOFF"
+      ],
+      "dataInputs": [
+        "ART-STG01-BUILD-CONTEXT-INVENTORY",
+        "ART-STG02-BUILD-METADATA-SOURCES",
+        "ART-STG02-INVOCATION-SCOPE-SELECTORS",
+        "ART-STG02-READONLY-TOOLS-RESOURCES"
+      ],
+      "authoritativeOutputs": [
+        "ART-STG02-COMPILATION-CONTEXT-SET",
+        "ART-STG02-TU-CONTEXT-ASSOCIATION-MAP",
+        "ART-STG02-RESOLUTION-REPORT"
+      ],
+      "prefectExecutionNotes": [
+        "Requires the exact immutable STG-01 inventory and fingerprint.",
+        "Preserve per-TU invocation evidence, freshness, conflicts, unknowns and context equivalence; do not collapse contexts by convenience.",
+        "STG-02 may overlap STG-03 after root invocation context and request are established, because STG-03 type capture does not require resolved C++ compilation contexts."
+      ],
+      "acceptanceIds": [
+        "ACC-STG02-01",
+        "ACC-STG02-02",
+        "ACC-STG02-03"
+      ]
+    },
+    {
+      "stageId": "STG-03",
+      "name": "Payload Type Input",
+      "flowRole": "Per requested payload-type branch Stage Parent Flow; may execute concurrently with STG-02 after root invocation establishment.",
+      "cadence": "oncePerPayloadTypeRequest",
+      "objectiveGroups": [
+        "OBJ-STG03-01",
+        "OBJ-STG03-02",
+        "OBJ-STG03-03",
+        "OBJ-STG03-04",
+        "OBJ-STG03-05"
+      ],
+      "dataInputs": [
+        "ART-STG03-IN-01",
+        "ART-STG03-IN-02",
+        "ART-STG03-IN-03",
+        "ART-STG03-IN-04"
+      ],
+      "authoritativeOutputs": [
+        "ART-STG03-OUT-01",
+        "ART-STG03-OUT-02",
+        "ART-STG03-OUT-03",
+        "ART-STG03-TYPE-INPUT-DESCRIPTOR"
+      ],
+      "prefectExecutionNotes": [
+        "Preserve the requested C++ type designator and input envelope; do not infer compilation context from the type input.",
+        "Keep request identity distinct from Pipeline Run and Prefect Flow Run identities.",
+        "STG-04 is admitted only after its required STG-01, STG-02 and STG-03 inputs are available."
+      ],
+      "acceptanceIds": [
+        "ACC-STG03-01",
+        "ACC-STG03-02"
+      ]
+    },
+    {
+      "stageId": "STG-04",
+      "name": "Type Resolution",
+      "flowRole": "Per payload-type request Stage Parent Flow; may aggregate multiple context-bound candidate/declaration bindings.",
+      "cadence": "oncePerPayloadTypeRequest",
+      "objectiveGroups": [
+        "OBJ-STG04-CANDIDATE-DISCOVERY",
+        "OBJ-STG04-CONTEXT-SEMANTIC-LOOKUP",
+        "OBJ-STG04-ROOT-TYPE-ELIGIBILITY",
+        "OBJ-STG04-MULTI-DECL-CONTEXT-AGGREGATION",
+        "OBJ-STG04-OUTPUT-RESOLVED-BINDING-SET"
+      ],
+      "dataInputs": [
+        "ART-STG03-TYPE-INPUT-DESCRIPTOR",
+        "ART-STG01-BUILD-CONTEXT-INVENTORY",
+        "ART-STG02-COMPILATION-CONTEXT-SET",
+        "ART-STG04-SUPPORTED-RESOLUTION-CAPABILITIES",
+        "ART-STG04-INVOCATION-SELECTION-CONSTRAINTS"
+      ],
+      "authoritativeOutputs": [
+        "ART-STG04-RESOLVED-TYPE-BINDING-SET",
+        "ART-STG04-PROCESSING-REPORT",
+        "ART-STG04-DIAGNOSTICS"
+      ],
+      "prefectExecutionNotes": [
+        "Search all authorized bounded roots and preserve all candidates and applicable contexts.",
+        "No first-match precedence or hidden fallback is permitted; ambiguity and unresolved results remain explicit.",
+        "Stage 5/6 fan-out is derived from the exact resolved binding set."
+      ],
+      "acceptanceIds": [
+        "ACC-STG04-01",
+        "ACC-STG04-02",
+        "ACC-STG04-03"
+      ]
+    },
+    {
+      "stageId": "STG-05",
+      "name": "AST Extraction",
+      "flowRole": "Per provider/binding executable Stage invocation; one logical Stage boundary per complete Stage 5 invocation.",
+      "cadence": "forEachEligibleResolvedBindingAndSelectedAstProvider",
+      "objectiveGroups": [
+        "OBJ-STG05-BINDING-CONSUMPTION",
+        "OBJ-STG05-PROVIDER-SELECTION",
+        "OBJ-STG05-INVOCATION-RECONSTRUCTION",
+        "OBJ-STG05-AST-OBSERVATION-EXTRACTION",
+        "OBJ-STG05-OUTPUT-AST-OBSERVATION-PACKAGE"
+      ],
+      "dataInputs": [
+        "ART-STG04-RESOLVED-TYPE-BINDING-SET",
+        "ART-STG02-COMPILATION-CONTEXT-SET",
+        "ART-STG01-BUILD-CONTEXT-INVENTORY",
+        "ART-STG05-PROVIDER-ADAPTER-DEFINITION"
+      ],
+      "authoritativeOutputs": [
+        "ART-STG05-AST-OBSERVATION-PACKAGE",
+        "ART-STG05-PROCESSING-REPORT",
+        "ART-STG05-DIAGNOSTICS"
+      ],
+      "prefectExecutionNotes": [
+        "Bind every provider invocation to the exact resolved binding and Compilation Context.",
+        "Preserve provider-native observations, source/TU/context lineage and diagnostics; Stage 7 owns canonical declaration identity.",
+        "Stage 5 and Stage 6 are eligible for parallel execution for the same binding only when their exact context binding is equal."
+      ],
+      "acceptanceIds": [
+        "ACC-STG05-01",
+        "ACC-STG05-02",
+        "ACC-STG05-03"
+      ]
+    },
+    {
+      "stageId": "STG-06",
+      "name": "XML Generation",
+      "flowRole": "Per provider/binding executable Stage invocation; paired provider branch alongside STG-05 when allowed by the exact context.",
+      "cadence": "forEachEligibleResolvedBindingAndSelectedXmlProvider",
+      "objectiveGroups": [
+        "OBJ-STG06-BINDING-CONSUMPTION",
+        "OBJ-STG06-PROVIDER-SELECTION",
+        "OBJ-STG06-INVOCATION-RECONSTRUCTION",
+        "OBJ-STG06-XML-OBSERVATION-EXTRACTION",
+        "OBJ-STG06-OUTPUT-XML-OBSERVATION-PACKAGE"
+      ],
+      "dataInputs": [
+        "ART-STG04-RESOLVED-TYPE-BINDING-SET",
+        "ART-STG02-COMPILATION-CONTEXT-SET",
+        "ART-STG01-BUILD-CONTEXT-INVENTORY",
+        "ART-STG06-PROVIDER-ADAPTER-DEFINITION"
+      ],
+      "authoritativeOutputs": [
+        "ART-STG06-XML-OBSERVATION-PACKAGE",
+        "ART-STG06-PROCESSING-REPORT",
+        "ART-STG06-DIAGNOSTICS"
+      ],
+      "prefectExecutionNotes": [
+        "Same exact Compilation Context and resolved binding as paired Stage 5 branch are mandatory for comparability.",
+        "Preserve XML provider observations and lineage independently; do not treat Stage 5/6 outputs as canonical declarations.",
+        "The prior PoC's successful task-level dynamic fan-out is regression evidence only; actual Prefect concurrency and child-flow behavior must be proven for selected execution mode."
+      ],
+      "acceptanceIds": [
+        "ACC-STG06-01",
+        "ACC-STG06-02",
+        "ACC-STG06-03"
+      ]
+    },
+    {
+      "stageId": "STG-07",
+      "name": "Declaration Analysis",
+      "flowRole": "Per payload-type request Stage Parent Flow performing provider reconciliation and declaration graph construction after Stage 4/5/6 dependencies settle.",
+      "cadence": "oncePerPayloadTypeRequestAfterProviderBranches",
+      "objectiveGroups": [
+        "OBJ-STG07-CONSUME-OBSERVATIONS",
+        "OBJ-STG07-DECLARATION-IDENTITY",
+        "OBJ-STG07-CROSS-PROVIDER-RECONCILIATION",
+        "OBJ-STG07-LAYOUT-CONTROL-CANDIDATES",
+        "OBJ-STG07-DECLARATION-GRAPH",
+        "OBJ-STG07-OUTPUT-MODEL"
+      ],
+      "dataInputs": [
+        "ART-STG04-RESOLVED-TYPE-BINDING-SET",
+        "ART-STG05-AST-OBSERVATION-PACKAGE",
+        "ART-STG06-XML-OBSERVATION-PACKAGE",
+        "ART-STG02-COMPILATION-CONTEXT-SET",
+        "ART-STG01-LAYOUT-CONTROL-DEFINITION-REGISTRY",
+        "ART-STG01-SPECIAL-LAYOUT-FACT-REGISTRY"
+      ],
+      "authoritativeOutputs": [
+        "ART-STG07-DECLARATION-ANALYSIS-MODEL",
+        "ART-STG07-OBSERVATION-BINDING-REPORT",
+        "ART-STG07-LAYOUT-CONTROL-APPLICATION-CANDIDATES",
+        "ART-STG07-DIAGNOSTICS-COVERAGE-SUMMARY"
+      ],
+      "prefectExecutionNotes": [
+        "Native Prefect dependencies provide fan-in only after required Stage 5/6 branches complete or produce an explicitly permitted missing-provider outcome.",
+        "Stage 7 owns DeclarationIds, CanonicalCppTypeKeys, ResolvedTypeIds and provider-neutral graph reconciliation.",
+        "Provider absence is tolerated only under an explicit approved capability/coverage rule; missing observations are not silently synthesized."
+      ],
+      "acceptanceIds": [
+        "ACC-STG07-01",
+        "ACC-STG07-02",
+        "ACC-STG07-03"
+      ]
+    },
+    {
+      "stageId": "STG-08",
+      "name": "Dependency Resolution",
+      "flowRole": "Per payload-type request Stage Parent Flow consuming authoritative Stage 7 declaration/type graph.",
+      "cadence": "oncePerPayloadTypeRequest",
+      "objectiveGroups": [
+        "OBJ-STG08-GRAPH-CONSUMPTION",
+        "OBJ-STG08-DEPENDENCY-TRAVERSAL",
+        "OBJ-STG08-CYCLE-SCC-HANDLING",
+        "OBJ-STG08-CLOSURE-BOUNDARIES",
+        "OBJ-STG08-GRAPH-PUBLICATION"
+      ],
+      "dataInputs": [
+        "ART-STG07-DECLARATION-ANALYSIS-MODEL",
+        "ART-STG04-RESOLVED-TYPE-BINDING-SET",
+        "ART-STG02-COMPILATION-CONTEXT-SET",
+        "ART-STG01-BUILD-CONTEXT-INVENTORY",
+        "ART-STG08-TRAVERSAL-POLICY"
+      ],
+      "authoritativeOutputs": [
+        "ART-STG08-RESOLVED-TYPE-DEPENDENCY-GRAPH",
+        "ART-STG08-CLOSURE-REPORT",
+        "ART-STG08-CYCLE-SCC",
+        "ART-STG08-DIAGNOSTICS"
+      ],
+      "prefectExecutionNotes": [
+        "Preserve cycles and strongly connected components as domain graph facts; do not convert cycles into orchestration cycles unless the stage contract explicitly requires repeated execution.",
+        "The resolved graph and closure boundaries are immutable handoff artifacts for downstream stages."
+      ],
+      "acceptanceIds": [
+        "ACC-STG08-01",
+        "ACC-STG08-02"
+      ]
+    },
+    {
+      "stageId": "STG-09",
+      "name": "Logical Description",
+      "flowRole": "Per payload-type request Stage Parent Flow consuming Stage 7/8 authoritative structures and publishing the Logical Description.",
+      "cadence": "oncePerPayloadTypeRequest",
+      "objectiveGroups": [
+        "OBJ-STG09-SCOPE-SEEDING",
+        "OBJ-STG09-LOGICAL-IDENTITY-ASSIGNMENT",
+        "OBJ-STG09-RELATIONSHIP-NORMALIZATION",
+        "OBJ-STG09-RECURSION-AND-BOUNDARIES",
+        "OBJ-STG09-LD-PUBLICATION"
+      ],
+      "dataInputs": [
+        "ART-STG04-RESOLVED-TYPE-BINDING-SET",
+        "ART-STG05-AST-OBSERVATION-PACKAGE",
+        "ART-STG06-XML-OBSERVATION-PACKAGE",
+        "ART-STG07-DECLARATION-ANALYSIS-MODEL",
+        "ART-STG08-RESOLVED-TYPE-DEPENDENCY-GRAPH",
+        "ART-STG02-COMPILATION-CONTEXT-SET",
+        "ART-STG09-LD-CONTRACT-SET",
+        "ART-STG09-LD-JSON-SCHEMA"
+      ],
+      "authoritativeOutputs": [
+        "ART-STG09-LOGICAL-DESCRIPTION",
+        "ART-STG09-LD-HANDOFF-MANIFEST",
+        "ART-STG09-LD-VALIDATION-RESULT",
+        "ART-STG09-LD-DIAGNOSTICS"
+      ],
+      "prefectExecutionNotes": [
+        "Stage 9 owns stable logical identities and logical relationships; it must not replace declaration or provider identities.",
+        "Validate/canonicalize/publish the exact LD contract and sidecar envelope; downstream stages consume immutable references."
+      ],
+      "acceptanceIds": [
+        "ACC-STG09-01",
+        "ACC-STG09-02",
+        "ACC-STG09-03"
+      ]
+    },
+    {
+      "stageId": "STG-10",
+      "name": "Physical Layout Extraction",
+      "flowRole": "Context-bound Stage invocations; produce one PLD per resolved type and exact Compilation Context.",
+      "cadence": "forEachResolvedTypeAndExactCompilationContext",
+      "objectiveGroups": [
+        "OBJ-STG10-INPUT-BINDING",
+        "OBJ-STG10-FEATURE-APPLICABILITY",
+        "OBJ-STG10-OBSERVATION-ACQUISITION",
+        "OBJ-STG10-NORMALIZATION-RECONCILIATION",
+        "OBJ-STG10-VALIDATION-AND-PUBLICATION"
+      ],
+      "dataInputs": [
+        "ART-STG04-RESOLVED-TYPE-BINDING-SET",
+        "ART-STG07-DECLARATION-ANALYSIS-MODEL",
+        "ART-STG08-RESOLVED-TYPE-DEPENDENCY-GRAPH",
+        "ART-STG09-LOGICAL-DESCRIPTION",
+        "ART-STG02-COMPILATION-CONTEXT-SET",
+        "ART-STG05-AST-OBSERVATION-PACKAGE",
+        "ART-STG06-XML-OBSERVATION-PACKAGE",
+        "ART-STG10-REGISTRY-SET",
+        "ART-STG10-EXTRACTION-POLICY"
+      ],
+      "authoritativeOutputs": [
+        "ART-STG10-PLD",
+        "ART-STG10-EOS",
+        "ART-STG10-NPLM",
+        "ART-STG10-COVERAGE-SUPPORT-RECORD",
+        "ART-STG10-DIAGNOSTICS"
+      ],
+      "prefectExecutionNotes": [
+        "Each PLD is bound to one exact resolved type/context pair; do not aggregate incompatible contexts into one PLD.",
+        "Keep native physical facts, evidence, layout-control applications and support/coverage records under Stage 10 ownership.",
+        "The extraction adapter acquires provider evidence; Stage 10 composition performs authoritative normalization/reconciliation and publication."
+      ],
+      "acceptanceIds": [
+        "ACC-STG10-01",
+        "ACC-STG10-02",
+        "ACC-STG10-03"
+      ]
+    },
+    {
+      "stageId": "STG-11",
+      "name": "Description Composition",
+      "flowRole": "Representation-qualified Stage invocations; produce separate SAM artifacts for distinct selected representation/profile versions.",
+      "cadence": "forEachApplicableRepresentationProfileAndRuleSetForExactLdPldContextSet",
+      "objectiveGroups": [
+        "OBJ-STG11-UPSTREAM-BINDING",
+        "OBJ-STG11-REPRESENTATION-SCOPE",
+        "OBJ-STG11-STORAGE-STRUCTURE",
+        "OBJ-STG11-MAPPING-COMPOSITION",
+        "OBJ-STG11-TARGET-REPRESENTATION-FACTS",
+        "OBJ-STG11-SAM-PUBLICATION"
+      ],
+      "dataInputs": [
+        "ART-STG09-LOGICAL-DESCRIPTION",
+        "ART-STG10-PHYSICAL-LAYOUT-DESCRIPTION",
+        "ART-STG08-RESOLVED-TYPE-DEPENDENCY-GRAPH",
+        "ART-STG02-COMPILATION-CONTEXT-SET",
+        "ART-STG11-REPRESENTATION-PROFILE",
+        "ART-STG11-REPRESENTATION-RULE-SET",
+        "ART-STG11-REPRESENTATION-SELECTION-DESCRIPTOR"
+      ],
+      "authoritativeOutputs": [
+        "ART-STG11-STORAGE-ACCESS-METADATA",
+        "ART-STG11-REPRESENTATION-BINDING",
+        "ART-STG11-NATIVE-FACT-REUSE-RECORD",
+        "ART-STG11-COVERAGE-SUPPORT-RECORD",
+        "ART-STG11-DIAGNOSTICS"
+      ],
+      "prefectExecutionNotes": [
+        "Each SAM is bound to exact LD/PLD/context and representation profile/rule-set identity/version/fingerprint.",
+        "Distinct representation profiles produce distinct SAM artifacts; no global type-level support claim is inferred.",
+        "Named Pipe is not a representation profile; it may be a transport for a message payload only."
+      ],
+      "acceptanceIds": [
+        "ACC-STG11-01",
+        "ACC-STG11-02",
+        "ACC-STG11-03"
+      ]
+    },
+    {
+      "stageId": "STG-12",
+      "name": "Validation",
+      "flowRole": "Per exact LD × applicable PLD/context × SAM representation profile/version combination; Stage Parent Flow with dependent validation objectives and nine semantic validation gates.",
+      "cadence": "forEachExactValidationCombination",
+      "objectiveGroups": [
+        "OBJ-STG12-RUN-BINDING",
+        "OBJ-STG12-SCHEMA-IDENTITY",
+        "OBJ-STG12-REFERENCE-INTEGRITY",
+        "OBJ-STG12-LAYER-SEMANTICS",
+        "OBJ-STG12-CONTROLS-SPECIAL-PROPERTIES",
+        "OBJ-STG12-EVIDENCE-LINEAGE",
+        "OBJ-STG12-EVIDENCE-COMPARISON",
+        "OBJ-STG12-FACT-RESOLUTION",
+        "OBJ-STG12-CROSS-LAYER-SUFFICIENCY",
+        "OBJ-STG12-OBLIGATION-COVERAGE",
+        "OBJ-STG12-REPRESENTATION-PROFILE",
+        "OBJ-STG12-SUPPORT-DECISION"
+      ],
+      "dataInputs": [
+        "ART-STG09-LOGICAL-DESCRIPTION",
+        "ART-STG10-PHYSICAL-LAYOUT-DESCRIPTION",
+        "ART-STG11-STORAGE-ACCESS-METADATA",
+        "ART-STG01-BUILD-CONTEXT-INVENTORY",
+        "ART-STG02-COMPILATION-CONTEXT-SET",
+        "ART-STG07-DECLARATION-ANALYSIS-MODEL",
+        "ART-STG12-REGISTRY-SET",
+        "ART-STG12-OBLIGATION-MATRICES",
+        "ART-STG12-REPRESENTATION-PROFILE-SET",
+        "ART-STG12-VALIDATION-POLICY"
+      ],
+      "authoritativeOutputs": [
+        "ART-STG12-VALIDATION-REPORT",
+        "ART-STG12-SUPPORT-DECISION",
+        "ART-STG12-OBLIGATION-RESULTS",
+        "ART-STG12-EVIDENCE-ASSESSMENT",
+        "ART-STG12-FACT-RESOLUTIONS",
+        "ART-STG12-DIAGNOSTICS"
+      ],
+      "prefectExecutionNotes": [
+        "Model the nine gates and twelve objective groups as a Stage-specific graph; do not assume every gate is parallelizable or that objective count equals Step count.",
+        "Preserve exact validation-combination identity and all pinned schema, registry, policy, profile and rule-set fingerprints.",
+        "Unknown, unavailable, conflicting, unresolved, or extracted-but-unverified facts must not be promoted to ValidatedSupported.",
+        "Stage 12 owns the Validation Report and representation-scoped support decision; Prefect state does not substitute for either."
+      ],
+      "acceptanceIds": [
+        "ACC-STG12-01",
+        "ACC-STG12-02",
+        "ACC-STG12-03",
+        "ACC-STG12-04"
+      ]
+    },
+    {
+      "stageId": "STG-13",
+      "name": "Output Generation",
+      "flowRole": "Conditional final Stage Parent Flow invoked only when exact Stage 12 result permits publication; ValidationFailed yields diagnostics only.",
+      "cadence": "oncePerApprovedValidationCombination",
+      "objectiveGroups": [
+        "OBJ-STG13-VALIDATED-INPUT-CONSUMPTION",
+        "OBJ-STG13-PACKAGE-ASSEMBLY",
+        "OBJ-STG13-SERIALIZATION-INTEGRITY",
+        "OBJ-STG13-SUPPORT-STATE-PRESERVATION",
+        "OBJ-STG13-PACKAGE-PUBLICATION"
+      ],
+      "dataInputs": [
+        "ART-STG09-LOGICAL-DESCRIPTION",
+        "ART-STG10-PHYSICAL-LAYOUT-DESCRIPTION",
+        "ART-STG11-STORAGE-ACCESS-METADATA",
+        "ART-STG12-VALIDATION-REPORT",
+        "ART-STG13-OUTPUT-MANIFEST-SCHEMA",
+        "ART-STG11-REPRESENTATION-SELECTION-DESCRIPTOR"
+      ],
+      "authoritativeOutputs": [
+        "ART-STG13-DESCRIPTION-PACKAGE",
+        "ART-STG13-OUTPUT-MANIFEST",
+        "ART-STG13-INTEGRITY-RECORD",
+        "ART-STG13-DIAGNOSTICS",
+        "ART-STG13-FAILED-RUN-DIAGNOSTICS"
+      ],
+      "prefectExecutionNotes": [
+        "Invoke STG-13 only for a permitted Stage 12 support outcome under the Stage 13 contract.",
+        "Verify every artifact's exact identity and digest before assembly; preserve validated content byte-for-byte.",
+        "Use the approved canonical serializer and exact integer-token preservation; publication is immutable and versioned.",
+        "ValidationFailed must not produce a package or Output Manifest; emit only the separate non-consumable diagnostic record."
+      ],
+      "acceptanceIds": [
+        "ACC-STG13-01",
+        "ACC-STG13-02",
+        "ACC-STG13-03",
+        "ACC-STG13-04"
+      ]
+    }
+  ],
+  "objectiveAndStepDecomposition": {
+    "rule": "A Stage Model objective is a documented responsibility grouping. An execution_steps entry is a documented processing action. Neither is automatically a GPWCF Step, SPU, or Prefect Task. The concrete Stage specialization must first identify GPWCF Step instances and their public Step[TInput,TOutput].execute contracts. Each Step Subflow then binds that public contract; only the Step's own approved composition decomposition binds SPUs and executable Supporting Units to Tasks.",
+    "requiredMappingFields": [
+      "stageId",
+      "objectiveId(s)",
+      "gpwcfStepIdentity",
+      "stepContractVersion",
+      "stepInputContract",
+      "stepOutputContract",
+      "stepExecutionResultContract",
+      "stepCompositionIdentity",
+      "internalFlowSemantics",
+      "spuBindings",
+      "supportingUnitBindings",
+      "prefectSubflowDefinition",
+      "resultAndExceptionMapping",
+      "lifecyclePolicy",
+      "acceptanceEvidence"
+    ],
+    "acceptance": "No Stage implementation is accepted while it uses objective IDs or execution_steps IDs as surrogate Step/SPU identities without an approved contract-based mapping."
+  },
+  "supportingUnitBinding": {
+    "principle": "Supporting Unit identity is independent of its native Prefect executable representation and of the scope to which it is functionally bound. A reusable Supporting Unit contract may be bound at a scope only when that specialized contract permits it.",
+    "permittedScopes": [
+      {
+        "scope": "processingNode",
+        "prefectBinding": "Task or local executable callable inside the SPU execution boundary",
+        "rule": "Only when the specialized Supporting Unit contract permits SPU-level binding."
+      },
+      {
+        "scope": "stepSubworkflow",
+        "prefectBinding": "Task or nested executable element inside the owning Step Subflow",
+        "rule": "Step Composition retains selection, invocation, result custody and applicable association/lifecycle authority."
+      },
+      {
+        "scope": "stageParentWorkflow",
+        "prefectBinding": "Task or Flow activity inside the Stage Flow",
+        "rule": "Must be Stage-owned/Stage-permitted; cannot bypass a Step-owned component boundary."
+      },
+      {
+        "scope": "pipelineRoot",
+        "prefectBinding": "Task or Flow activity inside the Root Flow",
+        "rule": "Must be explicitly pipeline-root permitted; must not centralize Step-owned internal components."
+      }
+    ],
+    "patterns": [
+      {
+        "pattern": "Error Modeling",
+        "executable": false,
+        "representation": "GPWCF semantic contract/model",
+        "rule": "Defines Error Type Definitions, Error Occurrences and ErrorResult meaning/aggregation. It is not an executable Prefect Task."
+      },
+      {
+        "pattern": "Error Handler Unit",
+        "executable": true,
+        "representation": "Prefect Task or callable bound within its owning Step Subflow",
+        "rule": "Executes handling operations under specialized input/result, publication, reservation, identity and recovery contracts. It is not interchangeable with Error Modeling."
+      },
+      {
+        "pattern": "Validator Unit",
+        "executable": true,
+        "representation": "Prefect Task or native callable",
+        "rule": "Preserve validator-specific outcomes, evidence, timing and gating semantics."
+      },
+      {
+        "pattern": "Observation Unit",
+        "executable": true,
+        "executionStyle": "task-or-event-driven",
+        "representation": "Task, event/callback integration or other supported native mechanism",
+        "rule": "Preserve zero/one/many observation semantics, subscriptions/events, destination and lifecycle; observation is not automatically StepExecutionResult content."
+      }
+    ],
+    "invariants": [
+      "Do not introduce a generic SupportingUnit base class or universal runtime component type solely for Prefect.",
+      "Do not require all Supporting Unit patterns at all scopes.",
+      "Keep instance identity, invocation/activity identity, association identity, target identity and Prefect run identity distinct.",
+      "Apply association only when the selected specialized contract requires it; native task dependency or containment is not a substitute for a required specialized association.",
+      "Step Composition remains authoritative for Step-internal selection, association, flow and lifecycle decisions."
+    ]
+  },
+  "identityContextAndResultMapping": {
+    "identityDomains": [
+      {
+        "gpwcfIdentity": "pipelineRunIdentity",
+        "prefectEvidence": "Root Flow Run ID",
+        "rule": "Store as correlated pair; GPWCF identity remains authoritative."
+      },
+      {
+        "gpwcfIdentity": "stageIdentity + stageInvocationIdentity",
+        "prefectEvidence": "Stage Flow definition identity + Stage Flow Run ID",
+        "rule": "A reusable Stage definition and each invocation are distinct."
+      },
+      {
+        "gpwcfIdentity": "stepIdentity + stepInvocationIdentity",
+        "prefectEvidence": "Step Subflow definition/run identity",
+        "rule": "Preserve independent Step boundary and parent Stage correlation."
+      },
+      {
+        "gpwcfIdentity": "spuIdentity + spuInvocationIdentity + attemptIdentity",
+        "prefectEvidence": "Task definition/run ID and retry/attempt evidence",
+        "rule": "One SPU invocation/result remains distinguishable from every attempt and native Task Run."
+      },
+      {
+        "gpwcfIdentity": "supportingUnitIdentity + activity/invocationIdentity",
+        "prefectEvidence": "Native Task/Flow run or event correlation",
+        "rule": "Do not overload component identity with activity identity."
+      },
+      {
+        "gpwcfIdentity": "artifactIdentity + contentDigest + producerIdentity",
+        "prefectEvidence": "Artifact reference stored in parameters/returns/log metadata",
+        "rule": "Prefect run ID is provenance metadata, not artifact identity."
+      }
+    ],
+    "envelopeRequirements": [
+      "GPWCF pipeline run identity and optional consumer request/type identity.",
+      "Stage, Step, SPU and Supporting Unit identities applicable to the invocation.",
+      "Invocation identity, attempt identity, parent invocation identity and correlation identity.",
+      "Prefect Flow Run ID / Task Run ID when known, stored as operational correlation only.",
+      "Specialized contract/schema versions and binding-manifest identity/version.",
+      "Compilation Context ID/fingerprint and other consumer-specific context references.",
+      "Immutable artifact IDs, locations, schema/contract IDs, versions, digests and custody state.",
+      "Deadline/cancellation context only where the public GPWCF contract supports it; never pass process-local handles as serialized context."
+    ],
+    "resultMapping": [
+      {
+        "source": "SPU callable return",
+        "target": "SPUExecutionResult[TOutput]",
+        "rule": "Normal return remains the structured SPU result. A Task return wrapper may carry it only if serialization/custody is proven."
+      },
+      {
+        "source": "Step public execute return",
+        "target": "StepExecutionResult[TOutput]",
+        "rule": "The Step Subflow returns the exact Step result contract; it is not replaced by Task state."
+      },
+      {
+        "source": "Stage completion",
+        "target": "Stage-specific Flow Result + Stage outputs/status",
+        "rule": "Stage Composition assembles the domain Flow Result from Step results, exceptions, transitions and StageError occurrences."
+      },
+      {
+        "source": "Prefect State",
+        "target": "Operational execution evidence",
+        "rule": "Keep Completed/Failed/Cancelled states separate from domain outcomes."
+      },
+      {
+        "source": "Thrown exception",
+        "target": "Invocation exception record / specialized exception path",
+        "rule": "Do not synthesize SPUError/StageError or a successful structured result automatically."
+      },
+      {
+        "source": "Validation support decision",
+        "target": "Stage 12 domain output",
+        "rule": "Prefect branch/conditional execution uses the exact support-decision artifact; orchestration state is not the decision."
+      }
+    ],
+    "serializationPolicy": {
+      "boundary": "Flow/Task parameters and returned values",
+      "allowed": "Small JSON-serializable invocation envelopes, typed metadata, stable scalar values, and immutable artifact references.",
+      "disallowedByDefault": "Large AST/XML payloads, large compiler outputs, binary payloads, mutable object graphs, open file handles, subprocess handles, and live runtime object references.",
+      "artifactStoreOwner": "SMRB.PayloadDescriptionGenerator / consuming application under the Artifact Envelope and Description Package contracts.",
+      "validation": "Schema/version/digest validation occurs at the receiving boundary before use."
+    }
+  },
+  "executionAndLifecycle": {
+    "concurrency": {
+      "owner": "Prefect performs actual scheduling/concurrency; GPWCF and the concrete Stage specialization define which work is allowed to overlap and what must join.",
+      "initialExpectedPatterns": [
+        "STG-02 and STG-03 may overlap after invocation establishment.",
+        "STG-05 and STG-06 may overlap for the same exact resolved binding and Compilation Context.",
+        "Multiple eligible Stage 5/6 provider invocations may fan out dynamically when their contracts permit.",
+        "STG-07 joins required Stage 5/6 observation branches before cross-provider reconciliation.",
+        "STG-10 invocations may fan out by exact resolved type × Compilation Context pair.",
+        "STG-11 invocations may fan out by distinct applicable representation profile/rule-set combination.",
+        "STG-12 validation work is parallelized only where its objective/gate dependency graph proves independence.",
+        "STG-13 publication remains gated by the exact Stage 12 support decision."
+      ],
+      "constraints": [
+        "Concurrency limits are configuration, not hidden constants.",
+        "Concurrent completion must not make result aggregation nondeterministic where the contract requires deterministic ordering.",
+        "The exact Prefect task runner and concurrency mechanism are selected only after a focused implementation experiment; the previous child-flow fan-out observation must be included."
+      ]
+    },
+    "retries": {
+      "rule": "No global retry policy. Retry is declared per Step/SPU/Supporting Unit operation only after idempotency, immutable input/output, attempt identity, side-effect boundaries and recovery semantics are defined.",
+      "initialDefault": "No automatic retry for side-effecting publication or custody-transfer operations. Retry disabled unless explicit binding/contract policy permits it.",
+      "requirements": [
+        "Distinguish invocation identity from attempt identity.",
+        "Preserve outputs/evidence produced before a later failure under the specialized recovery contract.",
+        "Use exact immutable inputs and version pins for replay.",
+        "Reconcile uncertain publication/custody before any retry that could duplicate an accepted operation."
+      ]
+    },
+    "cancellationAndTimeout": {
+      "rule": "Prefect cancellation/timeout is a runtime request or state transition, not proof of GPWCF lifecycle settlement or native process termination.",
+      "requirements": [
+        "Define cancellation propagation Root -> Stage -> Step -> executable work.",
+        "Determine whether selected local execution mode can terminate or only cancel orchestration of a running Python/subprocess operation.",
+        "Track child process/process-tree handles only in the owning execution adapter and reconcile their termination separately.",
+        "Preserve accepted artifacts/results and recovery ownership after cancellation.",
+        "Report confirmed, failed, or indeterminate settlement distinctly.",
+        "Do not release/reuse a Step or Supporting Unit until its own lifecycle contract confirms the required disposition."
+      ]
+    },
+    "failureIsolationAndRecovery": [
+      "A failed independent branch blocks only dependent branches where the Stage specification permits isolation.",
+      "A Prefect Failed state must be paired with the exact GPWCF exception/result/evidence record.",
+      "Partial diagnostics are published only when their schema, identity and consumption safety are valid.",
+      "Unresolved output custody or terminal retirement retains a named recovery owner and access path.",
+      "Root failure aggregation follows the consumer pipeline contract; it is not inferred from the count of failed Prefect runs."
+    ],
+    "stateAndPersistence": {
+      "distinction": "Prefect run state/history is operational execution history; Generator artifacts and GPWCF typed outcomes are separate authoritative data.",
+      "localProfile": "Use the selected local Prefect API/server and SQLite persistence profile for the first durable local integration profile, after restart/durability verification.",
+      "testProfile": "An ephemeral loopback API profile may be used for isolated unit/contract tests only where its non-durable behavior is explicit.",
+      "productionExpansion": "PostgreSQL/Redis or distributed worker infrastructure is considered only for a separately approved multi-worker/multi-server deployment profile; it is not a prerequisite for the initial local profile.",
+      "acceptance": [
+        "Document data directory and database ownership.",
+        "Verify restart and recovery behavior.",
+        "Define backup/restore and schema migration approach for the chosen local service profile.",
+        "Define log/history retention separately from immutable artifact retention."
+      ]
+    }
+  },
+  "deploymentAndDependencies": {
+    "initialProfile": {
+      "id": "PREFECT-WIN-LOCAL-001",
+      "name": "Windows Local Single-Host Integration Profile",
+      "host": "Windows x64",
+      "python": "Existing managed CPython 3.15.1 x64 interpreter; no global-Python fallback.",
+      "prefect": "prefect==3.9.2",
+      "execution": "Native local process execution; exact local Flow/Task runner and server/worker arrangement validated during implementation.",
+      "persistence": "Local Prefect API/server with SQLite for first durable single-host profile; ephemeral loopback server only for non-durable tests.",
+      "externalServicesRequired": [],
+      "excludedFromBaseline": [
+        "Docker",
+        "Kubernetes",
+        "PostgreSQL",
+        "Redis",
+        "Cloud Prefect service",
+        "External message broker",
+        "LLM/model provider"
+      ],
+      "conditions": [
+        "If selected Prefect execution mode requires a server/worker, exact processes, ports, startup order, permissions and restart behavior must be documented.",
+        "Do not assume ephemeral PoC execution proves durable service behavior."
+      ]
+    },
+    "dependencyClasses": [
+      {
+        "class": "Python runtime",
+        "status": "required",
+        "baseline": "Managed CPython 3.15.1 x64"
+      },
+      {
+        "class": "Prefect package",
+        "status": "required",
+        "baseline": "prefect==3.9.2 with full transitive lock and hashes"
+      },
+      {
+        "class": "Prefect API/server",
+        "status": "profile-dependent-required-for-durable-server-mode",
+        "baseline": "Local single-host profile"
+      },
+      {
+        "class": "SQLite",
+        "status": "profile-dependent",
+        "baseline": "Local persistence for initial single-host profile"
+      },
+      {
+        "class": "PostgreSQL/Redis",
+        "status": "not-required-for-initial-profile",
+        "baseline": "Only revisit for approved multi-worker/multi-server profile"
+      },
+      {
+        "class": "Artifact storage",
+        "status": "consumer-owned-required",
+        "baseline": "Existing Generator artifact/package directory contracts"
+      },
+      {
+        "class": "JSON Schema validation",
+        "status": "required-at-contract-boundaries",
+        "baseline": "Existing Draft 2020-12 schemas and managed Python jsonschema dependency"
+      },
+      {
+        "class": "Worker/container/cloud integrations",
+        "status": "optional-not-assumed",
+        "baseline": "No mandatory external worker/container/cloud service"
+      }
+    ],
+    "dependencyClosureDeliverables": [
+      "Exact package lock and package hashes",
+      "Direct/transitive dependency and license inventory",
+      "Selected Prefect extras/integrations list",
+      "Exact Python executable and environment verification",
+      "Windows process/service/port/filesystem requirements",
+      "SQLite data location, restart, backup and migration evidence",
+      "Artifact store and Prefect result-storage separation"
+    ]
+  },
+  "implementationPlan": [
+    {
+      "phase": "PHASE-00",
+      "name": "Adoption Baseline and Contract Freeze",
+      "objective": "Turn the accepted Prefect decision and existing GPWCF/THIM contracts into a controlled implementation baseline.",
+      "work": [
+        "Record this accepted decision in the project decision register without rewriting historical candidate evidence.",
+        "Inventory exact Stage/Step/SPU/Supporting Unit contracts and versions used by the first vertical slice.",
+        "Pin Prefect 3.9.2 and produce a reproducible dependency/license manifest under CPython 3.15.1.",
+        "Confirm the root invocation, Stage public facade, Step public execute and result contracts used by the reference consumer."
+      ],
+      "deliverables": [
+        "Accepted Prefect target decision",
+        "Prefect dependency lock/provenance manifest",
+        "GPWCF-to-Prefect contract inventory",
+        "Open decision register"
+      ],
+      "exitCriteria": [
+        "No unresolved ownership contradiction between GPWCF, Prefect and Generator.",
+        "Exact runtime/package environment is reproducible on Windows x64.",
+        "No change to specialized contracts is made without a separately approved contract change."
+      ]
+    },
+    {
+      "phase": "PHASE-01",
+      "name": "Prefect Native Capability Qualification",
+      "objective": "Prove the exact Prefect 3.9.2 constructs required by the target hierarchy in the selected local execution profile.",
+      "work": [
+        "Build a minimal Root Flow invoking at least two Stage Parent Flows.",
+        "Build one Stage Parent Flow invoking at least two independently identifiable Step Subflows through public Step callables.",
+        "Bind at least two SPUs as Tasks inside their owning Step Subflows.",
+        "Exercise task dependency, fan-out/fan-in and repeated-child-flow concurrency under the exact selected runner/server profile.",
+        "Capture native run IDs, parent/child correlation, parameters, returns, exceptions and state transitions."
+      ],
+      "deliverables": [
+        "Prefect Native Capability Qualification PoC",
+        "Native run/trace evidence",
+        "Topology and concurrency decision record"
+      ],
+      "exitCriteria": [
+        "Root, Stage, Step and executable-node boundaries are independently observable and correlated.",
+        "Step boundary is not bypassed.",
+        "Exact concurrency topology is understood and repeatable.",
+        "Unsupported native behavior is explicitly recorded."
+      ]
+    },
+    {
+      "phase": "PHASE-02",
+      "name": "Functional Binding and Invocation Contract",
+      "objective": "Define the smallest explicit target-specific mapping between GPWCF callable contracts and Prefect definitions.",
+      "work": [
+        "Define Functional Binding Manifest schema and versioning.",
+        "Define invocation/context envelope and identity correlation rules.",
+        "Define Stage Flow, Step Subflow, SPU Task and Supporting Unit binding declarations.",
+        "Define input/output serialization and artifact-reference handoff.",
+        "Define typed result, exception and Prefect-state mapping."
+      ],
+      "deliverables": [
+        "Functional Binding Manifest schema/contract",
+        "Invocation Envelope schema/contract",
+        "Result/Failure Mapping contract",
+        "Binding conformance validator"
+      ],
+      "exitCriteria": [
+        "All binding fields map to actual GPWCF specialized contracts.",
+        "No generic result/interface erases specialized semantics.",
+        "All native run IDs remain separate from GPWCF identities."
+      ]
+    },
+    {
+      "phase": "PHASE-03",
+      "name": "Root and Stage Integration",
+      "objective": "Implement the Root Flow and all thirteen Stage Flow boundaries for the reference consumer, initially using fixture-backed Stage callables.",
+      "work": [
+        "Implement root invocation and multiple Stage Flow inclusion/invocation.",
+        "Bind Stage facade inputs/outputs and Stage Flow Results.",
+        "Implement invocation-wide STG-01 and STG-02 reuse semantics.",
+        "Implement STG-02/STG-03 permitted overlap.",
+        "Implement exact Stage artifact-reference dependencies and conditional STG-13 admission."
+      ],
+      "deliverables": [
+        "Root Flow integration",
+        "Stage Flow bindings STG-01..STG-13",
+        "Stage-level fixture suite"
+      ],
+      "exitCriteria": [
+        "All 13 Stage boundaries are represented and independently correlated.",
+        "STG-01/STG-02 are not duplicated per payload type when environment scope is unchanged.",
+        "Stage dependency graph matches the Generator Pipeline contract."
+      ]
+    },
+    {
+      "phase": "PHASE-04",
+      "name": "Step Subworkflow and SPU Functional Binding",
+      "objective": "Implement each concrete Step public callable as a nested Prefect Flow and bind its internal SPUs as native executable elements.",
+      "work": [
+        "Derive actual GPWCF Step instances from Stage specialization and Step contracts; do not infer them from objective count.",
+        "Implement Step Subflow invocation through Step.execute.",
+        "Bind SPU callables and preserve SPUExecutionResult and StepExecutionResult independently.",
+        "Implement Step Composition flow result, returned results, invocation exceptions and Stage-facing aggregation.",
+        "Prove the Stage cannot bypass the Step boundary."
+      ],
+      "deliverables": [
+        "Step Subflow binding implementation",
+        "Step-level binding manifest entries",
+        "SPU Task bindings and typed-result tests"
+      ],
+      "exitCriteria": [
+        "Each Step Subflow has distinct identity and public input/output/result contract.",
+        "Each SPU Task runs only within its owning Step composition boundary.",
+        "StepExecutionResult and SPUExecutionResult semantics are preserved."
+      ]
+    },
+    {
+      "phase": "PHASE-05",
+      "name": "Supporting Unit Functional Binding",
+      "objective": "Bind only Supporting Unit patterns selected by concrete reference-consumer Steps and prove each applicable scope.",
+      "work": [
+        "Inventory actual selected Validator, Observation and Error Handling units and their specialized contracts.",
+        "Implement executable Supporting Unit bindings at permitted scopes processingNode, stepSubworkflow, stageParentWorkflow and pipelineRoot only where the concrete contract authorizes them.",
+        "Keep Error Modeling as semantic definition/aggregation contract, not executable Task.",
+        "Implement specialized association binding only for contracts that require it.",
+        "Preserve observation event/activity and error-handler publication/custody semantics."
+      ],
+      "deliverables": [
+        "Supporting Unit binding matrix",
+        "Pattern-specific Prefect binding tests",
+        "Specialized association mapping evidence"
+      ],
+      "exitCriteria": [
+        "Each selected unit's behavior/result/event/lifecycle semantics are preserved.",
+        "No generic Supporting Unit runtime type or mandatory association is introduced.",
+        "All required scope-validity and specialized association constraints pass."
+      ]
+    },
+    {
+      "phase": "PHASE-06",
+      "name": "Artifact, Context, Result and Provenance Integration",
+      "objective": "Connect real Generator Stage artifacts through the Prefect hierarchy without changing their semantic ownership.",
+      "work": [
+        "Implement artifact reference bridge and envelope verification.",
+        "Pass immutable IDs/digests/locations rather than large payloads through Prefect parameters/results.",
+        "Verify Stage 5/6 provider lineage and Stage 7 reconciliation inputs.",
+        "Verify Stage 10 context-bound PLD and Stage 11 representation-qualified SAM identities.",
+        "Verify Stage 12 exact validation-combination and Stage 13 manifest/package provenance."
+      ],
+      "deliverables": [
+        "Artifact bridge implementation",
+        "End-to-end identity/correlation trace",
+        "Result and artifact custody tests"
+      ],
+      "exitCriteria": [
+        "Every downstream artifact resolves to exact producer, input fingerprints and schema/version.",
+        "No in-place artifact mutation or identity-domain conflation.",
+        "Prefect state does not substitute for domain results."
+      ]
+    },
+    {
+      "phase": "PHASE-07",
+      "name": "Lifecycle, Failure, Retry and Recovery",
+      "objective": "Prove operational settlement against GPWCF lifecycle and custody contracts.",
+      "work": [
+        "Test cancellation propagation and actual process termination for native tools.",
+        "Test timeout settlement, including uncertain child process state.",
+        "Define retry/idempotency per safe operation and prohibit unsafe publication replay.",
+        "Test independent branch failure isolation and root aggregation.",
+        "Test Prefect server/worker restart and resumption/reconciliation for persisted runs.",
+        "Verify Step reuse/retirement and Supporting Unit quiescence/release outcomes."
+      ],
+      "deliverables": [
+        "Lifecycle mapping contract",
+        "Retry/idempotency matrix",
+        "Cancellation/process-tree report",
+        "Recovery and restart report"
+      ],
+      "exitCriteria": [
+        "No cancelled/timed-out operation is assumed terminated without evidence.",
+        "Unresolved settlement preserves recovery ownership and access.",
+        "Retries cannot duplicate accepted side effects.",
+        "All required lifecycle states map to confirmed/failed/indeterminate GPWCF outcomes."
+      ]
+    },
+    {
+      "phase": "PHASE-08",
+      "name": "Full Reference Consumer Acceptance and Release",
+      "objective": "Run the actual PayloadDescriptionGenerator through the adopted Prefect integration and close target acceptance gates.",
+      "work": [
+        "Execute complete Stage 1-13 end-to-end runs using real stage implementations and fixtures.",
+        "Exercise multiple contexts, provider fan-out, representation profiles, validation outcomes and publication gating.",
+        "Run schema, artifact digest, deterministic serialization and package immutability checks.",
+        "Run Windows restart/recovery and resource-boundary tests.",
+        "Produce final conformance report and dependency manifest."
+      ],
+      "deliverables": [
+        "End-to-end Prefect integration report",
+        "Acceptance evidence bundle",
+        "Release/deployment runbook",
+        "Conformance matrix"
+      ],
+      "exitCriteria": [
+        "All mandatory acceptance criteria pass or have explicitly approved scoped waivers.",
+        "No unresolved critical lifecycle, custody, result, identity or stage-boundary gap.",
+        "Prefect adoption is integrated-and-verified for the declared reference-consumer scope."
+      ]
+    }
+  ],
+  "acceptancePlan": {
+    "acceptancePolicy": "Acceptance is evidence-based. Each test records Prefect version, Python executable/version, host OS/architecture, execution profile, test fixture/input digests, GPWCF identities, Prefect run IDs, outputs/artifact digests, logs, and pass/fail/blocked status. No test is marked passed from source inspection alone when runtime behavior is required.",
+    "architectureAcceptance": [
+      {
+        "id": "ACC-ARCH-01",
+        "requirement": "A Root Flow invokes at least two distinct Stage Parent Flows in one root execution.",
+        "evidence": "Root Flow run plus two independently identifiable Stage Flow runs and correlated GPWCF identities."
+      },
+      {
+        "id": "ACC-ARCH-02",
+        "requirement": "A Stage Parent Flow invokes at least two Step Subflows through their public Step.execute contracts.",
+        "evidence": "Parent/child run trace, Step invocation envelopes and returned StepExecutionResults."
+      },
+      {
+        "id": "ACC-ARCH-03",
+        "requirement": "Each Step Subflow contains its own bound SPU executable Tasks; Stage cannot invoke those Tasks directly.",
+        "evidence": "Binding manifest, call graph/trace and negative boundary test."
+      },
+      {
+        "id": "ACC-ARCH-04",
+        "requirement": "Functional Binding covers all executable roles required by the reference consumer and each binding preserves its specialized contract.",
+        "evidence": "Complete binding manifest and contract conformance report."
+      },
+      {
+        "id": "ACC-ARCH-05",
+        "requirement": "Supporting Units bind at each actually applicable permitted scope, without converting Error Modeling into an executable unit.",
+        "evidence": "Scope-specific positive/negative tests and pattern-specific contract traces."
+      },
+      {
+        "id": "ACC-ARCH-06",
+        "requirement": "Association is used only for specialized contract semantics that require it; no Root Association is required by default.",
+        "evidence": "Relationship-to-native-mechanism mapping and negative test for unnecessary root association."
+      },
+      {
+        "id": "ACC-ARCH-07",
+        "requirement": "GPWCF identity, typed result, exception, artifact and lifecycle evidence remain distinct from Prefect native execution metadata.",
+        "evidence": "End-to-end correlation report and schema validation."
+      }
+    ],
+    "stageAcceptance": [
+      {
+        "id": "ACC-STG01-01",
+        "stageId": "STG-01",
+        "requirement": "One invocation/environment-wide Build Context Inventory is created and reused by downstream Stage runs without per-payload duplication when environment scope is unchanged.",
+        "verification": "Execute at least two payload branches under one root; verify one STG-01 producer identity and exact inventory digest in both branches."
+      },
+      {
+        "id": "ACC-STG01-02",
+        "stageId": "STG-01",
+        "requirement": "The isolated managed runtime, package/resource inventory, registries and schemas are verified without installation/download or global-Python fallback.",
+        "verification": "Runtime executable/version/isolation report plus resource fingerprints and negative PATH/user-site fallback test."
+      },
+      {
+        "id": "ACC-STG01-03",
+        "stageId": "STG-01",
+        "requirement": "Bounded roots, provenance, capability candidates and diagnostics are deterministic and reference-valid.",
+        "verification": "Repeat same inputs and compare canonical outputs; validate all references."
+      },
+      {
+        "id": "ACC-STG02-01",
+        "stageId": "STG-02",
+        "requirement": "STG-02 consumes the exact immutable STG-01 inventory and verifies schema, version, references and fingerprints.",
+        "verification": "Positive exact-digest case and negative changed-inventory case."
+      },
+      {
+        "id": "ACC-STG02-02",
+        "stageId": "STG-02",
+        "requirement": "Per-TU effective invocations, compiler/frontend, language/target/ABI, headers/macros and context grouping retain provenance and unknown/conflict states.",
+        "verification": "Multi-TU fixture set with distinct contexts, response files, stale metadata and conflicting candidates."
+      },
+      {
+        "id": "ACC-STG02-03",
+        "stageId": "STG-02",
+        "requirement": "STG-02 may overlap STG-03 after invocation establishment and publishes immutable Compilation Context Set/TU map/report.",
+        "verification": "Timestamped run evidence and schema/reference validation."
+      },
+      {
+        "id": "ACC-STG03-01",
+        "stageId": "STG-03",
+        "requirement": "Type designator, request identity, input envelope and independent invocation-context references are preserved without assuming compilation context.",
+        "verification": "Valid/invalid input fixtures and identity assertions."
+      },
+      {
+        "id": "ACC-STG03-02",
+        "stageId": "STG-03",
+        "requirement": "STG-03 runs independently of STG-02 where permitted, while STG-04 waits for all required inputs.",
+        "verification": "Run graph trace proves overlap and STG-04 dependency barrier."
+      },
+      {
+        "id": "ACC-STG04-01",
+        "stageId": "STG-04",
+        "requirement": "All authorized bounded roots and applicable Compilation Contexts are searched/aggregated without first-match selection.",
+        "verification": "Multiple-root/multiple-context fixtures including ambiguity."
+      },
+      {
+        "id": "ACC-STG04-02",
+        "stageId": "STG-04",
+        "requirement": "Root-type eligibility and context-specific semantic lookup are preserved.",
+        "verification": "Eligible/ineligible/ambiguous type fixtures."
+      },
+      {
+        "id": "ACC-STG04-03",
+        "stageId": "STG-04",
+        "requirement": "Resolved binding set and declaration locators are immutable and preserve all required context references.",
+        "verification": "Schema, digest and referential integrity checks."
+      },
+      {
+        "id": "ACC-STG05-01",
+        "stageId": "STG-05",
+        "requirement": "AST provider invocation uses exact binding and Compilation Context and preserves raw observations/lineage.",
+        "verification": "Provider fixture output and context fingerprint equality."
+      },
+      {
+        "id": "ACC-STG05-02",
+        "stageId": "STG-05",
+        "requirement": "AST observation package and diagnostics are independently identified and immutable.",
+        "verification": "Envelope/schema/digest checks."
+      },
+      {
+        "id": "ACC-STG05-03",
+        "stageId": "STG-05",
+        "requirement": "Eligible Stage 5 invocations overlap with paired Stage 6 invocations without losing deterministic correlation.",
+        "verification": "Timestamped concurrency trace and stable binding correlation."
+      },
+      {
+        "id": "ACC-STG06-01",
+        "stageId": "STG-06",
+        "requirement": "XML provider invocation uses the same exact resolved binding and Compilation Context as paired AST branch.",
+        "verification": "Pairwise binding/context equality assertion."
+      },
+      {
+        "id": "ACC-STG06-02",
+        "stageId": "STG-06",
+        "requirement": "XML observations remain provider-native and do not acquire canonical declaration identity prematurely.",
+        "verification": "Identity-domain negative assertions and envelope validation."
+      },
+      {
+        "id": "ACC-STG06-03",
+        "stageId": "STG-06",
+        "requirement": "Dynamic provider fan-out topology is repeatably concurrent in the selected Prefect execution profile.",
+        "verification": "Stress runs with timestamp overlap and no serialization regression; report any runner-specific limitation."
+      },
+      {
+        "id": "ACC-STG07-01",
+        "stageId": "STG-07",
+        "requirement": "Stage 7 joins required Stage 5/6 observations and preserves approved missing-provider exceptions only.",
+        "verification": "Both-provider, one-provider-permitted and one-provider-required-but-missing fixtures."
+      },
+      {
+        "id": "ACC-STG07-02",
+        "stageId": "STG-07",
+        "requirement": "Stage 7 owns DeclarationIds, CanonicalCppTypeKeys, ResolvedTypeIds and provider-neutral declaration graph.",
+        "verification": "Cross-provider reconciliation fixtures and identity uniqueness/reference checks."
+      },
+      {
+        "id": "ACC-STG07-03",
+        "stageId": "STG-07",
+        "requirement": "Layout Control Application candidates and diagnostics coverage are published without mutating provider observation artifacts.",
+        "verification": "Input/output digest comparison and graph validation."
+      },
+      {
+        "id": "ACC-STG08-01",
+        "stageId": "STG-08",
+        "requirement": "Dependency traversal computes graph closure and preserves cycles/SCCs and explicit boundaries.",
+        "verification": "Acyclic, cyclic, recursive and boundary fixtures."
+      },
+      {
+        "id": "ACC-STG08-02",
+        "stageId": "STG-08",
+        "requirement": "Resolved Type Dependency Graph and closure report are immutable and traceable to Stage 7 declarations.",
+        "verification": "Schema, digest and declaration-reference checks."
+      },
+      {
+        "id": "ACC-STG09-01",
+        "stageId": "STG-09",
+        "requirement": "Logical Description establishes stable logical identities independently of declaration/provider/native identities.",
+        "verification": "Identity namespace and uniqueness tests."
+      },
+      {
+        "id": "ACC-STG09-02",
+        "stageId": "STG-09",
+        "requirement": "Logical relationships, recursion and boundaries are represented under the LD contract.",
+        "verification": "LD schema, semantic and recursion fixtures."
+      },
+      {
+        "id": "ACC-STG09-03",
+        "stageId": "STG-09",
+        "requirement": "LD is validated, canonicalized, envelope-bound and published immutably.",
+        "verification": "Draft 2020-12 validation, digest and deterministic serialization checks."
+      },
+      {
+        "id": "ACC-STG10-01",
+        "stageId": "STG-10",
+        "requirement": "Exactly one context-bound PLD is produced per resolved type × exact Compilation Context pair.",
+        "verification": "Multiple-type/multiple-context fixture matrix and identity binding checks."
+      },
+      {
+        "id": "ACC-STG10-02",
+        "stageId": "STG-10",
+        "requirement": "Provider observations are normalized/reconciled while native facts, evidence and layout-control applications retain authoritative ownership.",
+        "verification": "Canonical typed fact fixtures, lineage checks and no-mutation assertions."
+      },
+      {
+        "id": "ACC-STG10-03",
+        "stageId": "STG-10",
+        "requirement": "PLD coverage/support records preserve unknown, unsupported and conflicting facts without overclaim.",
+        "verification": "Positive/negative evidence fixtures and PLD contract checks."
+      },
+      {
+        "id": "ACC-STG11-01",
+        "stageId": "STG-11",
+        "requirement": "Each SAM binds one exact LD/PLD/context set and one representation profile/rule-set version/fingerprint.",
+        "verification": "Cross-product fixture matrix and binding manifest assertions."
+      },
+      {
+        "id": "ACC-STG11-02",
+        "stageId": "STG-11",
+        "requirement": "Distinct representations yield distinct SAM artifacts; native facts and representation mappings remain separate.",
+        "verification": "At least two profile runs and identity/fingerprint separation."
+      },
+      {
+        "id": "ACC-STG11-03",
+        "stageId": "STG-11",
+        "requirement": "No transport configuration (including Named Pipe) is misclassified as a representation profile.",
+        "verification": "Schema and semantic negative tests."
+      },
+      {
+        "id": "ACC-STG12-01",
+        "stageId": "STG-12",
+        "requirement": "Validation is scoped to exact LD × applicable PLD/context × SAM profile/version and pins all schemas, registries, policies and evaluator fingerprints.",
+        "verification": "Exact-combination binding tests and changed-resource rejection."
+      },
+      {
+        "id": "ACC-STG12-02",
+        "stageId": "STG-12",
+        "requirement": "Nine validation gates preserve specified dependency/order semantics and evaluate CIR-001..024 and PL-001..044 obligations.",
+        "verification": "Gate trace, obligation coverage matrix and mandatory-negative fixtures."
+      },
+      {
+        "id": "ACC-STG12-03",
+        "stageId": "STG-12",
+        "requirement": "Unknown, unavailable, conflicting, unresolved or extracted-not-verified facts cannot satisfy mandatory support requirements.",
+        "verification": "Negative evidence-state fixtures."
+      },
+      {
+        "id": "ACC-STG12-04",
+        "stageId": "STG-12",
+        "requirement": "Validation Report and support decision are immutable, reproducible and carry sidecar Artifact Envelope.",
+        "verification": "Report schema, digest, deterministic repeat and provenance checks."
+      },
+      {
+        "id": "ACC-STG13-01",
+        "stageId": "STG-13",
+        "requirement": "Only exact artifacts and digests authorized by Stage 12 are packaged.",
+        "verification": "Tampered-artifact rejection and exact digest match."
+      },
+      {
+        "id": "ACC-STG13-02",
+        "stageId": "STG-13",
+        "requirement": "LD/PLD/SAM/report package content is byte-identical to validated inputs and Output Manifest references resolve.",
+        "verification": "Byte-equality comparison and package-wide reference validation."
+      },
+      {
+        "id": "ACC-STG13-03",
+        "stageId": "STG-13",
+        "requirement": "Canonical serialization preserves exact integer tokens and deterministic package fingerprints.",
+        "verification": "Large integer round-trip, parse-back equality, repeat-run byte/fingerprint comparison."
+      },
+      {
+        "id": "ACC-STG13-04",
+        "stageId": "STG-13",
+        "requirement": "ValidationFailed emits no package or Output Manifest and only a separate non-consumable diagnostic record.",
+        "verification": "Negative publication test for ValidationFailed."
+      }
+    ],
+    "crossCuttingAcceptance": [
+      {
+        "id": "ACC-CROSS-01",
+        "name": "Windows/Python Reproducibility",
+        "requirement": "Fresh isolated environment reproduces Prefect 3.9.2 under managed CPython 3.15.1 x64 with no global fallback.",
+        "gate": "DEP-GATE-02; DEP-GATE-03"
+      },
+      {
+        "id": "ACC-CROSS-02",
+        "name": "Hierarchy and Functional Binding",
+        "requirement": "Root, Stage, Step, SPU and all selected Supporting Unit boundaries pass their respective binding/nesting contracts.",
+        "gate": "HI-01..HI-06; FB-01..FB-12; HN-01..HN-08"
+      },
+      {
+        "id": "ACC-CROSS-03",
+        "name": "Typed Result and Exception Separation",
+        "requirement": "SPUExecutionResult, StepExecutionResult, Stage Flow Result, domain errors and thrown exceptions remain separate from Prefect states.",
+        "gate": "DEP-GATE-05; DEP-GATE-06"
+      },
+      {
+        "id": "ACC-CROSS-04",
+        "name": "Artifact Integrity and Custody",
+        "requirement": "All artifact references resolve and preserve exact schema/version/digest/producer/input lineage; no large payload dependence on Prefect parameter/result storage.",
+        "gate": "DEP-GATE-06"
+      },
+      {
+        "id": "ACC-CROSS-05",
+        "name": "Cancellation and Process Settlement",
+        "requirement": "Cancellation/timeout is propagated and actual child-process termination and unresolved recovery custody are evidenced.",
+        "gate": "DEP-GATE-07"
+      },
+      {
+        "id": "ACC-CROSS-06",
+        "name": "Retry and Replay Safety",
+        "requirement": "Every enabled retry has explicit idempotency/reconciliation proof; no duplicate accepted publication or output.",
+        "gate": "DEP-GATE-07"
+      },
+      {
+        "id": "ACC-CROSS-07",
+        "name": "Failure Isolation and Recovery",
+        "requirement": "Independent branches, Stage failures, worker/service restarts and uncertain outcomes preserve recovery responsibility and immutable evidence.",
+        "gate": "DEP-GATE-07"
+      },
+      {
+        "id": "ACC-CROSS-08",
+        "name": "Durable Local Execution",
+        "requirement": "Local Prefect server/SQLite profile survives controlled restart and retains operational history independently of consumer artifacts.",
+        "gate": "DEP-GATE-04"
+      },
+      {
+        "id": "ACC-CROSS-09",
+        "name": "Deterministic End-to-End Reference Run",
+        "requirement": "Same pinned inputs/resources produce semantically identical outputs and exact immutable artifact references except declared run/time metadata.",
+        "gate": "HI-06; DEP-GATE-06"
+      }
+    ]
+  },
+  "traceability": {
+    "targetModel": {
+      "document": ".docs/01.00_Capability_Open_Source_Integration_Assessment/01.03_Open_Source_Technology_Landscape.json",
+      "section": "targetHierarchicalIntegrationModel",
+      "version": "1.1.0"
+    },
+    "capabilityModel": {
+      "document": ".docs/01.00_Capability_Open_Source_Integration_Assessment/01.02_Framework_Capability_Model.json",
+      "version": "1.2.0"
+    },
+    "buildAdoptAdapt": {
+      "document": ".docs/01.00_Capability_Open_Source_Integration_Assessment/01.04_Build_vs_Adopt_vs_Adapt_Decisions.json",
+      "version": "1.1.0",
+      "decision": "This document resolves the previously open external workflow runtime selection in favor of Prefect."
+    },
+    "dependencyArchitecture": {
+      "document": ".docs/01.00_Capability_Open_Source_Integration_Assessment/01.05_Dependency_Architecture/01.05_Dependency_Architecture.json",
+      "version": "0.1.0",
+      "gates": [
+        "DEP-GATE-01",
+        "DEP-GATE-02",
+        "DEP-GATE-03",
+        "DEP-GATE-04",
+        "DEP-GATE-05",
+        "DEP-GATE-06",
+        "DEP-GATE-07"
+      ]
+    },
+    "referenceConsumerContracts": [
+      ".docs/Payload_Type_Definition_Description_Generator/Pipeline_Architecture/Pipeline_Architecture_and_Stage_Interface_Contract.md",
+      ".docs/Payload_Type_Definition_Description_Generator/Stage_Model.json",
+      ".docs/Payload_Type_Definition_Description_Generator/01.00_Build_Context_Discovery/Stage1_Specification.md",
+      ".docs/Payload_Type_Definition_Description_Generator/02.00_Compilation_Context_Resolution/Stage2_Specification.md",
+      ".docs/Payload_Type_Definition_Description_Generator/03.00_Payload_Type_Input/Stage3_Specification.md",
+      ".docs/Payload_Type_Definition_Description_Generator/04.00_Type_Resolution/Stage4_Specification.md",
+      ".docs/Payload_Type_Definition_Description_Generator/05.00_AST_Extraction/Stage5_Specification.md",
+      ".docs/Payload_Type_Definition_Description_Generator/06.00_XML_Generation/Stage6_Specification.md",
+      ".docs/Payload_Type_Definition_Description_Generator/07.00_Declaration_Analysis/Stage7_Specification.md",
+      ".docs/Payload_Type_Definition_Description_Generator/08.00_Dependency_Resolution/Stage8_Specification.md",
+      ".docs/Payload_Type_Definition_Description_Generator/09.00_Logical_Description/Stage9_Specification.md",
+      ".docs/Payload_Type_Definition_Description_Generator/10.00_Physical Layout Extraction/Stage10_Specification.md",
+      ".docs/Payload_Type_Definition_Description_Generator/11.00_Description_Composition/Stage11_Specification.md",
+      ".docs/Payload_Type_Definition_Description_Generator/12.00_Validation/Stage12_Specification.md",
+      ".docs/Payload_Type_Definition_Description_Generator/13.00_Output_Generation/Stage13_Specification.md",
+      ".docs/Payload_Type_Definition_Description_Generator/Pipeline_Artifact_Envelope_Identity_and_Canonicalization_Contract.md",
+      ".docs/Payload_Type_Definition_Description_Generator/Declaration_Identity_and_Cross_Provider_Correlation_Contract.md",
+      ".docs/Payload_Type_Definition_Description_Generator/Description_Package_Directory_Contract.md",
+      ".docs/Payload_Type_Definition_Description_Generator/Output_Manifest_Contract.md"
+    ],
+    "gpwcfContracts": [
+      ".docs/Identity.json",
+      ".docs/Architecture/Stage_Level/Stage_Level_Architecture.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      ".docs/Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+      ".docs/Architecture/Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+      ".docs/Architecture/Common/Error_Model.json"
+    ],
+    "hierarchyObligations": [
+      "HI-00",
+      "HI-01",
+      "HI-02",
+      "HI-03",
+      "HI-04",
+      "HI-05",
+      "HI-06"
+    ],
+    "functionalBindingObligations": [
+      "FB-01",
+      "FB-02",
+      "FB-03",
+      "FB-04",
+      "FB-05",
+      "FB-06",
+      "FB-07",
+      "FB-08",
+      "FB-09",
+      "FB-10",
+      "FB-11",
+      "FB-12"
+    ],
+    "hierarchicalNestingObligations": [
+      "HN-01",
+      "HN-02",
+      "HN-03",
+      "HN-04",
+      "HN-05",
+      "HN-06",
+      "HN-07",
+      "HN-08"
+    ]
+  },
+  "openDecisions": [
+    {
+      "id": "OD-PREF-01",
+      "question": "Which exact Prefect task runner and native local execution mode should be the supported baseline for Stage/Step nesting and dynamic provider fan-out?",
+      "owner": "GPWCF integration design",
+      "resolutionPhase": "PHASE-01",
+      "rule": "Select from measured behavior in Prefect 3.9.2 on Windows/CPython 3.15.1; do not infer from fixture PoC topology."
+    },
+    {
+      "id": "OD-PREF-02",
+      "question": "What exact local API/server/worker arrangement is used for durable runs and what are its restart, persistence and recovery guarantees?",
+      "owner": "Deployment architecture",
+      "resolutionPhase": "PHASE-01/PHASE-07",
+      "rule": "Keep ephemeral test mode separate from durable local mode."
+    },
+    {
+      "id": "OD-PREF-03",
+      "question": "What are the concrete Stage/Step public callable types and actual GPWCF Step instances for each reference-consumer Stage?",
+      "owner": "GPWCF + Generator specialization",
+      "resolutionPhase": "PHASE-00/PHASE-04",
+      "rule": "Derive from approved specialized contracts; Stage Model objectives/execution_steps are not a substitute."
+    },
+    {
+      "id": "OD-PREF-04",
+      "question": "Which Supporting Unit patterns and scopes are actually selected by each concrete Step/Stage/root?",
+      "owner": "Concrete Stage/Step specialization",
+      "resolutionPhase": "PHASE-05",
+      "rule": "No pattern or scope is mandatory merely because it is available in framework model."
+    },
+    {
+      "id": "OD-PREF-05",
+      "question": "What artifact storage adapter and reference URI/path scheme are authoritative for each Stage artifact?",
+      "owner": "Generator artifact contracts",
+      "resolutionPhase": "PHASE-02/PHASE-06",
+      "rule": "Preserve existing consumer artifact contracts; do not move semantic ownership into Prefect storage."
+    },
+    {
+      "id": "OD-PREF-06",
+      "question": "What cancellation, timeout, process-tree termination and recovery guarantees can be implemented in selected local Prefect mode?",
+      "owner": "Integration + consumer runtime",
+      "resolutionPhase": "PHASE-07",
+      "rule": "Represent unsupported or indeterminate behavior explicitly; do not claim confirmed termination from orchestration state."
+    },
+    {
+      "id": "OD-PREF-07",
+      "question": "Which operations are safely retryable and what idempotency/reconciliation key is used for each?",
+      "owner": "Concrete Stage/Step contracts",
+      "resolutionPhase": "PHASE-07",
+      "rule": "Default no retry for side-effecting operations until proven safe."
+    },
+    {
+      "id": "OD-PREF-08",
+      "question": "Which Stage 12 validation objectives/gates can execute concurrently without violating gate dependencies or deterministic aggregation?",
+      "owner": "Stage 12 specialization",
+      "resolutionPhase": "PHASE-03/PHASE-08",
+      "rule": "Preserve specified dependencies; parallelize only independently proven gates."
+    },
+    {
+      "id": "OD-PREF-09",
+      "question": "What are maximum inline parameter/result envelope sizes and artifact reference storage guarantees?",
+      "owner": "Integration + consumer",
+      "resolutionPhase": "PHASE-02/PHASE-06",
+      "rule": "Use small envelopes and immutable external artifact references; measure rather than guess."
+    }
+  ],
+  "conformanceStatus": {
+    "adoptionDecision": "accepted",
+    "targetTechnology": "Prefect 3",
+    "initialVersionBaseline": "3.9.2",
+    "implementationStatus": "not-yet-implemented-or-verified",
+    "targetHierarchicalIntegrationGate": "documentary-design-defined; full Prefect conformance not yet proven",
+    "priorPocStatus": "fixture-based Stage-boundary evidence only",
+    "releaseRule": "Do not mark HI-GATE-01, DEP-GATE-01..07, or full reference-consumer integration as passed until acceptance evidence is produced and reviewed."
+  },
+  "changeControl": {
+    "contractChangeRule": "This architecture maps to existing GPWCF and Generator contracts. It does not authorize silent edits to specialized contracts, Stage specifications, schemas, artifact contracts or result semantics. Any required semantic change must be raised as an explicit change proposal, reviewed against its owning contract and approved before modification.",
+    "evidenceRule": "Record exact Prefect/Python versions, execution profile, test inputs, run IDs, GPWCF identities, artifacts, digests, logs and test outcomes for each acceptance run.",
+    "repositoryRule": "Preserve existing working-tree changes. Do not reset, checkout, clean, stage or commit as part of this architecture authoring task."
+  }
+}

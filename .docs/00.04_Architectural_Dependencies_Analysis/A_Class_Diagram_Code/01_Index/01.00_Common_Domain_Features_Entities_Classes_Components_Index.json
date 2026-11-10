@@ -1,0 +1,438 @@
+{
+  "indexId": "common-domain-features-entities-classes-components-index",
+  "indexVersion": "1.0.0",
+  "sourceDirectory": ".docs/00.00_Primary_Architecture/Common",
+  "sourceFileCount": 8,
+  "totalRecords": 48,
+  "description": "Index of all relevant features, classes, entities, components, and contracts defined in the GPWCF Primary Architecture Common domain documents. Links are relative to this index file location.",
+  "records": [
+    {
+      "number": 1,
+      "name": "Supporting Pattern Functional Binding",
+      "category": "Architectural Design / Feature",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/08.00_Supporting_Pattern_Functional_Binding.json",
+      "description": "Wave 3 detailed design (artifact 2) defining how each optional Supporting Pattern (Validation, Error Handling, Observation) is functionally bound to Prefect native execution without flattening distinct behavior, result, association, lifecycle, identity, and custody contracts into a universal Supporting Unit abstraction."
+    },
+    {
+      "number": 2,
+      "name": "Validation Functional Binding",
+      "category": "Feature / Pattern Binding",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/08.00_Supporting_Pattern_Functional_Binding.json",
+      "description": "Binding of the Validator Unit pattern to Prefect native execution (Task), preserving its specialized Behavioral, Association, and Lifecycle contracts; validation conclusions remain domain results, not automatic invocation failures."
+    },
+    {
+      "number": 3,
+      "name": "Error Handling Functional Binding",
+      "category": "Feature / Pattern Binding",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/08.00_Supporting_Pattern_Functional_Binding.json",
+      "description": "Binding of the Error Handling Unit pattern to Prefect native execution, preserving operation identity, reservation, atomic publication acceptance, and Recovery Owner custody as distinct from Prefect Task State."
+    },
+    {
+      "number": 4,
+      "name": "Observation Functional Binding",
+      "category": "Feature / Pattern Binding",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/08.00_Supporting_Pattern_Functional_Binding.json",
+      "description": "Binding of the Observation Unit pattern to Prefect native execution supporting call, callback, sampling, or subscription activity cardinality; Observation Records remain independent of StepExecutionResult and preserve provenance/custody."
+    },
+    {
+      "number": 5,
+      "name": "Supporting Pattern Result to StepExecutionResult Optional Contributions Relationship",
+      "category": "Feature / Relationship",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/08.00_Supporting_Pattern_Functional_Binding.json",
+      "description": "Defines how Validator, Error, and Error Handler aggregates form the baseline optional Step result bundle, while Observation output remains outside the common contribution bundle."
+    },
+    {
+      "number": 6,
+      "name": "Prefect Operational State versus Pattern Domain Results / Publication Acceptance",
+      "category": "Feature / Relationship",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/08.00_Supporting_Pattern_Functional_Binding.json",
+      "description": "Distinction between Prefect operational run/task records and pattern-specific domain results/publication acceptance; Prefect does not redefine validation, observation, error handling, publication acceptance, or Step flow decisions."
+    },
+    {
+      "number": 7,
+      "name": "Generic Diagnostic Contract (core.diagnostics)",
+      "category": "Class / Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/09.00_Generic_Diagnostics.json",
+      "description": "Wave 4 detailed design (artifact 1) defining a narrow, typed, descriptive, and optional Diagnostic value contract, deliberately kept distinct from a universal Error Model, Failure taxonomy, execution outcome, or control-flow policy."
+    },
+    {
+      "number": 8,
+      "name": "Diagnostic Semantic Distinction",
+      "category": "Feature / Concept",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/09.00_Generic_Diagnostics.json",
+      "description": "The deliberate semantic distinction among Diagnostic, Error Occurrence, Failure, Exception, and domain Outcome; diagnostics are descriptive only and never a substitute for Error, Failure, Exception, or Outcome semantics."
+    },
+    {
+      "number": 9,
+      "name": "Generic Error Handling Capability",
+      "category": "Architectural Design / Feature",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/10.00_Error_Handling.json",
+      "description": "Wave 4 detailed design (artifact 2) defining the reusable optional Error Handling capability as a specialized Supporting Pattern, including generic type boundaries, unit/association/lifecycle ownership, operation-result aggregation, and dependency isolation, without promoting any consumer Error Model into GPWCF Core."
+    },
+    {
+      "number": 10,
+      "name": "Error Handling Unit",
+      "category": "Class / Component",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/10.00_Error_Handling.json",
+      "description": "Step-owned optional Supporting Unit callable that executes one or more authorized handling operations against target occurrences/resources and produces THandlingOperationResult values until the publication acceptance/custody transfer point."
+    },
+    {
+      "number": 11,
+      "name": "THandlingOperationResult",
+      "category": "Class / Generic Type",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/10.00_Error_Handling.json",
+      "description": "Per-operation result model produced by the Error Handling Unit; explicitly typed to match existing contract generic parameters, distinct from ErrorResult and ErrorHandlerResult."
+    },
+    {
+      "number": 12,
+      "name": "ErrorResult",
+      "category": "Class / Entity",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/10.00_Error_Handling.json",
+      "description": "Source Error Occurrence result type, kept separate from the Error Handling Unit's per-operation results and from ErrorHandlerResult; Error Model ownership remains with the concrete Step/consumer."
+    },
+    {
+      "number": 13,
+      "name": "ErrorHandlerResult",
+      "category": "Class / Entity",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/10.00_Error_Handling.json",
+      "description": "Aggregate of accepted operation entries produced by Error Handling; distinct from ErrorResult and does not assert error resolution."
+    },
+    {
+      "number": 14,
+      "name": "Step-Specialized Target Occurrence Reference Boundary",
+      "category": "Feature / Boundary",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/10.00_Error_Handling.json",
+      "description": "Boundary defining how the Error Handling Unit references target occurrences/resources made available by the owning Step, keeping operation attempt/execution identities and Association/target provenance distinct."
+    },
+    {
+      "number": 15,
+      "name": "OperationEntryPublisher Protocol",
+      "category": "Class / Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/11,00_Publication.json",
+      "description": "Wave 4 detailed design (artifact 3) defining the reservation-backed OperationEntryPublisher protocol; the Step-specific Error Handling Composition-owned invocation-scoped capability that accepts and retains complete ErrorHandlingOperationEntry values, the only authoritative delivery path for operation entries."
+    },
+    {
+      "number": 16,
+      "name": "PublicationReservation",
+      "category": "Class / Entity",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/11,00_Publication.json",
+      "description": "Opaque, Publisher-issued capability that authorizes one complete entry for one specific handling operation attempt and secures the resources needed for the promised handoff; enforces the one-attempt/one-entry authorization rule."
+    },
+    {
+      "number": 17,
+      "name": "Atomic Acceptance / Custody Transfer Boundary",
+      "category": "Feature / Boundary",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/11,00_Publication.json",
+      "description": "The equivalence between reservation consumption and complete-entry retention, with one unambiguous linearization point; no-fail ownership transfer and complete-entry capacity reservation before operation execution."
+    },
+    {
+      "number": 18,
+      "name": "Single Step Publication Specialization",
+      "category": "Class / Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/11,00_Publication.json",
+      "description": "Per-Step concrete policy/implementation contract defining mandatory no-fail transfer proof, Recovery Owner, identity generation, status retention, and end-to-end publication traces."
+    },
+    {
+      "number": 19,
+      "name": "Recovery Owner and Ambiguous-Acceptance Escrow",
+      "category": "Class / Entity",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/11,00_Publication.json",
+      "description": "Recovery Owner obligations for ambiguous-acceptance escrow and status reconciliation; every concrete Step names a Recovery Owner and defines escrow/reconciliation and status retention for unresolved produced-but-unaccepted outputs."
+    },
+    {
+      "number": 20,
+      "name": "Pipeline Common Error Model",
+      "category": "Architectural Design / Document",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+      "description": "Shared structural contracts (documentId: pipeline.common.error-model) for SPU-level and Stage-level error type definitions, error occurrences, their registries, and ownership/association within a Pipeline; standardizes structure while leaving semantics to the owning Stage or SPU."
+    },
+    {
+      "number": 21,
+      "name": "SPUErrorTypeDefinition[TErrorContent, THandlingAction]",
+      "category": "Class / Generic Type",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+      "description": "SPU-level error type definition owned by one concrete SPU; TErrorContent describes the error type's meaning/domain characteristics, THandlingAction describes the associated handling action."
+    },
+    {
+      "number": 22,
+      "name": "SPUError[TErrorOccurrenceContext]",
+      "category": "Class / Generic Type",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+      "description": "SPU-level error occurrence representing one actual occurrence of an error within an SPU; references exactly one registered SPUErrorTypeDefinition and carries occurrence-specific information via TErrorOccurrenceContext."
+    },
+    {
+      "number": 23,
+      "name": "SPUErrorTypeDefinitionRegistry[TErrorTypeDefinition]",
+      "category": "Class / Generic Type",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+      "description": "SPU-level registry that stores and resolves SPUErrorTypeDefinition instances for exactly one owning SPU; exclusively owned and allocated by the Pipeline per SPU."
+    },
+    {
+      "number": 24,
+      "name": "StageErrorTypeDefinition[TErrorContent, THandlingAction]",
+      "category": "Class / Generic Type",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+      "description": "Stage-level error type definition owned by one concrete Stage; distinct programmatic type from SPUErrorTypeDefinition (neither is alias or subtype of the other)."
+    },
+    {
+      "number": 25,
+      "name": "StageError[TErrorOccurrenceContext]",
+      "category": "Class / Generic Type",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+      "description": "Stage-level error occurrence representing one actual occurrence of an error within a Stage; references exactly one registered StageErrorTypeDefinition."
+    },
+    {
+      "number": 26,
+      "name": "StageErrorTypeDefinitionRegistry[TErrorTypeDefinition]",
+      "category": "Class / Generic Type",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+      "description": "Stage-level registry that stores and resolves StageErrorTypeDefinition instances for exactly one owning Stage; exclusively owned and allocated by the Pipeline per Stage."
+    },
+    {
+      "number": 27,
+      "name": "Error Type Definition",
+      "category": "Entity / Concept",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+      "description": "Conceptual entity describing a specialized kind of error that may occur within its owning SPU or Stage; registered before being referenced by occurrences; not itself an Error Occurrence."
+    },
+    {
+      "number": 28,
+      "name": "Error Occurrence",
+      "category": "Entity / Concept",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+      "description": "Conceptual entity representing one actual occurrence of an error; references the registered Error Type Definition that identifies its kind and carries occurrence-specific information without duplicating the complete definition."
+    },
+    {
+      "number": 29,
+      "name": "Error Registry",
+      "category": "Entity / Concept",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+      "description": "Conceptual entity that stores and resolves Error Type Definitions for exactly one owning SPU or Stage; SPU-level and Stage-level registries are distinct programmatic types."
+    },
+    {
+      "number": 30,
+      "name": "Step Composition Association Coordination Contract",
+      "category": "Architectural Design / Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+      "description": "Cross-cutting coordination contract (documentId: pipeline.step-composition.association-coordination.contract) governing association relationships and their use by Step Composition; does not define a Generic Supporting Unit or universal runtime component type."
+    },
+    {
+      "number": 31,
+      "name": "StepCompositionAssociationCoordination",
+      "category": "Component / Coordination Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+      "description": "The coordination component owned by Concrete Step Composition that establishes and maintains explicit relationships between Step-internal component instances and Step-owned target scopes, binding each authorized invocation to the exact relationship."
+    },
+    {
+      "number": 32,
+      "name": "Association",
+      "category": "Entity / Concept",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+      "description": "An explicit relationship between one concrete Step-internal runtime component instance and one target scope within the owning Step instance; distinct from both the component instance and the target."
+    },
+    {
+      "number": 33,
+      "name": "AssociationTarget",
+      "category": "Entity / Concept",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+      "description": "The Step-owned scope to which a component is applicable under an association; not necessarily the exact subject/resource acted upon by every invocation or operation."
+    },
+    {
+      "number": 34,
+      "name": "AssociationIdentity",
+      "category": "Entity / Concept",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+      "description": "The identity of the association relationship itself, distinct from the component instance identity and target identity; identifies exactly one component-instance-to-target relationship within one owning Step instance."
+    },
+    {
+      "number": 35,
+      "name": "InvocationBinding",
+      "category": "Entity / Concept",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+      "description": "The explicit selection of one association context under which a particular invocation or activity is authorized; binds each invocation to the exact Association selected by Step Composition."
+    },
+    {
+      "number": 36,
+      "name": "Component Instance Identity",
+      "category": "Conceptual Identity Role",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+      "description": "Conceptual identity role identifying the concrete runtime component instance participating in an association; must not be derived from or overloaded to represent an association or target identity."
+    },
+    {
+      "number": 37,
+      "name": "Component Association Identity",
+      "category": "Conceptual Identity Role",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+      "description": "Conceptual identity role identifying one particular relationship between a component instance and a target scope within the owning Step instance."
+    },
+    {
+      "number": 38,
+      "name": "Component Invocation Identity",
+      "category": "Conceptual Identity Role",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+      "description": "Conceptual identity role identifying one invocation/activity; remains distinct from instance, association, and target identities."
+    },
+    {
+      "number": 39,
+      "name": "Step Composition Internal Component Lifecycle Coordination Contract",
+      "category": "Architectural Design / Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+      "description": "Cross-cutting contract (documentId: pipeline.step-composition.internal-component-lifecycle-coordination.contract) governing Step Composition lifecycle authority, eligibility, quiescence, reuse, release, and evidence independence for Step-internal runtime components."
+    },
+    {
+      "number": 40,
+      "name": "StepCompositionInternalComponentLifecycleCoordination",
+      "category": "Component / Coordination Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+      "description": "The coordination component owned by Concrete Step Composition that makes lifecycle decisions (eligibility, admission, invocation authorization, quiescence, reuse, release) without imposing a common technical lifecycle implementation."
+    },
+    {
+      "number": 41,
+      "name": "Runtime Instance Lifetime",
+      "category": "Conceptual Lifetime",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+      "description": "Conceptual lifetime of one concrete runtime component instance; distinct from association, invocation, operation, resource capability, and output/evidence retention lifetimes."
+    },
+    {
+      "number": 42,
+      "name": "Association Lifetime",
+      "category": "Conceptual Lifetime",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+      "description": "Conceptual lifetime of each relationship between a component instance and a Step-owned target scope; ending an association does not by itself release the runtime instance."
+    },
+    {
+      "number": 43,
+      "name": "Invocation or Activity Lifetime",
+      "category": "Conceptual Lifetime",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+      "description": "Conceptual lifetime of one authorized invocation, activity, subscription activation, or other specialized work unit; completing an invocation does not by itself require instance release."
+    },
+    {
+      "number": 44,
+      "name": "Operation Lifetime",
+      "category": "Conceptual Lifetime",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+      "description": "Where component behavior defines nested operations, each operation/attempt lifetime is distinct from its enclosing invocation lifetime (e.g., Error Handling operation attempts, Observation subscriptions)."
+    },
+    {
+      "number": 45,
+      "name": "Resource Capability Lifetime",
+      "category": "Conceptual Lifetime",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+      "description": "Conceptual lifetime of borrowed views, handles, callbacks, registrations, subscriptions, leases, or other technical access resources; retaining output/evidence must not implicitly retain these technical resources."
+    },
+    {
+      "number": 46,
+      "name": "Output and Evidence Retention Lifetime",
+      "category": "Conceptual Lifetime",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+      "description": "Conceptual lifetime during which produced results, records, entries, or historical evidence must remain available and interpretable; retaining evidence does not require retaining the runtime instance or its technical resources."
+    },
+    {
+      "number": 47,
+      "name": "Nine Specialized Supporting Pattern Contracts",
+      "category": "Feature / Contract Set",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Supporting_Patterns_Integration_Review.md",
+      "description": "The nine Behavioral, Association, and Lifecycle contracts for Validator Unit, Observation Unit, and Error Handling Unit (3 patterns x 3 contracts), each retaining its own specialized behavior, result, identity, association, lifecycle, and custody semantics."
+    },
+    {
+      "number": 48,
+      "name": "Supporting Pattern Integration Review",
+      "category": "Architectural Design / Decision Record",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Common/Supporting_Patterns_Integration_Review.md",
+      "description": "Architectural decision record concluding that commonality is a pair of Step Composition responsibilities (association coordination and lifecycle coordination), leading to the two Framework-level coordination contracts while keeping all Association and Lifecycle specialization contracts per pattern."
+    },
+    {
+      "number": 49,
+      "name": "Step Error Handling Contract",
+      "category": "Class / Component",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Contract.json",
+      "description": "Step-owned optional Supporting Unit callable (Error Handling Unit) that executes authorized handling operations against target occurrences/resources and produces THandlingOperationResult values until the publication acceptance/custody transfer point; retains specialized behavioral, result, association, lifecycle, identity, and custody semantics without a universal Supporting Unit abstraction."
+    },
+    {
+      "number": 50,
+      "name": "ErrorHandlerResult[THandlingOperationEntry, TErrorHandlingContext]",
+      "category": "Class / Generic Type",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlerResult_Contract.json",
+      "description": "Aggregate of one or more error-handling operation executions produced by an Error Handling Unit; preserves producing Unit identity, Association/target provenance, invocation/attempt/operation identities, target occurrence references, and per-operation structured results; carried as an independent optional errorHandlerResult element of StepExecutionResult."
+    },
+    {
+      "number": 51,
+      "name": "OperationEntryPublisher Protocol",
+      "category": "Class / Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/OperationEntryPublisher_Contract.json",
+      "description": "Step-specific composition-owned reserve/publish/status/release protocol for ErrorHandlingOperationEntry delivery; atomic acceptance linearization, complete-entry retention capacity, per-invocation Publisher capability, and no-fail ownership handoff boundary; authoritative delivery path for operation entries."
+    },
+    {
+      "number": 52,
+      "name": "PublicationReservation",
+      "category": "Class / Entity",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/PublicationReservation_Contract.json",
+      "description": "Opaque, single-use publication capability issued by the OperationEntryPublisher; reserves complete-entry retention capacity and handoff path for exactly one Handling Operation Attempt; states Reserved/Consumed/Released with forbidden transitions and capacity invariant TotalCapacity >= ReservedCapacity + OccupiedCapacity."
+    },
+    {
+      "number": 53,
+      "name": "Single Step Publication Specialization Contract",
+      "category": "Class / Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json",
+      "description": "Mandatory per-Step concrete instantiation of publication protocol representations, Recovery Owner and recovery procedure, identity rules, publication-status retention, and end-to-end state/custody trace for Single Steps using ErrorHandlingUnits and an OperationEntryPublisher."
+    },
+    {
+      "number": 54,
+      "name": "Step Supporting Error Handling Unit Association Contract",
+      "category": "Architectural Design / Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Association_Contract.json",
+      "description": "Association between an Error Handling Unit instance and a Step-owned target scope; identifies unitAssociationIdentity, targetIdentity, and owning step; establishes applicability only without transfer of association-management authority to the target."
+    },
+    {
+      "number": 55,
+      "name": "Step Supporting Error Handling Unit Lifecycle Contract",
+      "category": "Architectural Design / Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Lifecycle_Contract.json",
+      "description": "Lifecycle milestones and authority for Error Handling Unit instances (provisioned, prepared, ready, admitted, available/in-use, quiescing, retained-for-reuse, released); Step Composition owns eligibility/admission/quiescence/release; unit lifetime is distinct from association, invocation, operation, publisher, and result-retention lifetimes."
+    },
+    {
+      "number": 56,
+      "name": "SPU Validator Unit Contract (Step Supporting Validator Unit)",
+      "category": "Class / Component",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Contract.json",
+      "description": "Optional supporting pattern selected by a concrete Step for validation responsibilities; retains specialized behavioral and result semantics; validation conclusions remain domain results, not automatic invocation failures; SPUValidatorResult carried independently in SPUExecutionResult/StepExecutionResult optional slots."
+    },
+    {
+      "number": 57,
+      "name": "Step Supporting Validator Unit Association Contract",
+      "category": "Architectural Design / Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Association_Contract.json",
+      "description": "Identity-bearing relationship between a Validator Unit instance and a Step-owned validation target scope (SPU, owning Step, or other internal scope); validatorUnitAssociationIdentity distinct from participant identities; Step Composition is sole authority for establishing/changing/ending associations."
+    },
+    {
+      "number": 58,
+      "name": "Step Supporting Validator Unit Lifecycle Contract",
+      "category": "Architectural Design / Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Lifecycle_Contract.json",
+      "description": "Provisioning, readiness, admission, invocation eligibility, quiescence, reuse, release, and independent retention of Validator Unit instances; lifetime distinct from association/invocation/operation lifetimes; no universal state machine, pool, scheduler, or lifecycle manager imposed."
+    },
+    {
+      "number": 59,
+      "name": "SPU Observation Unit Contract (Step Supporting Observation Unit)",
+      "category": "Class / Component",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Contract.json",
+      "description": "Optional supporting pattern for observation activity (call, callback, sampling, subscription) against Step-owned target scopes; observation records remain independent of StepExecutionResult and preserve provenance/custody; association establishes applicability only without guaranteeing active observation."
+    },
+    {
+      "number": 60,
+      "name": "Step Supporting Observation Unit Association Contract",
+      "category": "Architectural Design / Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Association_Contract.json",
+      "description": "Relationship between an Observation Unit instance and a Step-owned observation target scope; observationUnitAssociationIdentity, observationInvocationIdentity, observationRecordIdentity provenance preserved historically after dissociation; Step Composition is sole authority for establishment/change/dissociation."
+    },
+    {
+      "number": 61,
+      "name": "Step Supporting Observation Unit Lifecycle Contract",
+      "category": "Architectural Design / Contract",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Lifecycle_Contract.json",
+      "description": "Instance readiness and lifecycle preconditions for observation-unit association establishment and use; separation of association existence from instance admission, active observation activity, and observation-record retention; historical association metadata retained independently of runtime instance lifetime."
+    }
+  ]
+}
+

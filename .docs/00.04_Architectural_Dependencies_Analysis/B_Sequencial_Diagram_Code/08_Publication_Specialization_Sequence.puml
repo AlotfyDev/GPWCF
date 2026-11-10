@@ -1,0 +1,37 @@
+@startuml
+title Single Step Publication Specialization - Atomic Acceptance & Custody
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+skinparam roundcorner 0
+
+participant "Error Handling Unit" as EHU
+participant "OperationEntryPublisher" as Pub
+participant "Recovery Owner" as RO
+participant "Step-Specific Error Handling Composition" as Comp
+
+EHU -> Pub : reserve(attemptIdentity)
+Pub --> EHU : ReservationGrant (capacity committed)
+EHU -> EHU : prepare ErrorHandlingOperationEntry
+(non-throwing handoff representation)
+EHU -> Pub : publish(reservation, entry)
+alt acceptance succeeds
+  Pub -> Pub : atomic acceptance linearization point
+  Pub --> EHU : PublicationAccepted
+  Pub -> Comp : retain accepted entry
+else ambiguous outcome (lost acknowledgement)
+  EHU -> Pub : get_publication_status(reservation)
+  Pub --> EHU : Consumed | Reserved | Released
+  alt Consumed
+    Pub --> EHU : publication accepted - do not resubmit
+  else Reserved
+    EHU -> Pub : retry publish same logical entry
+  else Released & pending result
+    EHU -> RO : transfer custody (verifiable protocol)
+    RO --> EHU : custody confirmed
+end
+
+note right of Pub : No-fail ownership transfer boundary
+Recovery Owner handles ambiguous acceptance
+Entry identity preserved for idempotent retry
+
+@enduml

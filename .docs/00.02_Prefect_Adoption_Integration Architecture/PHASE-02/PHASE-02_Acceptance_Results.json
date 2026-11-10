@@ -1,0 +1,118 @@
+{
+  "documentType": "PrefectDeploymentBackedStageAcceptanceResults",
+  "documentId": "GPWCF-PREFECT-PHASE-02-ACCEPTANCE",
+  "documentVersion": "1.0.0",
+  "status": "same-host-two-worker-deployment-stage-invocation-qualified; production-integration-not-qualified",
+  "executionProfile": {
+    "prefect": "3.9.2",
+    "python": "3.15.1",
+    "platform": "Windows x64",
+    "workPool": "gpwcf-phase02-stage-qualified-pool",
+    "workers": [
+      "gpwcf-stage-worker-01",
+      "gpwcf-stage-worker-02"
+    ],
+    "workerFlowRunLimit": 1,
+    "apiServerWorkers": 1,
+    "database": "SQLite"
+  },
+  "acceptance": [
+    {
+      "id": "P02-ACC-01",
+      "criterion": "The Root is a native Prefect Flow Run and completes a two-Stage invocation.",
+      "result": "PASS",
+      "evidence": "Five of five Root Flow Runs completed."
+    },
+    {
+      "id": "P02-ACC-02",
+      "criterion": "Two independently registered Stage Deployments are invoked from each Root invocation.",
+      "result": "PASS",
+      "evidence": "Ten Stage Deployment Flow Runs across five Root invocations; both deployment names are recorded in each Root result."
+    },
+    {
+      "id": "P02-ACC-03",
+      "criterion": "The qualified work pool contains exactly the two expected ONLINE Process Workers before execution.",
+      "result": "PASS",
+      "evidence": "The qualification script checked the exact ONLINE worker set before the batch: gpwcf-stage-worker-01 and gpwcf-stage-worker-02."
+    },
+    {
+      "id": "P02-ACC-04",
+      "criterion": "Sibling Stage Deployments execute on distinct Process Worker instances.",
+      "result": "PASS",
+      "evidence": "Distinct worker labels were recorded and validated for both Stages in all five Root invocations."
+    },
+    {
+      "id": "P02-ACC-05",
+      "criterion": "Sibling Stage Flow Run execution intervals overlap in repeated runs.",
+      "result": "PASS",
+      "evidence": "Positive overlap in five of five runs; see PHASE-02_Repeatability_Evidence.json."
+    },
+    {
+      "id": "P02-ACC-06",
+      "criterion": "The Stage Flow Run identity matches the Deployment Flow Run identity.",
+      "result": "PASS",
+      "evidence": "Validated for all ten Stage Flow Runs."
+    },
+    {
+      "id": "P02-ACC-07",
+      "criterion": "Stage Flow Run native parent_task_run_id matches the Prefect-generated deployment invocation Task Run.",
+      "result": "PASS",
+      "evidence": "Validated for all ten Stage Flow Runs."
+    },
+    {
+      "id": "P02-ACC-08",
+      "criterion": "The synthetic deployment invocation Task Run links back to the correct Root dispatch Task Run.",
+      "result": "PASS",
+      "evidence": "task_inputs.__parents__ links verified for all ten Stage invocations."
+    },
+    {
+      "id": "P02-ACC-09",
+      "criterion": "Stage identity, Stage invocation identity and Pipeline invocation identity remain separate from Prefect operational IDs.",
+      "result": "PASS",
+      "evidence": "Domain correlation fields and Prefect Flow/Task Run IDs are independently recorded and compared in all runs."
+    },
+    {
+      "id": "P02-ACC-10",
+      "criterion": "The Stage Deployment returns a persisted domain result that the Root can retrieve.",
+      "result": "PASS",
+      "evidence": "persist_result=True; both Stage results were loaded by the Root in all five invocations (ten Stage results)."
+    },
+    {
+      "id": "P02-ACC-11",
+      "criterion": "Stage-to-Step native Subflow boundaries and parent correlations remain intact.",
+      "result": "PASS",
+      "evidence": "Twenty Step Subflow invocations; each synthetic child-subflow Task links to its Stage-owned Step dispatch Task."
+    },
+    {
+      "id": "P02-ACC-12",
+      "criterion": "SPU Tasks execute within their owning Step Flow Run and the Stage does not bypass the Step boundary.",
+      "result": "PASS",
+      "evidence": "Forty SPU Task Runs across the five Root invocations; SPU flow_run_id matches the owning Step Flow Run."
+    },
+    {
+      "id": "P02-ACC-13",
+      "criterion": "SPUExecutionResult and StepExecutionResult remain distinct from Prefect State.",
+      "result": "PASS",
+      "evidence": "Typed fixture results are returned in the Stage domain result; Prefect State is recorded separately."
+    },
+    {
+      "id": "P02-ACC-14",
+      "criterion": "The deployment code source and result storage are accessible to workers on a different host.",
+      "result": "NOT_TESTED",
+      "evidence": "This qualification uses same-host LocalStorage and local result storage under PREFECT_HOME."
+    },
+    {
+      "id": "P02-ACC-15",
+      "criterion": "Production GPWCF Stage/Step/SPU classes are bound to Prefect Deployments.",
+      "result": "OUT_OF_SCOPE_NOT_PROVEN",
+      "evidence": "Contract-shaped fixtures only; no production GPWCF classes were modified or bound."
+    },
+    {
+      "id": "P02-ACC-16",
+      "criterion": "Deployment failure, cancellation, timeout, retry and worker restart semantics are qualified.",
+      "result": "NOT_TESTED",
+      "evidence": "Success-path deployment invocation only; failure and lifecycle settlement remain follow-up work."
+    }
+  ],
+  "phaseDisposition": "The same-host two-Process-Worker deployment profile qualifies concurrent sibling Stage Flow execution, native identity correlation, indirect parent linkage, Stage result retrieval and preservation of the existing Step/SPU hierarchy. It does not qualify multi-host storage, production GPWCF binding, failure/cancellation/recovery semantics or capacity beyond two concurrent Stages."
+}

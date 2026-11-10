@@ -1,0 +1,31 @@
+@startuml
+title Error Handling Sequence - Reservation-Backed Operation Entry Publication
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+skinparam roundcorner 0
+
+participant "Step Composition" as SC
+participant "Error Handling Unit" as EHU
+participant "OperationEntryPublisher" as Pub
+participant "PublicationReservation" as Res
+participant "ErrorHandlerResult[THandlingOperationEntry,TErrorHandlingContext]" as EHR
+
+SC -> EHU : authorize invocation under Association
+EHU -> Pub : reserve(handlingOperationAttemptIdentity)
+Pub -> Res : grant ReservationGrant (Reserved)
+Res --> EHU : PublicationReservation
+EHU -> EHU : produce THandlingOperationResult
+EHU -> Pub : publish(reservation, ErrorHandlingOperationEntry)
+Pub -> Pub : atomic acceptance linearization point
+Pub --> EHU : PublicationAccepted (Consumed)
+Pub -> Pub : retain complete entry
+EHU -> EHR : assemble operation entries
+EHR --> SC : ErrorHandlerResult aggregate
+SC -> SC : integrate as optional errorHandlerResult
+of StepExecutionResult[TOutput]
+
+note right of Pub : Atomic acceptance: entry retained iff reservation Consumed
+No partial acceptance
+Reservation states: Reserved -> Consumed/Released
+
+@enduml

@@ -1,0 +1,25 @@
+@startuml
+title Prefect Integration Sequence - GPWCF to Native Prefect Binding
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+skinparam roundcorner 0
+
+participant "Root Flow Run" as Root
+participant "Stage Parent Flow/Deployment" as StageFlow
+participant "Step Subflow" as StepSub
+participant "SPU Task" as SPUTask
+participant "GPWCF Domain Contract" as GW
+
+Root -> StageFlow : run_deployment(as_subflow=True)
+StageFlow -> StepSub : invoke_step dispatch Task
+StepSub -> SPUTask : execute SPU as native Task
+SPUTask --> GW : return SPUExecutionResult (not Prefect State)
+GW --> StepSub : domain result preserved
+StepSub --> StageFlow : Step result
+StageFlow --> Root : Stage result via persist_result=True
+
+note right of Root : Domain identities != Prefect operational identities
+Prefect State = operational evidence, not domain result
+GPWCF contracts remain runtime-independent
+
+@enduml

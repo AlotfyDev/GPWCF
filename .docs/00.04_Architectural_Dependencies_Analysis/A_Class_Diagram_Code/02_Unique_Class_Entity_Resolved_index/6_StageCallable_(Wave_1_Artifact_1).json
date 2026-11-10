@@ -1,0 +1,10 @@
+{
+  "serialNumber": 6,
+  "name": "StageCallable (Wave 1 Artifact 1)",
+  "category": "Architectural Design / Feature",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+  "description": "Wave 1 detailed design (artifact 1) defining the framework-owned, workflow-runtime-independent callable boundary of a GPWCF Stage. Makes a concrete Stage invocable as one bounded functional unit by a consuming workflow or native external workflow element while preserving Stage ownership of internal Step composition and Stage-specific flow semantics.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

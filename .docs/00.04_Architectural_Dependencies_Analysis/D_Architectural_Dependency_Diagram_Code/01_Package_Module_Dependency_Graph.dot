@@ -1,0 +1,22 @@
+digraph "Package & Module Dependency Graph" {
+  rankdir=LR;
+  node [shape=box, style=filled, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=8, len=1.5];
+  label="Package & Module Dependency Graph";
+  labelloc=t;
+  Core [fillcolor="#e6f3ff", tooltip="Core: domain contracts, standard-library-only"];
+  CoreIdentities [fillcolor="#e6f3ff", tooltip="core.identities: nominal identity value types"];
+  CoreDiagnostics [fillcolor="#e6f3ff", tooltip="core.diagnostics: optional Diagnostic value contract"];
+  SupportingPatterns [fillcolor="#fff2e6", tooltip="Optional Supporting Patterns (Validator, Error Handling, Observation)"];
+  PrefectIntegration [fillcolor="#ffe6e6", tooltip="Prefect Integration Package: Prefect 3.9.2 opt-in extra"];
+  PublicAPI [fillcolor="#e6ffe6", tooltip="Curated stable Public API boundary"];
+  BuildBackend [fillcolor="#f0f0f0", tooltip="setuptools==84.2.1 / build_meta (isolated)"];
+  "Core" -> "CoreIdentities" [label="defines", style=solid, color=#0066cc];
+  "Core" -> "CoreDiagnostics" [label="defines (optional)", style=solid, color=#0066cc];
+  "Core" -> "SupportingPatterns" [label="contracts for", style=dashed, color=#0066cc];
+  "Core" -> "PublicAPI" [label="exposes", style=solid, color=#0066cc];
+  "SupportingPatterns" -> "PrefectIntegration" [label="opt-in binding", style=dashed, color=#cc6600];
+  "PrefectIntegration" -> "PublicAPI" [label="exposes", style=solid, color=#cc6600];
+  "BuildBackend" -> "Core" [label="isolated build", style=dotted, color=#666666];
+  "PrefectIntegration" -> "Core" [label="NO dependency", style=dashed, color=#ff0000];
+}

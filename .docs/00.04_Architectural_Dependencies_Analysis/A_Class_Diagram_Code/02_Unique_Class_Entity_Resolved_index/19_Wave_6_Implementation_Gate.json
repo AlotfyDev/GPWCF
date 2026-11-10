@@ -1,0 +1,10 @@
+{
+  "serialNumber": 19,
+  "name": "Wave 6 Implementation Gate",
+  "category": "Feature / Change Control",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "Do not create pyproject.toml or install new project build dependencies until all Wave 6 artifacts and governing-artifact reconciliation are accepted; next step: design 15,00_Packaging.json.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

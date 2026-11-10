@@ -1,0 +1,10 @@
+{
+  "serialNumber": 40,
+  "name": "StepCompositionInternalComponentLifecycleCoordination",
+  "category": "Component / Coordination Contract",
+  "type": "Component",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+  "description": "The coordination component owned by Concrete Step Composition that makes lifecycle decisions (eligibility, admission, invocation authorization, quiescence, reuse, release) without imposing a common technical lifecycle implementation.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

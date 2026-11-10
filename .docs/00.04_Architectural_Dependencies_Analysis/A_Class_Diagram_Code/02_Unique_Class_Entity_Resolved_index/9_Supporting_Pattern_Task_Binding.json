@@ -1,0 +1,10 @@
+{
+  "serialNumber": 9,
+  "name": "Supporting Pattern Task Binding",
+  "category": "Feature / Pattern Binding",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+  "description": "Native Prefect realization of selected Supporting Pattern (Validation, Error Handling, Observation) execution as Prefect Tasks, preserving each pattern's specialized behavior, result, identity, association, lifecycle, and custody contract.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

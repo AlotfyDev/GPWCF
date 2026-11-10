@@ -1,0 +1,10 @@
+{
+  "serialNumber": 17,
+  "name": "Atomic Acceptance / Custody Transfer Boundary",
+  "category": "Feature / Boundary",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/11,00_Publication.json",
+  "description": "The equivalence between reservation consumption and complete-entry retention, with one unambiguous linearization point; no-fail ownership transfer and complete-entry capacity reservation before operation execution.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

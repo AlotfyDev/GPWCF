@@ -1,0 +1,10 @@
+{
+  "serialNumber": 16,
+  "name": "PHASE-01/02 Qualification Limits",
+  "category": "Feature / Evidence Boundary",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+  "description": "The exact PHASE-01/02 evidence and qualification limits: native hierarchy qualification, same-host two-worker deployment qualification, nondeterministic Stage sibling overlap, serialized Step sibling subflows, SPU Task fan-out/fan-in evidence; production GPWCF binding remains unqualified.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

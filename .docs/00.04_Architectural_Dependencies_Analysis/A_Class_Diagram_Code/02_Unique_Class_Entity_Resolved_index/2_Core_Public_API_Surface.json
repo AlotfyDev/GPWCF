@@ -1,0 +1,10 @@
+{
+  "serialNumber": 2,
+  "name": "Core Public API Surface",
+  "category": "Class / API Surface",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Core Public API (PUBLIC-CORE) with namespace gpwcf.public_api.core; owner: GPWCF Core; availability: Always available, no Prefect dependency; exposes Stage/Step/SPU callable and result contracts.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

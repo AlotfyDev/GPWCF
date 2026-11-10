@@ -1,0 +1,10 @@
+{
+  "serialNumber": 8,
+  "name": "Core Runtime Dependency Metadata",
+  "category": "Feature / Dependency Policy",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "Core base runtime dependencies remain empty; Core-only installation/import succeeds without Prefect, pygccxml, or Generator assets.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}

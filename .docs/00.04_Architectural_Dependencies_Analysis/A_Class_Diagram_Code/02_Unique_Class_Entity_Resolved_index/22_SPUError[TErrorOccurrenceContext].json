@@ -1,0 +1,10 @@
+{
+  "serialNumber": 22,
+  "name": "SPUError[TErrorOccurrenceContext]",
+  "category": "Class / Generic Type",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+  "description": "SPU-level error occurrence representing one actual occurrence of an error within an SPU; references exactly one registered SPUErrorTypeDefinition and carries occurrence-specific information via TErrorOccurrenceContext.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

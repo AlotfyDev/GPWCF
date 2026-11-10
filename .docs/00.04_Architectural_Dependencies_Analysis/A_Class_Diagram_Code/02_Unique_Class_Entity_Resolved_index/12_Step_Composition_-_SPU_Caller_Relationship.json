@@ -1,0 +1,10 @@
+{
+  "serialNumber": 12,
+  "name": "Step Composition - SPU Caller Relationship",
+  "category": "Feature / Relationship",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+  "description": "The concrete owning Step Composition selects and invokes the SPU, supplies its specialized input/dependencies, and consumes SPUExecutionResult; owns internal composition and flow decisions involving the SPU.",
+  "resolvedFrom": "02,00_Step_SPU_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "step-spu-level-domain-features-entities-classes-components-index"
+}

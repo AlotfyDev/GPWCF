@@ -1,0 +1,25 @@
+@startuml
+title SPU Execution Sequence - Step Processing Unit Invocation
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+skinparam roundcorner 0
+
+participant "Step Composition" as SC
+participant "Step Processing Unit (SPU)" as SPU
+participant "SPUExecutionResult[TOutput]" as SER
+
+SC -> SPU : execute(input: TInput)
+SPU --> SER : construct SPUExecutionResult
+processingArtifact
+spuErrorOccurrences
+validatorResult
+TErrorOccurrenceContext
+SER --> SPU : return result
+SPU --> SC : SPUExecutionResult[TOutput]
+
+note right of SC : Step Composition selects SPU,
+supplies input, consumes result
+SPU does NOT assemble StepExecutionResult
+SPU does NOT decide Step flow
+
+@enduml

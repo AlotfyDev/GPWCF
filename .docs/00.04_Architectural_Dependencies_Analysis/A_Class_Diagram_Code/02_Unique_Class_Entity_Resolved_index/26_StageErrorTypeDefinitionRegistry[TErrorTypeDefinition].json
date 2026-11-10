@@ -1,0 +1,10 @@
+{
+  "serialNumber": 26,
+  "name": "StageErrorTypeDefinitionRegistry[TErrorTypeDefinition]",
+  "category": "Class / Generic Type",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+  "description": "Stage-level registry that stores and resolves StageErrorTypeDefinition instances for exactly one owning Stage; exclusively owned and allocated by the Pipeline per Stage.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

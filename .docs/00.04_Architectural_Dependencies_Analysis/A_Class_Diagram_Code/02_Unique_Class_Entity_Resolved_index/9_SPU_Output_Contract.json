@@ -1,0 +1,10 @@
+{
+  "serialNumber": 9,
+  "name": "SPU Output Contract",
+  "category": "Feature / Contract Rule",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+  "description": "Return SPUExecutionResult[TOutput] for a normally completed invocation, preserving results and evidence assigned to this SPU's invocation contract; the SPU does not assemble StepExecutionResult or decide the Step's next flow transition.",
+  "resolvedFrom": "02,00_Step_SPU_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "step-spu-level-domain-features-entities-classes-components-index"
+}

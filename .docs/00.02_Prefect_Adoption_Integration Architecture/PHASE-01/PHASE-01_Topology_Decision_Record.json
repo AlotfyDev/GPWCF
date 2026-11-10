@@ -1,0 +1,142 @@
+{
+  "documentType": "PrefectNativeHierarchyTopologyDecisionRecord",
+  "documentId": "GPWCF-PREFECT-PHASE-01-TOPOLOGY",
+  "documentVersion": "1.0.3",
+  "status": "native-hierarchy-qualified; sibling-flow-concurrency-not-deterministic",
+  "target": {
+    "prefectVersion": "3.9.2",
+    "pythonVersion": "3.15.1",
+    "platform": "Windows x64",
+    "executionProfile": "local Prefect API server; 127.0.0.1:4200/api; one API server worker with SQLite; UI and scheduler disabled; ThreadPoolTaskRunner(max_workers=4) at Root, Stage and Step Flow levels. API-server worker count and client task-runner thread count are separate settings."
+  },
+  "topology": [
+    {
+      "gpwcfBoundary": "Pipeline Root",
+      "prefectConstruct": "Native Prefect Flow",
+      "implementation": "pipeline_root_flow",
+      "invocationMechanism": "Two Prefect dispatch Tasks are submitted. Each dispatch Task invokes a distinct Stage-specific Flow object created with Flow.with_options(name=...).",
+      "nativeEvidence": "One Root Flow Run; two Stage Flow Runs; each child Stage Flow has a native parent_task_run_id.",
+      "semanticRule": "Root owns inclusion and invocation of Stage Parent Flows; Prefect performs orchestration. Dispatch Tasks do not become GPWCF semantic components."
+    },
+    {
+      "gpwcfBoundary": "Stage",
+      "prefectConstruct": "Native Prefect Flow / Stage Parent Flow",
+      "implementation": "stage_parent_flow",
+      "invocationMechanism": "invoke_stage dispatch Task invokes the Stage-specific Flow object. Stage submits Step dispatch Tasks; each dispatch invokes the Step public callable.",
+      "nativeEvidence": "Each Stage is a distinct native Flow Run correlated to the Root Flow Run and native dispatch Task Run.",
+      "semanticRule": "Stage controls its Step membership and Stage-specific composition. It does not call SPU Tasks directly."
+    },
+    {
+      "gpwcfBoundary": "Step",
+      "prefectConstruct": "Native Prefect Flow / Step Subflow",
+      "implementation": "_step_subworkflow",
+      "invocationMechanism": "StepFacade.execute(input) is the Stage-facing public callable. It invokes a Step-specific Flow object created with Flow.with_options(name=...).",
+      "nativeEvidence": "Each Step is a distinct native Flow Run correlated to its owning Stage Flow and native dispatch Task Run.",
+      "semanticRule": "The Step public callable is the only Stage-facing entry into the Step. SPU invocation and Step result assembly remain inside the Step Subflow."
+    },
+    {
+      "gpwcfBoundary": "SPU",
+      "prefectConstruct": "Native Prefect Task",
+      "implementation": "spu_normalize; spu_measure",
+      "invocationMechanism": "The Step Flow submits both SPU Tasks to its ThreadPoolTaskRunner and joins their futures.",
+      "nativeEvidence": "Each SPU has an independently observable native Task Run ID; both SPU tasks completed for every tested Step invocation.",
+      "semanticRule": "SPUs execute inside the owning Step Subflow. SPUExecutionResult remains distinct from StepExecutionResult."
+    }
+  ],
+  "dispatchMechanismDecision": {
+    "reason": "Prefect 3.9.2 Flow objects do not expose a submit method; Task objects do. The PoC therefore uses narrow Prefect Task dispatch wrappers to invoke native child Flow objects while preserving Prefect parent_task_run_id relationships.",
+    "wrappers": [
+      "invoke_stage",
+      "invoke_step"
+    ],
+    "constraints": [
+      "Dispatch wrappers carry no GPWCF business or composition semantics.",
+      "They do not select SPUs, implement Step Composition, or assemble domain results.",
+      "The public StepFacade.execute method remains the only Stage-facing Step entry point."
+    ]
+  },
+  "flowIdentityDecision": {
+    "mechanism": "Flow.with_options(name=...) creates a Stage- or Step-specific named Flow object at the target integration boundary.",
+    "rationale": "Distinct Stage/Step specializations remain separately identifiable in Prefect native Flow Run records.",
+    "boundary": "The Prefect Flow name is an operational label, not a replacement for GPWCF domain identity or invocation identity."
+  },
+  "concurrencyFindings": {
+    "repeatedRuns": [
+      {
+        "runId": "run-5f8ffd7d-ec75-4380-8d25-cf8054a2dde0",
+        "profile": "local-prefect-server-api-sqlite-single-worker",
+        "rootSiblingStageFlowsOverlap": false,
+        "rootStageOverlapSeconds": 0,
+        "stepSiblingOverlapByStage": {
+          "stageA": false,
+          "stageB": false
+        },
+        "spuTaskFanout": "4/4 Step invocations"
+      },
+      {
+        "runId": "run-c52c64f9-44bf-4cf5-85eb-85f6834d1cb9",
+        "profile": "local-prefect-server-api-sqlite-single-worker",
+        "rootSiblingStageFlowsOverlap": true,
+        "rootStageOverlapSeconds": 5.472557,
+        "stepSiblingOverlapByStage": {
+          "stageA": false,
+          "stageB": false
+        },
+        "spuTaskFanout": "4/4 Step invocations"
+      },
+      {
+        "runId": "run-0f24960a-b7b0-4285-825f-bc0f18950c67",
+        "profile": "local-prefect-server-api-sqlite-single-worker",
+        "rootSiblingStageFlowsOverlap": true,
+        "rootStageOverlapSeconds": 3.244401,
+        "stepSiblingOverlapByStage": {
+          "stageA": false,
+          "stageB": false
+        },
+        "spuTaskFanout": "4/4 Step invocations"
+      },
+      {
+        "runId": "run-bc923468-7a5e-4c62-8cc8-913b0ddd51ec",
+        "profile": "local-prefect-server-api-sqlite-single-worker; run script using external Prefect home",
+        "rootSiblingStageFlowsOverlap": true,
+        "rootStageOverlapSeconds": 6.489385,
+        "stepSiblingOverlapByStage": {
+          "stageA": false,
+          "stageB": false
+        },
+        "spuTaskFanout": "4/4 Step invocations"
+      }
+    ],
+    "aggregate": {
+      "rootSiblingStageFlowOverlap": "3/4 runs; not deterministic",
+      "stepSiblingSubflowOverlap": "0/8 Stage sibling pairs; serialized in all four runs",
+      "spuTaskFanoutOverlap": "16/16 Step invocations"
+    },
+    "disposition": "The native Root/Stage/Step hierarchy is executable and parent-correlated. However, Root-to-Stage sibling Flow overlap occurred in only three of four repeated runs, so it is not guaranteed. Stage-to-Step sibling Subflows were serialized in all eight observed pairs. Step-internal SPU Task fan-out/fan-in overlapped in every tested Step invocation.",
+    "serverConstraint": "Prefect rejects API-server multi-worker mode when SQLite is the database. Multi-worker API-server mode requires PostgreSQL. This qualification uses the supported single-worker SQLite server profile; ThreadPoolTaskRunner(max_workers=4) is a separate client-side setting.",
+    "designConsequence": "Do not assume independent Generator Stages can execute concurrently merely because Root submits multiple dispatch Tasks. If a Generator scenario requires concurrent Stage Parent Flows, qualify an alternative Prefect-native dispatch/execution profile that preserves Stage Flow identity and explicit parent correlation. Apply the same rule to sibling Step Subflows only where the concrete Step Composition requires it."
+  },
+  "resultAndIdentityDecision": {
+    "domainResults": [
+      "SPUExecutionResult[TOutput]",
+      "StepExecutionResult[TOutput]"
+    ],
+    "operationalState": "Prefect State is captured in separate operational evidence and is not embedded in pipeline-result.json.",
+    "identitySeparation": "GPWCF domain identities and invocation identities are recorded separately from Prefect Flow Run IDs and Task Run IDs.",
+    "errorProbe": "A controlled RuntimeError caused the probe Task to enter FAILED while the probe Flow returned COMPLETED after catching the exception. No GPWCF domain structured result was fabricated."
+  },
+  "qualificationScope": {
+    "fixturesOnly": true,
+    "productionGpwcfClassesBound": false,
+    "generatorStagesBound": false,
+    "supportingUnitsIncluded": false,
+    "specializedContractsModified": false
+  },
+  "nextRequiredWork": [
+    "Retain the qualified native hierarchy boundary mapping as the candidate integration shape.",
+    "Investigate and qualify a deterministic Prefect-native mechanism for concurrent sibling Stage Flow runs while preserving native Flow identity and Root-to-Stage correlation.",
+    "Determine whether actual Generator Stage specializations require sibling Step Subflow concurrency; current evidence shows sibling Step Subflows serialized in the local SQLite profile.",
+    "If multi-worker Prefect API-server execution is considered, first qualify the PostgreSQL-backed server profile and its dependency/operations implications.",
+    "Do not begin production Stage mapping that assumes sibling Stage parallelism until the concurrency gap is resolved."
+  ]
+}

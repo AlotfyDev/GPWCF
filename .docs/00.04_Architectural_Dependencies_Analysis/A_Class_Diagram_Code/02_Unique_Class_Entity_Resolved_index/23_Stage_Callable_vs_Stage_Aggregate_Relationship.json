@@ -1,0 +1,10 @@
+{
+  "serialNumber": 23,
+  "name": "Stage Callable vs Stage Aggregate Relationship",
+  "category": "Feature / Relationship",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/01.00_Stage_Callable.json",
+  "description": "The Stage callable contract is the public invocation boundary of the Stage Aggregate. The Stage Aggregate owns Step membership, Stage Composition, flow semantics, transition meanings, and Stage Flow Result assembly; the callable boundary does not transfer those responsibilities.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

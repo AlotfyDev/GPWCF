@@ -1,0 +1,57 @@
+{
+  "documentType": "PrefectDeploymentStageOpenIntegrationQuestions",
+  "documentId": "GPWCF-PREFECT-PHASE-02-OPEN-QUESTIONS",
+  "documentVersion": "1.0.0",
+  "status": "remaining-qualification-questions",
+  "questions": [
+    {
+      "id": "P02-OPEN-01",
+      "topic": "Multi-host code distribution",
+      "question": "What shared/retrievable code source should be used when Stage Workers execute on different hosts?",
+      "status": "OPEN",
+      "reason": "The current deployment pull step uses a host-local LocalStorage path."
+    },
+    {
+      "id": "P02-OPEN-02",
+      "topic": "Multi-host result storage",
+      "question": "Which shared result-storage backend and custody contract should be used when the Root and Stage Workers do not share a local filesystem?",
+      "status": "OPEN",
+      "reason": "The current Stage result uses local result storage under the same PREFECT_HOME."
+    },
+    {
+      "id": "P02-OPEN-03",
+      "topic": "Higher Stage concurrency",
+      "question": "How should worker count, per-worker flow-run limits and queue capacity be configured for more than two concurrent sibling Stages?",
+      "status": "OPEN",
+      "reason": "Only two concurrent Stage Deployments and two dedicated Process Workers were qualified."
+    },
+    {
+      "id": "P02-OPEN-04",
+      "topic": "Failure and lifecycle settlement",
+      "question": "How should deployment failures, cancellation, timeout, retries, worker loss and interrupted Flow Runs map to GPWCF domain outcomes and safe settlement?",
+      "status": "OPEN",
+      "reason": "Only the successful deployment path was tested."
+    },
+    {
+      "id": "P02-OPEN-05",
+      "topic": "Production functional binding",
+      "question": "How will actual Generator Stage callables, contracts, Step Composition and Supporting Units be bound to the deployment-backed Stage boundary?",
+      "status": "OPEN",
+      "reason": "The PoC uses contract-shaped fixtures and does not modify production GPWCF components."
+    },
+    {
+      "id": "P02-OPEN-06",
+      "topic": "SQLite and API server scale",
+      "question": "Does the target deployment profile require a PostgreSQL-backed Prefect API server and multi-worker API-server operation?",
+      "status": "OPEN",
+      "reason": "This qualification uses a one-worker SQLite API server; the two Process Workers are separate."
+    },
+    {
+      "id": "P02-OPEN-07",
+      "topic": "Non-fatal Windows shutdown warning",
+      "question": "Should the asyncio Proactor ConnectionResetError observed during one Root client shutdown be reproduced and eliminated or documented as a non-fatal client teardown condition?",
+      "status": "OPEN",
+      "reason": "The five-run batch exited with code 0 and all acceptance checks passed, but a ConnectionResetError was logged during client connection teardown."
+    }
+  ]
+}

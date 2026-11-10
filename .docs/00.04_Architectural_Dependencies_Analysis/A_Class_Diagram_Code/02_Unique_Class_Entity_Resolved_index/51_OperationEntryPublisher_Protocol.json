@@ -1,0 +1,10 @@
+{
+  "serialNumber": 51,
+  "name": "OperationEntryPublisher Protocol",
+  "category": "Class / Contract",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.02_Step_Error_Handling/OperationEntryPublisher_Contract.json",
+  "description": "Step-specific composition-owned reserve/publish/status/release protocol for ErrorHandlingOperationEntry delivery; atomic acceptance linearization, complete-entry retention capacity, per-invocation Publisher capability, and no-fail ownership handoff boundary; authoritative delivery path for operation entries.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

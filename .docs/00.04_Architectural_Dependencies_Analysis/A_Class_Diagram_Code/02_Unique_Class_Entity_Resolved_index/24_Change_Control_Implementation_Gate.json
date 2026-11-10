@@ -1,0 +1,10 @@
+{
+  "serialNumber": 24,
+  "name": "Change Control / Implementation Gate",
+  "category": "Feature / Change Control",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Wave 6 Public API proposal; becomes supported consumer contract only after architecture review, governing-artifact reconciliation, and implementation conformance tests; do not create public_api package files or export symbols until six-wave design set and governing PHASE-03 artifacts are reconciled and accepted; next step: cross-wave consistency review of all six waves.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,30 @@
+digraph "02_Step" {
+  rankdir=TB;
+  node [shape=record, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=8];
+  label="02 Step Class Diagram";
+  labelloc=t;
+
+  "StepExecutionResult_TOutput" [label="{StepExecutionResult[TOutput]|Class / Generic Type|TParams: TOutput}", tooltip="Structured result of one Step invocation returned to its owning Stage. Carries the Step-level processing artifact and independently optional Step-specialized validation, error, and error-handling aggr"];
+  "Stage_Flow_Result" [label="{Stage Flow Result|Class / Entity|StepExecutionResult}", tooltip="The result of the Stage's internal Step-execution flow. Independent of any individual StepExecutionResult; its detailed structure and composition policy are Stage-specific. Distinct from Stage outputs"];
+  "OptionalResultContributions_Aggregate" [label="{OptionalResultContributions Aggregate|Class / Entity|ErrorResult\lErrorHandlerResult\lvalidatorResult}", tooltip="Closed aggregate grouping the three baseline optional Step-level result categories (validatorResult, errorResult, errorHandlerResult) for transport through the Step result without redefining their mea"];
+  "Step_Callable" [label="{Step Callable|Architectural Design / Feature|StepExecutionResult}", tooltip="Wave 2 detailed design (artifact 1) defining the stable Stage-facing callable boundary of a Step, including explicit invocation identity and parent Stage correlation, while preserving the Step Aggrega"];
+  "Stage_Callable_vs_StageResult_vs_StepExecutionResult_Separation" [label="{Stage Callable vs StageResult vs StepExecutionResult Separation|Feature / Conceptual Distinction|StepExecutionResult\lStageResult}", tooltip="StepExecutionResult describes one Step invocation that returned a result; it is not a Stage Flow Result and is not a StageResult. StageResult is the result of one Stage invocation returned to its call"];
+  "Stage_Callable_Traceability_Sources" [label="{Stage Callable Traceability Sources|Feature / Relationship|StepExecutionResult}", tooltip="Traceability links to Stage_Level_Architecture.json (Stage bounded orchestration, Stage owns Step composition, Stage Flow Result independent of StepExecutionResult), Step_Contract.json (Stage invokes "];
+  "Observation_Functional_Binding" [label="{Observation Functional Binding|Feature / Pattern Binding|StepExecutionResult}", tooltip="Binding of the Observation Unit pattern to Prefect native execution supporting call, callback, sampling, or subscription activity cardinality; Observation Records remain independent of StepExecutionRe"];
+  "ErrorHandlerResult_THandlingOperationEntry_TErrorHandlingContext" [label="{ErrorHandlerResult[THandlingOperationEntry, TErrorHandlingContext]|Class / Generic Type|ErrorHandlerResult\lStepExecutionResult\lAssociation\lTParams: THandlingOperationEntry, TErrorHandlingContext}", tooltip="Aggregate of one or more error-handling operation executions produced by an Error Handling Unit; preserves producing Unit identity, Association/target provenance, invocation/attempt/operation identiti"];
+  "StepInvocation" [label="{StepInvocation|Class / Entity}", tooltip="Typed invocation envelope carrying the input and required identity/correlation context (Step identity, Step invocation identity, owning Stage identity, parent Stage invocation identity, optional pipel"];
+  "Supporting_Pattern_Result_to_StepExecutionResult_Optional_Contributions_Relationship" [label="{Supporting Pattern Result to StepExecutionResult Optional Contributions Relationship|Feature / Relationship}", tooltip="Defines how Validator, Error, and Error Handler aggregates form the baseline optional Step result bundle, while Observation output remains outside the common contribution bundle."];
+  "Step_Invocation_Step_Execution_Result_Optional_Result_Contributions_Contract_Group" [label="{Step Invocation / Step Execution Result / Optional Result Contributions Contract Group|Feature / API Contract Group|StepExecutionResult\lStepInvocation}", tooltip="Core Public API contract group covering StepInvocation, StepExecutionResult, and OptionalResultContributions; readiness gaps resolved according to Waves 1-4."];
+
+  "Stage_Flow_Result" -> "StepExecutionResult_TOutput" [label="assoc", style=dashed];
+  "Step_Callable" -> "StepExecutionResult_TOutput" [label="assoc", style=dashed];
+  "Stage_Callable_vs_StageResult_vs_StepExecutionResult_Separation" -> "StepExecutionResult_TOutput" [label="assoc", style=dashed];
+  "Stage_Callable_vs_StageResult_vs_StepExecutionResult_Separation" -> "Stage_Flow_Result" [label="assoc", style=dashed];
+  "Stage_Callable_Traceability_Sources" -> "StepExecutionResult_TOutput" [label="assoc", style=dashed];
+  "Stage_Callable_Traceability_Sources" -> "Stage_Flow_Result" [label="assoc", style=dashed];
+  "Observation_Functional_Binding" -> "StepExecutionResult_TOutput" [label="assoc", style=dashed];
+  "ErrorHandlerResult_THandlingOperationEntry_TErrorHandlingContext" -> "StepExecutionResult_TOutput" [label="assoc", style=dashed];
+  "Step_Invocation_Step_Execution_Result_Optional_Result_Contributions_Contract_Group" -> "StepExecutionResult_TOutput" [label="assoc", style=dashed];
+  "Step_Invocation_Step_Execution_Result_Optional_Result_Contributions_Contract_Group" -> "StepInvocation" [label="assoc", style=dashed];
+}

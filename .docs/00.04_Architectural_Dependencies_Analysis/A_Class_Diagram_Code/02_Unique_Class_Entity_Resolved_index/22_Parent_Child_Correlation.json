@@ -1,0 +1,10 @@
+{
+  "serialNumber": 22,
+  "name": "Parent/Child Correlation",
+  "category": "Feature / Mapping",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+  "description": "Parent/child correlation between Pipeline Root Flow Run, Stage Flow Run, Step Subflow Flow Run, and SPU Task Run; synthetic deployment/subflow invocation records create indirect parent linkage chains preserved through native Prefect task_inputs.__parents__ and parent_task_run_id.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

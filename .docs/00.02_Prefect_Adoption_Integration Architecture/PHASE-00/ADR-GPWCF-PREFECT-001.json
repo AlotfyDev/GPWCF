@@ -1,0 +1,39 @@
+{
+  "documentType": "ArchitectureDecisionRecord",
+  "documentId": "ADR-GPWCF-PREFECT-001",
+  "documentVersion": "1.0.0",
+  "status": "accepted",
+  "decisionDate": "2026-11-08",
+  "title": "Adopt Prefect 3 as GPWCF External Workflow Runtime",
+  "decision": "Adopt Prefect 3.9.2 as the initial pinned external workflow runtime for GPWCF integration on Windows x64 / CPython 3.15.1. Prefect owns native workflow execution; GPWCF retains component contracts, composition semantics, identities, typed results, lifecycle and artifact obligations.",
+  "authority": "User-approved decision recorded in Prefect_Adoption_And_Integration_Architecture_v1.0.json.",
+  "scope": "This ADR confirms the selected target and authorizes target-specific integration qualification. It does not declare GPWCF implementation or full THIM conformance complete.",
+  "selectedBaseline": {
+    "product": "Prefect",
+    "version": "3.9.2",
+    "python": "CPython 3.15.1 x64",
+    "platform": "Windows x64",
+    "executionProfile": "Native local execution using Prefect's local API/server profile",
+    "packageRequirement": "prefect==3.9.2"
+  },
+  "rationale": [
+    "Python-native integration with the managed CPython runtime.",
+    "Existing reference-consumer fixture evidence supports Stage invocation, fan-out/fan-in, artifact handoff and conditional publication.",
+    "Native Prefect Flow/Subflow and Task constructs can realize the target hierarchy, subject to topology qualification."
+  ],
+  "consequences": {
+    "positive": [
+      "One concrete runtime target for the first integration.",
+      "Native Flow/Subflow/Task execution without a mandatory cross-language worker boundary."
+    ],
+    "constraints": [
+      "Prefect Run IDs and State remain operational evidence, not GPWCF domain identities/results.",
+      "Exact local concurrency topology must be qualified.",
+      "Full dependency/license closure and clean environment reconstruction remain separate release requirements."
+    ]
+  },
+  "supersedes": [
+    "The open candidate comparison for the primary workflow-runtime selection."
+  ],
+  "historicalEvidencePolicy": "Do not rewrite or delete historical Prefect/Dagu candidate evidence; retain it as decision provenance."
+}

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 20,
+  "name": "Prefect Dispatch Tasks",
+  "category": "Component / Mechanism",
+  "type": "Component",
+  "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-01/PHASE-01_Topology_Decision_Record.json",
+  "description": "Narrow Prefect Task dispatch wrappers (invoke_stage, invoke_step) used to invoke native child Flow objects while preserving Prefect parent_task_run_id relationships. Carry no GPWCF business or composition semantics.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

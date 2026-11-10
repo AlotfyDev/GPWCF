@@ -1,0 +1,10 @@
+{
+  "serialNumber": 29,
+  "name": "Core Public API vs Prefect Integration Public API",
+  "category": "Feature / API Boundary",
+  "type": "Feature",
+  "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-03_GPWCF_Structure/Dependency_and_Public_API_Architecture.json",
+  "description": "Separable public API surfaces; Core must remain usable with Prefect absent. No Prefect types leak into Core API. Public API is an explicit curated stable boundary under public_api.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

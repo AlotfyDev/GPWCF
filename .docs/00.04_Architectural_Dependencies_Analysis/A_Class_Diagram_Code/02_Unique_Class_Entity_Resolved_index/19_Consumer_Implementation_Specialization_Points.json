@@ -1,0 +1,10 @@
+{
+  "serialNumber": 19,
+  "name": "Consumer Implementation / Specialization Points",
+  "category": "Feature / API Surface",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Defines what consumers may implement, customize, compose, and invoke; consumer owns Pipeline Root (no generic Root API created); consumer-specific Generator Stage/Step Models or business contracts excluded from Public API.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

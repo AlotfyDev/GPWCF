@@ -1,0 +1,10 @@
+{
+  "serialNumber": 1,
+  "name": "SPU Functional Binding",
+  "category": "Architectural Design / Feature",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/07.00_SPU.json",
+  "description": "Wave 3 detailed design (artifact 1) defining how a concrete Step Processing Unit is functionally bound to Prefect's native execution model while preserving the SPU as the actual domain processing entity, its specialized callable/result contract, and Step Composition ownership of invocation coordination and Step-level flow.",
+  "resolvedFrom": "02,00_Step_SPU_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "step-spu-level-domain-features-entities-classes-components-index"
+}

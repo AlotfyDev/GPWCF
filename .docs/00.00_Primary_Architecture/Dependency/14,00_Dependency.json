@@ -1,0 +1,632 @@
+{
+  "documentType": "GPWCFDetailedArchitectureDesign",
+  "documentId": "gpwcf.architecture-closure.wave6-dependency",
+  "documentVersion": "1.0.0",
+  "status": "draft-for-architecture-review",
+  "designSequence": {
+    "wave": 6,
+    "waveName": "Dependency, Packaging, and Public API Architecture",
+    "artifactNumber": 1,
+    "predecessorArtifacts": [
+      "../Wave!_Stage_Callable_Stage Result_Pipeline Invocation/01.00_Stage_Callable.json",
+      "../Wave!_Stage_Callable_Stage Result_Pipeline Invocation/02.00_Stage_Result.json",
+      "../Wave!_Stage_Callable_Stage Result_Pipeline Invocation/03.00_Pipeline_Invocation.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/04.00_Step_Callable.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/05.00_Step_Execution_Result.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/06.00_Optional_Result_Contributions.json",
+      "../Wave3_SPU_Supporting_Pattern_Functional_Binding/07.00_SPU.json",
+      "../Wave3_SPU_Supporting_Pattern_Functional_Binding/08.00_Supporting_Pattern_Functional_Binding.json",
+      "../Wave4_Generic_Diagnostics_Error_Handling_Publication/09.00_Generic_Diagnostics.json",
+      "../Wave4_Generic_Diagnostics_Error_Handling_Publication/10.00_Error_Handling.json",
+      "../Wave4_Generic_Diagnostics_Error_Handling_Publication/11,00_Publication.json",
+      "../Wave5_Prefect_Integration_Binding_Operational_Mapping/12.00_Prefect_Integration_Binding.json",
+      "../Wave5_Prefect_Integration_Binding_Operational_Mapping/13.00_Operational_Mapping.json",
+      ".docs/01.00_Capability_Open_Source_Integration_Assessment/01.05_Dependency_Architecture/01.05_Dependency_Architecture.json",
+      ".docs/03.00_GPWCF_Structure_Architecture/Dependency_and_Public_API_Architecture.json"
+    ]
+  },
+  "purpose": "Finalize GPWCF dependency ownership and allowed/forbidden dependency directions across Core, optional Supporting Patterns, Prefect Integration, consumers, and the SMRB development environment, including the newly justified identity and diagnostics modules.",
+  "scope": {
+    "included": [
+      "Runtime, build, development, test, and verification dependency ownership.",
+      "The Core/optional pattern/Prefect Integration/consumer dependency graph.",
+      "The canonical identity and optional diagnostics module allocation.",
+      "The minimal Prefect Integration direct/transitive dependency policy.",
+      "Installation profiles and environment isolation guarantees.",
+      "The treatment of SMRB .dependencies and shared .env.",
+      "Dependency closure and release gates."
+    ],
+    "excluded": [
+      "Reconsideration of the accepted Prefect 3.9.2 integration decision.",
+      "Concrete packaging artifact layout and build backend configuration, detailed in 15,00_Packaging.json.",
+      "Exact public import/export names, detailed in 16.00_Public_API_Architecture.json.",
+      "Any new runtime service, manager, registry, or mandatory external infrastructure not required by an approved contract."
+    ]
+  },
+  "governingPrinciples": [
+    "Dependency ownership follows semantic and operational responsibility, not repository proximity or current developer environment installation.",
+    "Core runtime imports remain standard-library-only in the current baseline.",
+    "Prefect 3.9.2 is an accepted optional external runtime owned only by integrations.prefect.",
+    "Optional Supporting Patterns remain separately importable and are required only when selected by a concrete Step.",
+    "Generator extraction dependencies remain consumer-owned.",
+    "SMRB .dependencies and .env remain shared developer environment assets and are not GPWCF package runtime dependencies.",
+    "Build/test/verification tools are isolated from runtime dependency metadata.",
+    "No GPWCF-local .dependencies directory or duplicate dependency bundle is created.",
+    "No generic core.shared_contracts catch-all module is created; each cross-module contract must have a named cohesive owner.",
+    "Dependency graph remains inward and acyclic."
+  ],
+  "dependencyOwners": [
+    {
+      "ownerId": "DEP-CORE",
+      "owner": "GPWCF Core",
+      "modules": [
+        "core.stage",
+        "core.step",
+        "core.step.results",
+        "core.stage.results",
+        "core.processing_units.spu",
+        "core.identities"
+      ],
+      "runtimeDependencies": [],
+      "runtimeGuarantee": "Core installation/import requires only the Python standard library in the current baseline.",
+      "mustNotDependOn": [
+        "Prefect or any external workflow runtime.",
+        "integrations.prefect.",
+        "Generator modules, private assets, or pygccxml.",
+        "Consumer business models or consumer-specific error vocabulary.",
+        "SMRB .dependencies contents as implicit runtime dependencies.",
+        "C++ vcpkg dependencies or native toolchains.",
+        "External API server, database, queue, broker, or worker service."
+      ]
+    },
+    {
+      "ownerId": "DEP-IDENTITIES",
+      "owner": "GPWCF Core Identity Value Contracts",
+      "modules": [
+        "core.identities"
+      ],
+      "classification": "mandatory_standalone",
+      "runtimeDependencies": [],
+      "responsibility": "Canonical immutable nominal identity value types used across Pipeline invocation correlation, Stage, Step, SPU, selected Supporting Patterns, and integration correlation boundaries.",
+      "subpackages": ["core.identities.invocation", "core.identities.stage", "core.identities.step", "core.identities.spu", "core.identities.supporting_patterns"],
+      "mustNotProvide": [
+        "Identity generator/service.",
+        "Global identity registry.",
+        "Lifecycle manager.",
+        "Identity persistence service.",
+        "Workflow runtime identity mapping."
+      ],
+      "semanticOwnership": "Each Entity/Aggregate or consumer remains the authority for issuing, validating, accepting, retaining, and retiring its own identity values. The module owns only the canonical value type definitions."
+    },
+    {
+      "ownerId": "DEP-DIAGNOSTICS",
+      "owner": "GPWCF Optional Generic Diagnostics",
+      "modules": [
+        "core.diagnostics"
+      ],
+      "classification": "optional_reusable",
+      "runtimeDependencies": [],
+      "responsibility": "A narrow typed descriptive Diagnostic[TDetails] value contract.",
+      "mustNotProvide": [
+        "Generic Error Model.",
+        "Failure or Outcome taxonomy.",
+        "Severity/retry/resolution policy.",
+        "Logger, collector, event bus, or diagnostic registry."
+      ],
+      "consumptionRule": "Only specialized contracts that explicitly choose to use Diagnostic import this optional module. No mandatory Core result envelope depends on it."
+    },
+    {
+      "ownerId": "DEP-SUPPORTING-PATTERNS",
+      "owner": "GPWCF Optional Supporting Patterns",
+      "modules": [
+        "core.supporting_patterns.error_handling",
+        "core.supporting_patterns.validation",
+        "core.supporting_patterns.observation"
+      ],
+      "classification": "optional_reusable",
+      "runtimeDependencies": [],
+      "dependencyRule": "Each pattern owns its specialized callable/result/association/lifecycle contracts. A concrete Step depends only on selected pattern contract surfaces.",
+      "mustNotDependOn": [
+        "Step Composition implementation.",
+        "Prefect runtime.",
+        "Generator Common Error Model as a generic dependency.",
+        "Other optional patterns unless a specialized contract explicitly requires the relationship."
+      ],
+      "currentDependencyEvidence": "No third-party runtime dependency is currently evidenced for the generic pattern contract packages."
+    },
+    {
+      "ownerId": "DEP-PREFECT-INTEGRATION",
+      "owner": "GPWCF Prefect Integration",
+      "modules": [
+        "integrations.prefect"
+      ],
+      "classification": "selected_external_runtime_integration",
+      "directRuntimeDependencies": [
+        {
+          "distribution": "prefect",
+          "version": "3.9.2",
+          "requirement": "prefect==3.9.2",
+          "basis": "Accepted ADR-GPWCF-PREFECT-001."
+        }
+      ],
+      "transitiveRuntimeDependencies": "Must be resolved from Prefect 3.9.2 package metadata in a clean isolated Integration environment, then minimized, version/hash locked, license-reviewed, and tested.",
+      "mayDependOn": [
+        "Core Public API.",
+        "Prefect 3.9.2 and its verified transitive runtime closure.",
+        "Selected optional pattern Public API contracts where a binding is implemented."
+      ],
+      "mustNotDependOn": [
+        "Core private implementation modules.",
+        "Consumer business modules or Generator-private assets.",
+        "Unselected optional Supporting Pattern implementations.",
+        "Unqualified external services as mandatory package prerequisites."
+      ],
+      "installationRule": "Opt-in only. Installing/importing Core must not install/import Prefect or integrations.prefect."
+    },
+    {
+      "ownerId": "DEP-CONSUMER",
+      "owner": "PayloadDescriptionGenerator and other GPWCF consumers",
+      "modules": [
+        "Consumer-owned Stage/Step/SPU specializations",
+        "Generator Stage Models and contracts",
+        "Consumer-specific Error Models and business policies"
+      ],
+      "directRuntimeDependencies": [
+        {
+          "distribution": "pygccxml",
+          "requirement": "pygccxml>=3.0.0",
+          "basis": "Current py_payload_descriptor_generator/requirements.txt."
+        }
+      ],
+      "dependencyRule": "Consumer dependencies remain declared by the consumer project. They are not promoted into GPWCF Core or Prefect Integration.",
+      "mayDependOn": [
+        "Core Public API.",
+        "Prefect Integration Public API when selected.",
+        "Its own business, extraction, and deployment dependencies."
+      ],
+      "mustNotDependOn": [
+        "GPWCF Core private implementation paths.",
+        "Prefect private internals outside the Prefect Integration Public API."
+      ]
+    },
+    {
+      "ownerId": "DEP-SMRB-DEVELOPMENT",
+      "owner": "SMRB solution-level development/build environment",
+      "assets": [
+        "SMRB root requirements.txt aggregator",
+        "SMRB .dependencies ownership/documentation",
+        "SMRB shared .env virtual environment",
+        "Repository-root vcpkg.json and C++ MSBuild integration"
+      ],
+      "role": "Coordinates developer setup and aggregates requirements of solution-owned tools. It is not a consumer installation profile or GPWCF runtime dependency.",
+      "mustNotDo": [
+        "Create GPWCF/.dependencies as a duplicate dependency store.",
+        "Copy the shared .env into the GPWCF package.",
+        "Promote every installed solution package into Core runtime metadata.",
+        "Assume every asset under .dependencies ships to consumers.",
+        "Treat vcpkg dependencies as Python package runtime dependencies."
+      ]
+    },
+    {
+      "ownerId": "DEP-GUIDANCE",
+      "owner": "Architectural Guidance",
+      "modules": [
+        "architectural_guidance"
+      ],
+      "runtimeDependencies": [],
+      "rule": "Guidance creates no runtime package, service, manager, or installation requirement."
+    },
+    {
+      "ownerId": "DEP-CONDITIONAL-STEP-ERROR-MODEL",
+      "owner": "Conditional Step Error Model",
+      "modules": [
+        "core.step.error_model"
+      ],
+      "classification": "conditional_optional_reusable",
+      "status": "Excluded from baseline Core until genericity and dependency closure are approved.",
+      "rule": "The current Generator Common Error Model and clauses coupled to its vocabulary are not promoted into Core. Genericization requires a separately versioned contract, explicit ownership, dependency closure, and Public API review."
+    }
+  ],
+  "allowedDependencyEdges": [
+    {
+      "from": "core.stage",
+      "to": "core.step public contract",
+      "kind": "domain-contract",
+      "rule": "Stage Composition invokes the Step public callable contract; Stage must not depend directly on SPU."
+    },
+    {
+      "from": "core.stage",
+      "to": "core.identities",
+      "kind": "identity-value-contract",
+      "rule": "Stage uses canonical Stage and invocation identity value types."
+    },
+    {
+      "from": "core.stage",
+      "to": "core.stage.results",
+      "kind": "owned-result",
+      "rule": "StageResult and Stage-specific Flow Result typing are owned by Stage; no universal FlowResult module is created."
+    },
+    {
+      "from": "core.step",
+      "to": "core.processing_units.spu",
+      "kind": "domain-contract",
+      "rule": "Step Composition owns SPU selection/invocation and StepExecutionResult assembly."
+    },
+    {
+      "from": "core.step",
+      "to": "core.step.results",
+      "kind": "owned-result",
+      "rule": "StepExecutionResult and OptionalResultContributions are owned by the Step result module."
+    },
+    {
+      "from": "core.step",
+      "to": "core.identities",
+      "kind": "identity-value-contract",
+      "rule": "Step uses canonical Step and parent Stage invocation identity value types without importing Stage implementation."
+    },
+    {
+      "from": "core.step",
+      "to": "selected core.supporting_patterns.* contract",
+      "kind": "conditional-contract",
+      "rule": "Only the concrete Step's selected optional pattern contract surfaces are imported."
+    },
+        {
+      "from": "core.stage.results",
+      "to": "core.identities",
+      "kind": "identity-value-contract",
+      "rule": "StageResult carries canonical Stage and invocation identity values."
+    },
+    {
+      "from": "core.step.results",
+      "to": "core.identities",
+      "kind": "identity-value-contract",
+      "rule": "StepExecutionResult carries canonical Step and parent Stage invocation identity values."
+    },
+{
+      "from": "core.processing_units.spu",
+      "to": "core.identities",
+      "kind": "identity-value-contract",
+      "rule": "SPU identity value types are imported without depending on Step implementation."
+    },
+    {
+      "from": "core.supporting_patterns.*",
+      "to": "core.identities",
+      "kind": "identity-value-contract",
+      "rule": "Selected pattern contracts use canonical unit/association/invocation/operation identity values."
+    },
+    {
+      "from": "selected specialized contract",
+      "to": "core.diagnostics",
+      "kind": "optional-descriptive-contract",
+      "rule": "A specialized contract may use Diagnostic[TDetails] when useful; this dependency is never mandatory for Core results."
+    },
+    {
+      "from": "integrations.prefect",
+      "to": "gpwcf.public_api.core",
+      "kind": "integration",
+      "rule": "Prefect Integration binds supported public contracts and maps invocation/context/result/identity."
+    },
+    {
+      "from": "integrations.prefect",
+      "to": "prefect==3.9.2",
+      "kind": "runtime",
+      "rule": "External runtime dependency is isolated to the opt-in Prefect Integration."
+    },
+    {
+      "from": "Consumer",
+      "to": "gpwcf.public_api.core",
+      "kind": "consumer",
+      "rule": "Consumer owns concrete specializations and business policies."
+    },
+    {
+      "from": "Consumer",
+      "to": "gpwcf.public_api.integrations.prefect",
+      "kind": "optional-consumer",
+      "rule": "Consumer uses this API only when Prefect Integration is selected; no consumer depends on Integration internals."
+    }
+  ],
+  "forbiddenDependencyEdges": [
+    {
+      "from": "Any Core module",
+      "to": "Prefect or integrations.prefect",
+      "reason": "Would make Core import/installation dependent on the external workflow runtime."
+    },
+    {
+      "from": "Any Core module",
+      "to": "Consumer or Generator module",
+      "reason": "Would invert ownership and couple the framework to one consumer."
+    },
+    {
+      "from": "core.stage",
+      "to": "core.processing_units.spu",
+      "reason": "Stage coordinates the Step public contract only; Step owns internal SPU composition."
+    },
+    {
+      "from": "core.step",
+      "to": "core.stage implementation",
+      "reason": "Would create a reverse dependency/cycle; parent Stage correlation is carried through core.identities value types."
+    },
+    {
+      "from": "core.processing_units.spu",
+      "to": "core.step or Step Composition implementation",
+      "reason": "SPU is a standalone callable processing entity; Step consumes the SPU contract, not vice versa."
+    },
+    {
+      "from": "core.step.results",
+      "to": "Concrete optional Supporting Pattern result package",
+      "reason": "Optional result types are generic type parameters; importing every pattern would destroy optionality."
+    },
+    {
+      "from": "Core baseline",
+      "to": "Generator Common Error Model",
+      "reason": "Current Error Model is consumer-specific and dependency closure is not approved."
+    },
+    {
+      "from": "Core or Integration",
+      "to": "SMRB shared .env/.dependencies as runtime service",
+      "reason": "Shared development environment assets are not package runtime contracts."
+    },
+    {
+      "from": "Core result modules",
+      "to": "Prefect State or native run/task IDs",
+      "reason": "Domain results and identities remain independent from native operational records."
+    },
+    {
+      "from": "Optional Supporting Pattern",
+      "to": "Step Composition implementation",
+      "reason": "Step Composition consumes the pattern contract; optional pattern modules do not import their consumer's implementation."
+    }
+  ],
+  "installationProfiles": [
+    {
+      "id": "INSTALL-CORE-ONLY",
+      "name": "Core-only consumer",
+      "installCommand": "pip install gpwcf",
+      "required": [
+        "GPWCF Core"
+      ],
+      "thirdPartyRuntimeRequirements": [],
+      "guarantees": [
+        "No Prefect installation required.",
+        "No Generator or pygccxml installation required.",
+        "Core Public API usable without Prefect imports.",
+        "Unselected Supporting Patterns need not be imported."
+      ]
+    },
+    {
+      "id": "INSTALL-PREFECT-INTEGRATION",
+      "name": "Core plus Prefect Integration",
+      "installCommand": "pip install 'gpwcf[prefect]'",
+      "required": [
+        "GPWCF Core",
+        "GPWCF Prefect Integration"
+      ],
+      "directRuntimeRequirements": [
+        "prefect==3.9.2"
+      ],
+      "deploymentProfile": "PHASE-02 used a local Prefect API server backed by SQLite and two Process Workers; these are deployment/operations, not Core installation dependencies.",
+      "lockRequirement": "A minimized, cleanly reconstructed, version/hash-controlled transitive lock is required before release.",
+      "guarantees": [
+        "Integration runtime is opt-in.",
+        "Core remains importable without Prefect.",
+        "Prefect IDs/State remain operational evidence, not GPWCF domain identities/results."
+      ]
+    },
+    {
+      "id": "INSTALL-OPTIONAL-PATTERNS",
+      "name": "Core plus selected Supporting Patterns",
+      "installCommand": "pip install gpwcf; import only the selected gpwcf.public_api.core.supporting_patterns.* submodules",
+      "required": [
+        "GPWCF Core",
+        "Only selected optional Supporting Pattern contracts/implementations"
+      ],
+      "thirdPartyRuntimeRequirements": [],
+      "guarantees": [
+        "Unselected optional pattern packages are not imported.",
+        "No optional pattern becomes a mandatory Core dependency.",
+        "Current generic pattern contracts have no evidenced third-party runtime requirement."
+      ]
+    },
+    {
+      "id": "INSTALL-GENERATOR-CONSUMER",
+      "name": "PayloadDescriptionGenerator consumer",
+      "required": [
+        "GPWCF Core",
+        "GPWCF Prefect Integration when Prefect is used",
+        "Generator-owned dependencies"
+      ],
+      "consumerOwnedRequirements": [
+        "pygccxml>=3.0.0"
+      ],
+      "rule": "Generator dependencies remain declared by Generator-owned requirements and are aggregated at SMRB solution root only for developer setup."
+    },
+    {
+      "id": "INSTALL-SMRB-DEVELOPER",
+      "name": "SMRB solution developer environment",
+      "required": [
+        "SMRB root requirements aggregator",
+        "SMRB shared .env",
+        "Relevant solution build tools and vcpkg-managed C++ dependencies"
+      ],
+      "rule": "This profile may aggregate multiple tool requirements for convenience. It is not a consumer installation profile and is not evidence of Core or Integration runtime dependency closure."
+    }
+  ],
+  "prefectDependencyQualification": {
+    "adoptionDecision": "Accepted and settled: Prefect 3.9.2 is the initial pinned external workflow runtime under ADR-GPWCF-PREFECT-001.",
+    "directRequirement": "prefect==3.9.2",
+    "environmentEvidence": {
+      "python": "CPython 3.15.1 x64",
+      "prefect": "3.9.2",
+      "capturedPackageCount": 106,
+      "lockArtifact": "PHASE-00/prefect-3.9.2-managed-lock.txt",
+      "interpretation": "Complete environment snapshot including packages not required by the minimal PoC; not a minimized Integration lock or proof all 106 packages are required."
+    },
+    "deploymentDependenciesNotPackageBaseDependencies": [
+      "Prefect API server process/profile.",
+      "SQLite persistence used by qualified local profile.",
+      "Process Worker processes and Work Pool.",
+      "Worker registration and deployment configuration.",
+      "Local result storage configuration."
+    ],
+    "qualifiedOperationalProfile": "Windows x64, CPython 3.15.1, Prefect 3.9.2, local SQLite API server, Process Work Pool, two Process Workers with flow-run limit 1, two Stage Deployments.",
+    "requiredBeforeRelease": [
+      "Create a clean isolated environment for Integration only.",
+      "Install exact direct requirement prefect==3.9.2 and capture resolver-produced transitive closure.",
+      "Separate runtime packages from PoC/developer/test/documentation/optional-service packages using clean imports and profile-specific tests.",
+      "Record exact versions and hashes in a reproducible lock; review licenses and Python/platform markers.",
+      "Prove Core install/import with Prefect absent and Integration import/run with the locked Prefect environment.",
+      "Do not add optional API-server database backends, distributed queues, cloud services, or worker infrastructure unless the chosen deployment profile explicitly requires them."
+    ]
+  },
+  "developmentBuildAndVerificationDependencies": {
+    "principle": "Development/build/test/verification tools are not runtime dependencies unless the shipped package imports or executes them at runtime.",
+    "currentEvidence": {
+      "gpwcfRequirements": "Current GPWCF requirements.txt contains comments only and declares no third-party requirements.",
+      "solutionRootRequirements": "Aggregates py_payload_descriptor_generator/requirements.txt and GPWCF requirements.txt.",
+      "generatorRequirements": "Currently declares pygccxml>=3.0.0.",
+      "sharedEnvironment": "SMRB .dependencies/README.md describes one shared .env and solution-level aggregation.",
+      "testTooling": "No GPWCF-specific third-party test/build/type-check dependency is declared in the reviewed GPWCF requirements file; do not invent one here."
+    },
+    "selectedBuildBackend": {
+      "distribution": "setuptools",
+      "version": "84.2.1",
+      "requirement": "setuptools==84.2.1",
+      "backend": "setuptools.build_meta",
+      "classification": "isolated build-system dependency only; not a GPWCF runtime dependency.",
+      "basis": [
+        "Setuptools 84.2.1 declares Python >=3.10 support and its release history includes Python 3.15 build support.",
+        "The official setuptools build-system documentation identifies setuptools.build_meta as its PEP 517 backend."
+      ],
+      "verificationGate": "Run a clean isolated sdist/wheel build and install smoke test under the actual CPython 3.15.1 x64 Windows environment before implementing pyproject.toml."
+    },
+    "buildFrontend": {
+      "tool": "build",
+      "classification": "developer/build frontend only.",
+      "version": "Pin in the development/build lock after the project test/build toolchain is selected; do not add to runtime dependencies."
+    },
+    "ownershipRules": [
+      "Core runtime metadata contains no third-party dependency in the current baseline.",
+      "Prefect Integration runtime metadata contains the optional prefect==3.9.2 requirement and only its verified closure.",
+      "Build backend is declared under [build-system] and is installed in an isolated build environment.",
+      "Test/type-check/lint/documentation tools remain in development configuration/lock and are excluded from runtime metadata.",
+      "Generator tooling remains declared by Generator requirements.",
+      "SMRB root requirements remains an aggregator, not the authoritative owner of individual tool dependencies.",
+      "vcpkg dependencies remain C++ build dependencies, not Python package requirements."
+    ],
+    "verificationProfiles": [
+      {
+        "profile": "Core clean-install/import",
+        "requirements": "Core only, no Prefect or Generator dependencies; verify Core Public API and import graph."
+      },
+      {
+        "profile": "Optional pattern isolation",
+        "requirements": "Core plus one selected optional pattern at a time; verify unselected patterns are not imported/required."
+      },
+      {
+        "profile": "Prefect Integration clean-install/import",
+        "requirements": "Core plus pinned Prefect Integration dependency lock; verify Integration imports and native runtime."
+      },
+      {
+        "profile": "Consumer integration",
+        "requirements": "Core plus Integration when selected plus consumer-owned requirements; verify no consumer dependency leaks into framework packages."
+      },
+      {
+        "profile": "Build isolation",
+        "requirements": "Build sdist and wheel in an isolated environment with only the pinned build backend; install the artifacts into clean Core-only and Core-plus-Prefect environments."
+      }
+    ]
+  },
+  "dependencyAndImportInvariants": [
+    "Core runtime imports are standard-library-only in the current baseline.",
+    "Core Public API import succeeds in an environment where Prefect is not installed.",
+    "Importing Core does not import integrations.prefect or any Prefect package.",
+    "Prefect Integration imports Core only through Core Public API, not Core internals.",
+    "Prefect imports remain within the opt-in Integration boundary.",
+    "Optional Supporting Pattern APIs are separately importable and not eagerly imported by Core root or Step result module.",
+    "Step Composition consumes only selected Supporting Pattern contract surfaces; pattern modules do not import Step Composition implementation.",
+    "No consumer or Generator code is imported by Core or Integration.",
+    "No Generator Common Error Model, pygccxml, or Generator extraction engine is installed by Core or Integration.",
+    "No broad core.shared_contracts package is created; core.identities and core.diagnostics each have a narrow explicit purpose and ownership.",
+    "No package imports Prefect State as a substitute for SPUExecutionResult, StepExecutionResult, or StageResult.",
+    "The Public API surface, not private implementation paths, is the compatibility boundary."
+  ],
+  "requiredGoverningArtifactChanges": [
+    {
+      "target": "Framework_Module_Boundary_Model.json",
+      "changes": [
+        "Add MOD-CORE-IDENTITIES as mandatory_standalone and dependency-free.",
+        "Add MOD-CORE-DIAGNOSTICS as optional_reusable and dependency-free.",
+        "Add StageResult under MOD-CORE-STAGE and StepExecutionResult/OptionalResultContributions under MOD-CORE-STEP-RESULTS.",
+        "Record allowed dependency edges from Stage, Step, SPU, and selected Supporting Patterns to core.identities.",
+        "Record the optional dependency edge to core.diagnostics only when a specialized contract selects it.",
+        "Keep MOD-CORE-SHARED-CONTRACTS not_established and do not create a broad shared package."
+      ]
+    },
+    {
+      "target": "Filesystem_Architecture.json",
+      "changes": [
+        "Add src/gpwcf/core/identities.",
+        "Add optional src/gpwcf/core/diagnostics.",
+        "Add Stage-owned core/stage/results and invocation/contracts/lifecycle allocations justified by Wave 1.",
+        "Add Step contracts/invocation/lifecycle/results allocations justified by Wave 2.",
+        "Add SPU generic result type allocations justified by Wave 3.",
+        "Add core/supporting_patterns/error_handling/publication.",
+        "Align Prefect integration subpackages to Wave 5 binding/correlation/results/configuration allocations.",
+        "Make pyproject.toml required because the selected packaging design uses PEP 621 and setuptools PEP 517 build metadata."
+      ]
+    },
+    {
+      "target": "Dependency_and_Public_API_Architecture.json",
+      "changes": [
+        "Update dependency owner/module lists and dependency graph with core.identities and core.diagnostics.",
+        "Replace the unresolved distribution arrangement with one distribution and optional Prefect extra for the initial release.",
+        "Record setuptools==84.2.1 / setuptools.build_meta as isolated build-system dependency.",
+        "Preserve Prefect 3.9.2 as optional runtime extra and keep minimal transitive lock as a release gate.",
+        "Update Public API readiness gaps resolved by Waves 1-4 while retaining production integration/failure qualification gates."
+      ]
+    }
+  ],
+  "externalTechnicalReferences": [
+    {
+      "source": "PyPI setuptools project",
+      "url": "https://pypi.org/project/setuptools/",
+      "supports": "Setuptools 84.2.1 release metadata and Python >=3.10 requirement; current package release metadata."
+    },
+    {
+      "source": "Setuptools 84.2.1 build system support",
+      "url": "https://setuptools.pypa.io/en/latest/build_meta.html",
+      "supports": "setuptools.build_meta is the PEP 517 build backend and supports wheel/sdist build hooks."
+    },
+    {
+      "source": "Setuptools 84.2.1 release history",
+      "url": "https://setuptools.pypa.io/en/latest/history.html",
+      "supports": "Python 3.15 build support in the current Setuptools release history."
+    },
+    {
+      "source": "Python Packaging User Guide: Writing pyproject.toml",
+      "url": "https://packaging.python.org/en/latest/guides/writing-pyproject-toml/",
+      "supports": "The [build-system] table declares the build backend and isolated build requirements; PEP 621 project metadata belongs in [project]."
+    }
+  ],
+  "acceptanceCriteria": [
+    "Every runtime/build/development dependency has one explicit owner.",
+    "Core remains standard-library-only and installable without Prefect, Generator dependencies, or SMRB development assets.",
+    "core.identities is a narrow dependency-free module for nominal identity value types only.",
+    "core.diagnostics is optional and does not become a universal Error Model.",
+    "Optional Supporting Patterns remain independent and opt-in.",
+    "Prefect 3.9.2 remains the accepted integration runtime and is installed only through the optional Prefect profile.",
+    "The 106-package environment snapshot is not treated as the minimal Integration dependency closure.",
+    "No GPWCF-local .dependencies directory is introduced.",
+    "Dependency graph is acyclic and all forbidden directions remain prohibited.",
+    "The single-distribution optional-extra packaging choice preserves the Core-only installation/import guarantee.",
+    "Build backend dependencies remain isolated from runtime dependencies.",
+    "The exact Prefect transitive lock and clean isolated build verification remain explicit release gates.",
+    "No source package or specialized contract is modified by this design artifact."
+  ],
+  "changeControl": {
+    "authority": "Wave 6 dependency architecture proposal. It becomes an implementation constraint only after review and explicit acceptance.",
+    "sourceContractPolicy": "This artifact does not modify the current Dependency_and_Public_API_Architecture.json, Framework_Module_Boundary_Model.json, or Filesystem_Architecture.json; it records required reconciliation changes.",
+    "implementationGate": "Do not create pyproject.toml or install new project build dependencies until all Wave 6 artifacts and governing-artifact reconciliation are accepted.",
+    "nextStep": "Design 15,00_Packaging.json with the selected distribution arrangement, build backend, metadata, optional extras, lock strategy, and build/test installation profiles."
+  }
+}

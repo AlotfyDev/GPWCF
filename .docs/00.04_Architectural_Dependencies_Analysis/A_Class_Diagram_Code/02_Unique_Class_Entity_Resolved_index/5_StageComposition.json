@@ -1,0 +1,10 @@
+{
+  "serialNumber": 5,
+  "name": "StageComposition",
+  "category": "Class / Component",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+  "description": "Owns semantic composition and flow rules of Step Instances belonging to the Stage; coordinates their contract-level participation and result collection while allowing an external Workflow Framework to execute the corresponding native Parent Workflow graph. Maintains Stage-specific Step set, coordinates invocation through public Step contracts, respects Stage-specific dependencies and execution constraints.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

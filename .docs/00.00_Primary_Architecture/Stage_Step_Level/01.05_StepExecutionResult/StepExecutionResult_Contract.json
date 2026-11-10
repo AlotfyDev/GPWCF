@@ -1,0 +1,186 @@
+{
+  "documentId": "pipeline.step-execution-result.contract",
+  "documentVersion": "0.2.0",
+  "status": "design-baseline",
+  "title": "StepExecutionResult Contract",
+  "scope": {
+    "architecturalLevel": "stage-step",
+    "component": "StepExecutionResult",
+    "owningLevel": "Step",
+    "purpose": "Define the generic Step-level aggregate result returned by a concrete Step Instance to its owning Stage.",
+    "appliesTo": "Every concrete Step[TInput,TOutput], specialized as StepExecutionResult[TOutput]."
+  },
+  "contract": {
+    "name": "StepExecutionResult",
+    "genericType": "StepExecutionResult[TOutput]",
+    "producedBy": "Concrete Step Instance / Step Composition",
+    "returnedAs": "The structured result of one Step invocation, consumed by Stage Composition.",
+    "responsibility": "Carry the Step-level output artifact and the applicable Step-specialized validation, error, and error-handling aggregates composed from internal SPU and supporting-unit activity.",
+    "nonResponsibilities": [
+      "Represent the result of an individual SPU invocation; that is SPUExecutionResult.",
+      "Expose internal SPU topology or individual component implementation details to Stage.",
+      "Define Stage-level or Pipeline-level status and flow policy.",
+      "Represent observability events, logs, telemetry, or Observation Unit results."
+    ]
+  },
+  "typeParameters": [
+    {
+      "name": "TOutput",
+      "meaning": "The Step-specific type of the output artifact exposed to Stage through processingArtifact.",
+      "specialization": "Selected by the concrete Step, not by an individual SPU unless the Step explicitly adopts the same type."
+    }
+  ],
+  "elements": [
+    {
+      "name": "processingArtifact",
+      "type": "Optional[TOutput]",
+      "absentValue": "null",
+      "producer": "Step Composition",
+      "meaning": "The output artifact produced by the complete Step responsibility and exposed to its owning Stage.",
+      "constraints": [
+        "Its type is exactly the Step's TOutput specialization.",
+        "The Step defines how zero or more SPU artifacts and other internal results contribute to it.",
+        "It is distinct from any individual SPU's processingArtifact unless the Step explicitly forwards one as its output."
+      ]
+    },
+    {
+      "name": "validatorResult",
+      "type": "Optional[StepValidatorResult]",
+      "absentValue": "null",
+      "producer": "Step Composition from applicable validator-unit results",
+      "meaning": "The Step-specialized validation result or aggregate of validation results relevant to the Step invocation.",
+      "constraints": [
+        "Optional and independently present/absent.",
+        "Concrete structure and aggregation rules are defined by the Step specialization and validator contracts."
+      ]
+    },
+    {
+      "name": "errorResult",
+      "type": "Optional[ErrorResult]",
+      "absentValue": "null",
+      "producer": "Step Composition according to the Step Error Model",
+      "meaning": "The Step-level aggregate representation of selected SPUError occurrences and any other Step error information explicitly included by the Step Error Model.",
+      "constraints": [
+        "Optional; detailed structure and semantics are defined by Step_Error_Model_Contract.json and its concrete specialization.",
+        "Preserves original producerSPUIdentity, occurrenceIdentity, full definition reference, and occurrence content as required by the Step Error Model.",
+        "Represents error information, not the outcome of handling that information."
+      ]
+    },
+    {
+      "name": "errorHandlerResult",
+      "type": "Optional[ErrorHandlerResult]",
+      "absentValue": "null",
+      "producer": "Step-specific Error Handling Composition within Step Composition",
+      "meaning": "The Step-level aggregate of accepted error-handling operation entries produced by applicable Error Handling Units.",
+      "constraints": [
+        "Optional and independently present/absent.",
+        "Its detailed structure and aggregation are defined by ErrorHandlerResult_Contract.json and the concrete Step specialization.",
+        "Does not contain, mutate, remove, or subsume errorResult."
+      ]
+    }
+  ],
+  "optionality": {
+    "rule": "Each element is independently optional.",
+    "representation": "None in memory; null when serialized where serialization is defined.",
+    "semantics": [
+      "Absence is not a universal status such as NotApplicable, NotExecuted, Success, or Failed.",
+      "Absence alone does not imply success or failure.",
+      "Applicability and interpretation are defined by the concrete Step.",
+      "Optional field presence remains distinct from a TOutput domain value that may itself permit null."
+    ]
+  },
+  "preservation": {
+    "invariant": "Every result required by the Step's concrete result contract that was actually produced and accepted into Step custody must be retained in the assembled StepExecutionResult, including results produced before a later internal failure.",
+    "rules": [
+      "A later internal processing or supporting-unit failure does not authorize discarding an earlier retained result.",
+      "The Step must not fabricate a result for an operation that did not produce one.",
+      "Any result whose custody remains unresolved at a thrown-exception boundary is handled under the concrete Step's recovery contract; it must not be silently treated as absent."
+    ]
+  },
+  "independenceAndSeparation": {
+    "fieldsAreIndependentlyOptional": true,
+    "rules": [
+      "processingArtifact, validatorResult, errorResult, and errorHandlerResult represent distinct information categories.",
+      "errorResult and errorHandlerResult must remain separate.",
+      "The aggregate carries Step-level results; it does not redefine the domain semantics of contributing component results.",
+      "SPUExecutionResult is an internal per-SPU invocation result and is not interchangeable with StepExecutionResult."
+    ]
+  },
+  "observationBoundary": {
+    "includedInAggregate": false,
+    "rule": "Observation events, logs, telemetry, and Observation Unit-specific results are outside the common StepExecutionResult contract unless a concrete Step explicitly defines a separate application-specific output integration."
+  },
+  "constructionAndAssembly": {
+    "owner": "Concrete Step Instance / Step Composition.",
+    "rules": [
+      "Step Composition assembles StepExecutionResult from the Step output and the applicable internal results actually produced and retained.",
+      "The Step defines the mapping/aggregation from SPUExecutionResult values to the Step-level processingArtifact and optional aggregate fields.",
+      "The Step Error Model defines ErrorResult structure and aggregation semantics; Step Composition performs the physical assembly.",
+      "The Step-specific Error Handling Composition aggregates accepted operation entries into ErrorHandlerResult; Step Composition integrates that result.",
+      "The contract does not prescribe a constructor, builder, mutation model, or implementation language.",
+      "The contract does not prescribe the internal execution order or topology."
+    ]
+  },
+  "explicitNonGoals": [
+    "No universal execution status or success boolean is introduced.",
+    "No fixed validation-before-processing or processing-before-validation sequence is introduced.",
+    "No exception type, exception propagation policy, or catch boundary is prescribed.",
+    "No universal schema is imposed on StepValidatorResult, ErrorResult, or ErrorHandlerResult.",
+    "No Stage-level aggregation or Pipeline-level failure policy is defined here."
+  ],
+  "relationships": [
+    {
+      "from": "Step Composition",
+      "to": "StepExecutionResult[TOutput]",
+      "relationship": "assembles-and-returns-to-Stage"
+    },
+    {
+      "from": "StepProcessingUnit",
+      "to": "SPUExecutionResult[TOutput]",
+      "relationship": "returns-per-invocation-result-to-Step-Composition"
+    },
+    {
+      "from": "SPUExecutionResult values",
+      "to": "StepExecutionResult[TOutput]",
+      "relationship": "consumed-and-composed-according-to-concrete-Step-rules"
+    },
+    {
+      "from": "Step Error Model",
+      "to": "errorResult",
+      "relationship": "defines-structure-and-aggregation-semantics"
+    },
+    {
+      "from": "Step-specific Error Handling Composition",
+      "to": "errorHandlerResult",
+      "relationship": "assembles-from-accepted-operation-entries"
+    }
+  ],
+  "references": [
+    {
+      "document": "../00.00_Step/Step_Contract.json",
+      "relationship": "producer and Stage-facing Step interface"
+    },
+    {
+      "document": "../01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+      "relationship": "internal per-SPU invocation result"
+    },
+    {
+      "document": "../01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      "relationship": "internal SPU callable contract"
+    },
+    {
+      "document": "../01.01_Step_Error_Model/Step_Error_Model_Contract.json",
+      "relationship": "Step-specific ErrorResult contract"
+    },
+    {
+      "document": "../01.02_Step_Error_Handling/ErrorHandlerResult_Contract.json",
+      "relationship": "Step-specific ErrorHandlerResult contract"
+    }
+  ],
+  "openDesignDetails": [
+    "Define the concrete Step TOutput and its derivation from the internal SPU outputs for each Step.",
+    "Define concrete StepValidatorResult aggregation when multiple validator units are used.",
+    "Define concrete ErrorResult and ErrorHandlerResult type-parameter specializations for each applicable Step.",
+    "Define serialization only if StepExecutionResult must cross a process or persistence boundary."
+  ]
+}

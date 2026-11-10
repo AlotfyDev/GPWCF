@@ -1,0 +1,10 @@
+{
+  "serialNumber": 13,
+  "name": "Single-Distribution Optional-Extra Packaging",
+  "category": "Feature / Packaging Decision",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "Replaces unresolved distribution arrangement with one distribution and optional Prefect extra for the initial release; preserves the Core-only installation/import guarantee.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 59,
+  "name": "SPU Observation Unit Contract (Step Supporting Observation Unit)",
+  "category": "Class / Component",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Contract.json",
+  "description": "Optional supporting pattern for observation activity (call, callback, sampling, subscription) against Step-owned target scopes; observation records remain independent of StepExecutionResult and preserve provenance/custody; association establishes applicability only without guaranteeing active observation.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

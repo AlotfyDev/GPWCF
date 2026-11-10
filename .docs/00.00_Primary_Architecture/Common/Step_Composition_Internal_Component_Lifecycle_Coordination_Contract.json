@@ -1,0 +1,248 @@
+{
+  "documentId": "pipeline.step-composition.internal-component-lifecycle-coordination.contract",
+  "documentVersion": "0.1.0",
+  "status": "design-baseline",
+  "title": "Step Composition Internal Component Lifecycle Coordination Contract",
+  "scope": {
+    "architecturalLevel": "pipeline-framework",
+    "component": "StepCompositionInternalComponentLifecycleCoordination",
+    "owner": "Concrete Step Composition",
+    "purpose": "Define reusable lifecycle-coordination invariants for Step-internal runtime component instances whose specialized contracts assign lifecycle decisions and coordination to Step Composition.",
+    "applicability": "Applies to selected SPU and supporting-component instances where their specialized contracts define lifecycle participation. It does not create a universal runtime component type or require all components to expose identical lifecycle operations."
+  },
+  "architecturalPosition": {
+    "nature": "A cross-cutting contract for Step Composition lifecycle authority, eligibility, quiescence, reuse, release, and evidence independence.",
+    "notAComponentType": [
+      "Does not define a Generic Supporting Unit or universal Step-internal component type.",
+      "Does not require a common lifecycle interface, factory, pool, service locator, scheduler, reference counter, state machine, or disposal API.",
+      "Does not replace component-specific lifecycle, resource, activity, or output-custody contracts."
+    ],
+    "authority": "The concrete Step owns Step Composition, which owns lifecycle decisions and coordination. The component implementation performs technical lifecycle mechanics for resources it owns.",
+    "specialization": "Each component pattern defines its technical readiness, activity model, resource obligations, output custody, and release preconditions."
+  },
+  "lifetimeSeparation": {
+    "conceptualLifetimes": [
+      {
+        "name": "runtimeInstanceLifetime",
+        "meaning": "The lifetime of one concrete runtime component instance."
+      },
+      {
+        "name": "associationLifetime",
+        "meaning": "The lifetime of each relationship between the instance and a Step-owned target scope."
+      },
+      {
+        "name": "invocationOrActivityLifetime",
+        "meaning": "The lifetime of one authorized invocation, activity, subscription activation, or other specialized work unit."
+      },
+      {
+        "name": "operationLifetime",
+        "meaning": "Where the component behavior defines nested operations, each operation/attempt lifetime distinct from its enclosing invocation."
+      },
+      {
+        "name": "resourceCapabilityLifetime",
+        "meaning": "The lifetime of borrowed views, handles, callbacks, registrations, subscriptions, leases, or other technical access resources."
+      },
+      {
+        "name": "outputAndEvidenceRetentionLifetime",
+        "meaning": "The lifetime during which produced results, records, entries, or historical evidence must remain available and interpretable."
+      }
+    ],
+    "invariants": [
+      "These lifetimes are conceptually distinct even when a concrete implementation chooses to align some of their boundaries.",
+      "Ending an association does not by itself release the runtime instance.",
+      "Completing an invocation or activity does not by itself require instance release.",
+      "Retaining output or historical evidence does not by itself require retaining the runtime instance or its technical resources.",
+      "A specialized behavior may define additional nested lifetimes, such as Error Handling operation attempts or Observation subscriptions."
+    ]
+  },
+  "lifecycleAuthority": {
+    "stepComposition": [
+      "Determines which component instances the concrete Step requires and whether they are created, acquired, injected, retained, reused, replaced, or released.",
+      "Coordinates identity assignment and authoritative lifecycle eligibility within the Step.",
+      "Determines readiness criteria and whether readiness is checked at provisioning, admission, invocation, or after relevant changes.",
+      "Controls admission and authorization for new invocations or activities.",
+      "Coordinates association eligibility and the relationship between admission, association, and invocation authorization.",
+      "Determines reuse, isolation, concurrency, quiescence, release, and recovery policy for the concrete Step.",
+      "Ensures that release does not invalidate outputs or evidence whose retention obligations remain active."
+    ],
+    "componentImplementation": [
+      "Performs its implementation-specific initialization, preparation, technical readiness checks, activation/deactivation, quiescence, shutdown, and release mechanics as applicable.",
+      "Reports readiness, inability to accept work, quiescence, and release outcomes through its specialized interaction boundary.",
+      "Stops accepting new work when authorization is withdrawn under the specialized contract.",
+      "Releases resources it owns and ensures resource-specific shutdown requirements are satisfied."
+    ],
+    "targetAndExternalOwners": [
+      "A target or external resource owner may expose or withdraw access capabilities under its own contract.",
+      "Such ownership does not transfer lifecycle authority over the associated component to the target."
+    ],
+    "outerLevels": [
+      "Stage Composition invokes the owning Step and does not directly manage internal component instances.",
+      "Pipeline does not impose a global lifecycle manager or own every Step-internal instance."
+    ]
+  },
+  "readinessAdmissionAndAuthorization": {
+    "distinctions": [
+      "Technical preparation is the completion of implementation-specific setup.",
+      "Readiness is satisfaction of declared technical prerequisites for intended use.",
+      "Admission is Step Composition's decision that the instance is eligible to participate in the Step's internal composition.",
+      "Association establishes applicability to a target scope where the specialized pattern uses associations.",
+      "Invocation/activity authorization permits a particular unit of work under the current instance, association, and Step conditions."
+    ],
+    "invariants": [
+      "These concepts must not be conflated; the concrete specialization defines which are applicable and their dependency ordering.",
+      "Provisioning does not by itself prove readiness.",
+      "Readiness does not by itself imply admission or invocation authorization.",
+      "Admission does not necessarily require an active association or immediate invocation.",
+      "Association does not necessarily activate behavior.",
+      "Step Composition authorizes each new invocation/activity only when the specialized lifecycle and association preconditions are satisfied.",
+      "The component must not independently grant itself admission or association authority."
+    ]
+  },
+  "conceptualLifecycleMilestones": {
+    "nature": "The following are reusable conceptual milestones only. They are not a mandatory enum, state machine, fixed sequence, or required set of separately materialized states.",
+    "milestones": [
+      {
+        "name": "ProvisionedOrAcquired",
+        "meaning": "The Step has obtained or made available a concrete runtime instance with its required identity."
+      },
+      {
+        "name": "Prepared",
+        "meaning": "The implementation-specific setup required before readiness evaluation has been performed."
+      },
+      {
+        "name": "Ready",
+        "meaning": "The instance satisfies the applicable technical readiness criteria."
+      },
+      {
+        "name": "Admitted",
+        "meaning": "Step Composition has authorized the instance to participate in the Step's internal composition."
+      },
+      {
+        "name": "AvailableOrInUse",
+        "meaning": "The instance may accept authorized work or is currently performing it within its declared constraints."
+      },
+      {
+        "name": "Quiescing",
+        "meaning": "Step Composition has withdrawn authorization for new work and is reconciling active work and associated obligations."
+      },
+      {
+        "name": "RetainedForReuse",
+        "meaning": "The same instance remains available for later use subject to reset, readiness, and isolation rules."
+      },
+      {
+        "name": "Released",
+        "meaning": "The required release procedure has completed successfully and the instance is no longer eligible for use by the Step."
+      }
+    ],
+    "rules": [
+      "A specialization may omit, combine, repeat, refine, or add milestones.",
+      "A specialization may use different names and technical states while preserving the conceptual distinctions.",
+      "Activity-specific states such as Observing, Subscribed, Activated, or Processing are defined only by the relevant behavior/lifecycle specialization.",
+      "A successful release must be confirmed; failed or indeterminate release remains unresolved and must not be represented as Released."
+    ]
+  },
+  "invocationAndConcurrency": {
+    "rules": [
+      "Each invocation/activity has a lifetime distinct from the instance and is correlated with the association/authorization context under which it began where applicable.",
+      "The concrete Step and component specialization define synchronous/asynchronous execution, concurrency, reentrancy, serialization, cancellation, timeout, and ordering guarantees.",
+      "The component specialization defines whether the instance is single-use, stateless, stateful, reusable, externally backed, or concurrently shareable.",
+      "A new invocation/activity receives a new invocation/activity identity under its specialized identity contract.",
+      "A completed invocation/activity does not imply that the instance must be released."
+    ]
+  },
+  "quiescenceAndRelease": {
+    "principle": "Release is permitted only after Step Composition has withdrawn new-work authorization and the specialized component obligations that could be invalidated by release have been completed, cancelled, detached, or explicitly reconciled.",
+    "commonPreconditions": [
+      "No new invocation/activity may be authorized for the instance during quiescence.",
+      "Associations that could authorize new work are ended, deactivated, or rendered unusable as required by the Association Contract.",
+      "Active invocations, operations, callbacks, subscriptions, sampling cycles, asynchronous work, and queued work are completed, cancelled, drained, or reconciled according to the specialization.",
+      "Produced outputs and results are accepted by their destination or remain recoverable under the explicitly designated owner; no produced output may be silently lost.",
+      "Any unresolved handoff/custody state that could be invalidated by release has been transferred to a named recovery owner or otherwise reconciled under the specialized contract.",
+      "Instance-owned handles, borrowed capabilities, registrations, callbacks, subscriptions, and resources are detached or released when required by their ownership contracts."
+    ],
+    "releaseRules": [
+      "Step Composition decides when release is appropriate and coordinates it.",
+      "The implementation performs technical release mechanics for resources it owns.",
+      "Successful release is recorded only after confirmation under the specialized release contract.",
+      "Failed or indeterminate release remains unresolved and must not be treated as successful or eligible for reuse without explicit reconciliation.",
+      "Release does not erase outputs or evidence already accepted or retained under their independent contracts.",
+      "The runtime instance need not be retained solely because historical evidence refers to its identity."
+    ]
+  },
+  "reuse": {
+    "rules": [
+      "Reuse is permitted only when the concrete Step and component specialization allow it and all readiness, reset, isolation, and outstanding-work requirements are satisfied.",
+      "The same runtime instance retains its instance identity across reuse.",
+      "A replacement runtime instance receives a new instance identity even if it has the same implementation, configuration, logical role, or resource category.",
+      "New associations and invocations/activities receive new identities under their specialized contracts.",
+      "Reuse must not attribute pending work or historical outputs from a prior association or invocation to a later one.",
+      "No universal object pool, factory, reference count, lock, or lifecycle manager is mandated."
+    ]
+  },
+  "failureAndRecovery": {
+    "rules": [
+      "Provisioning, preparation, readiness, admission, invocation, activity, quiescence, and release failures remain distinct lifecycle/execution facts.",
+      "A lifecycle failure is not automatically a component's domain output, validation outcome, observation record, error occurrence, or handling-operation result.",
+      "The concrete Step defines retry, replacement, quarantine, compensation, escalation, or termination policy.",
+      "A failed or indeterminate release must not be represented as Released.",
+      "Previously accepted outputs remain valid under their retention contracts after later component or lifecycle failure.",
+      "If output custody is unresolved, the instance must not be destroyed or released in a way that loses the only recoverable representation."
+    ]
+  },
+  "evidenceAndResourceIndependence": {
+    "rules": [
+      "Produced outputs and historical provenance may outlive the component instance, its associations, and its invocation/activity.",
+      "The owning Step, destination, or specialized composition defines output retention ownership, duration, access, and release conditions.",
+      "Historical identity references do not imply that the corresponding runtime instance, target, or association remains active.",
+      "Retained evidence must remain interpretable without requiring runtime handles or borrowed resources that are released with the instance.",
+      "If output content depends on instance-owned memory or resources, the specialization defines how it is detached, copied, materialized, or otherwise preserved before release.",
+      "Retaining identity metadata or output content must not implicitly retain callbacks, subscriptions, handles, leases, or other technical resources."
+    ]
+  },
+  "specializationRequirements": {
+    "required": [
+      "Define the concrete instance identity, issuer, uniqueness scope, and replacement semantics.",
+      "Define preparation, readiness, admission, and invocation/activity authorization conditions.",
+      "Define applicable association dependencies and target activation behavior.",
+      "Define instance, invocation/activity, nested operation, and resource-capability lifetimes.",
+      "Define concurrency, reentrancy, cancellation, and isolation guarantees where applicable.",
+      "Define quiescence conditions and all active/queued work that must be reconciled.",
+      "Define output custody and identify the recovery owner for unresolved produced-but-unaccepted outputs.",
+      "Define reuse/reset criteria and release confirmation/failure reconciliation.",
+      "Define how historical outputs remain interpretable after instance and association release."
+    ],
+    "completionRule": "A lifecycle specialization is complete when instance identity, readiness/admission, invocation eligibility, relevant lifetimes, concurrency, quiescence, output custody, reuse, release, failure recovery, and historical evidence independence are explicit."
+  },
+  "explicitNonGoals": [
+    "No Generic Supporting Unit abstraction or universal runtime component type.",
+    "No mandatory common lifecycle interface or concrete lifecycle method names.",
+    "No universal linear lifecycle state machine or mandatory enum.",
+    "No universal provisioning, factory, pool, DI container, scheduler, service locator, or resource manager.",
+    "No universal activation, invocation, cancellation, retry, replacement, or recovery policy.",
+    "No assumption that all components produce one result per invocation or use synchronous calls.",
+    "No universal result, event, operation-entry, or publication protocol.",
+    "No requirement that retaining evidence keeps the runtime instance or its resources alive."
+  ],
+  "references": [
+    {
+      "document": "../Stage_Level/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+      "relationship": "Defines Step Composition ownership of internal component lifecycle decisions, result retention, and recovery coordination."
+    },
+    {
+      "document": "../Stage_Level/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Lifecycle_Contract.json",
+      "relationship": "Validator-specific lifecycle specialization."
+    },
+    {
+      "document": "../Stage_Level/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Lifecycle_Contract.json",
+      "relationship": "Observation-specific lifecycle specialization, including activity/subscription lifetime."
+    },
+    {
+      "document": "../Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Lifecycle_Contract.json",
+      "relationship": "Error Handling-specific lifecycle specialization, including operation and publication custody."
+    },
+    {
+      "document": "Step_Composition_Association_Coordination_Contract.json",
+      "relationship": "Association lifecycle boundaries, dissociation, and in-flight invocation attribution used by lifecycle quiescence and release coordination."
+    }
+  ]
+}

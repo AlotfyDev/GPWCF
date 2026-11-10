@@ -1,0 +1,10 @@
+{
+  "serialNumber": 28,
+  "name": "Error Occurrence",
+  "category": "Entity / Concept",
+  "type": "Entity",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+  "description": "Conceptual entity representing one actual occurrence of an error; references the registered Error Type Definition that identifies its kind and carries occurrence-specific information without duplicating the complete definition.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

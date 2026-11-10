@@ -1,0 +1,45 @@
+{
+  "taskId": "02_Step",
+  "serialNumber": 2,
+  "target": "Step",
+  "category": "Core Component",
+  "description": "Implement the Step[TInput,TOutput] aggregate root exposing execute(input: TInput) -> StepExecutionResult[TOutput]. The Step owns internal Step Composition coordinating SPUs and supporting units. StepExecutionResult carries the processing artifact and independently optional contributions (validatorResult, errorResult, errorHandlerResult). Stage invokes Step only through the public callable boundary.",
+  "implementationClasses": [
+    "Step[TInput,TOutput]",
+    "StepExecutionResult[TOutput]",
+    "OptionalResultContributions",
+    "OptionalResultSlot",
+    "StepComposition",
+    "StepInvocation",
+    "StepCallable"
+  ],
+  "relatedDiagrams": {
+    "class": "03_Diagrams_Codes_Files/02_Step.dot",
+    "sequence": "B_Sequencial_Diagram_Code/05_Step_Execution_Sequence.puml",
+    "association": "C_Association_Diagram_Code/02_Step_Associations.puml",
+    "dependency": "D_Architectural_Dependency_Diagram_Code/02_Architectural_Level_Dependency_Graph.dot"
+  },
+  "dependencies": [
+    "01_SPU_Step_Processing_Unit",
+    "04_Error_Handling",
+    "05_Validator_Unit",
+    "06_Observation_Unit"
+  ],
+  "acceptanceCriteria": [
+    "Step execute(input: TInput) -> StepExecutionResult[TOutput] implemented",
+    "Step owns Step Composition coordinating SPUs and supporting units",
+    "StepExecutionResult optional result slots independently present/absent",
+    "Stage does not invoke SPUs or supporting units directly",
+    "StepLifecycle states RetainForReuse and TerminalRetirement implemented",
+    "Step Admission Boundary linearizable for execute invocations"
+  ],
+  "definitionOfDone": [
+    "Tests for optional result slot presence/absence semantics",
+    "Architecture test: Stage not permitted to call SPU directly",
+    "Lifecycle tests for admission/quiescence/release"
+  ],
+  "priority": "high",
+  "status": "pending",
+  "estimatedEffort": "high",
+  "testStrategy": "Unit tests for Step contract and optional contributions; architecture tests for boundary; lifecycle state-machine tests"
+}

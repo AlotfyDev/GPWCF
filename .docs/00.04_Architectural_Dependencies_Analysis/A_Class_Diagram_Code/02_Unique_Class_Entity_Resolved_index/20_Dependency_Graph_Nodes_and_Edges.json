@@ -1,0 +1,10 @@
+{
+  "serialNumber": 20,
+  "name": "Dependency Graph Nodes and Edges",
+  "category": "Feature / Graph Model",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "Models dependency ownership and allowed/forbidden dependency directions across Core, optional Supporting Patterns, Prefect Integration, consumers, and SMRB development environment as a directed acyclic graph.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

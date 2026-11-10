@@ -1,0 +1,10 @@
+{
+  "serialNumber": 3,
+  "name": "Prefect Integration Public API Surface",
+  "category": "Class / API Surface",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Prefect Integration Public API (PUBLIC-PREFECT) with namespace gpwcf.public_api.integrations.prefect; exposes Prefect-specific binding/configuration/correlation/result retrieval API groups without exposing private wrappers or native metadata internals.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

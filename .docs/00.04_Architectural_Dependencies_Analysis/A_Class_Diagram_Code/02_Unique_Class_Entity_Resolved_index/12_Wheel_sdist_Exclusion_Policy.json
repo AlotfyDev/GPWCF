@@ -1,0 +1,10 @@
+{
+  "serialNumber": 12,
+  "name": "Wheel/sdist Exclusion Policy",
+  "category": "Feature / Package Policy",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "The wheel excludes docs, PoC, dependencies, virtual environment, and consumer-specific assets; only accepted baseline package markers materialized.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 17,
+  "name": "Excluded Concerns (Non-Goals)",
+  "category": "Feature / Explicit Non-Goal",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+  "description": "Excludes: GPWCF Pipeline Root Entity/Aggregate, universal workflow adapter/plugin manager/runtime registry/scheduler/dispatcher/worker manager/deployment manager, generic business workflow definition, universal serializer/result codec registry/Publisher service/event bus/recovery manager, unqualified failure/cancellation/timeout/retry/worker-loss/recovery/multi-host/high-scale behavior.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

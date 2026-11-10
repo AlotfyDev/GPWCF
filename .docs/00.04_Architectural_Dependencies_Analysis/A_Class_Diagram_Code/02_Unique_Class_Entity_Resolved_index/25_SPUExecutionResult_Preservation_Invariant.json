@@ -1,0 +1,10 @@
+{
+  "serialNumber": 25,
+  "name": "SPUExecutionResult Preservation Invariant",
+  "category": "Feature / Contract Rule",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+  "description": "Every result element actually produced and available under the SPU invocation contract must be preserved in the returned SPUExecutionResult; a later internal failure must not discard an earlier result the contract requires to be returned.",
+  "resolvedFrom": "02,00_Step_SPU_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "step-spu-level-domain-features-entities-classes-components-index"
+}

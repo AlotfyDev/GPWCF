@@ -1,0 +1,49 @@
+{
+  "taskId": "09_Prefect_Integration",
+  "serialNumber": 9,
+  "target": "Prefect Integration",
+  "category": "Integration Package",
+  "description": "Implement the Prefect 3.9.2 integration binding mapping GPWCF domain contracts to native Prefect Flows/Deployments/Subflows/Tasks. Pipeline Root -> Native Flow, Stage -> Stage Parent Flow, Step -> Step Subflow, SPU -> Native Task. Preserve domain ownership/identities/results/operational evidence. Prefect is opt-in dependency never a Core dependency. Domain/Native identity correlation kept separate; Prefect State is operational evidence not domain result.",
+  "implementationClasses": [
+    "Prefect Integration Package",
+    "Stage Flow/Deployment Binding",
+    "run_deployment(as_subflow=True) Profile",
+    "Step Subflow Binding",
+    "SPU Task Binding",
+    "Supporting Pattern Task Binding",
+    "Domain/Native Identity Correlation",
+    "Typed Result Preservation",
+    "Stage Result Persistence/Retrieval"
+  ],
+  "relatedDiagrams": {
+    "class": "03_Diagrams_Codes_Files/09_Prefect_Integration.dot",
+    "sequence": "B_Sequencial_Diagram_Code/07_Prefect_Integration_Sequence.puml",
+    "association": "C_Association_Diagram_Code/09_Prefect_Integration_Associations.puml",
+    "dependency": "D_Architectural_Dependency_Diagram_Code/06_Core_vs_Prefect_Integration_Boundary.dot"
+  },
+  "dependencies": [
+    "03_Stage",
+    "02_Step",
+    "01_SPU_Step_Processing_Unit"
+  ],
+  "acceptanceCriteria": [
+    "Stage execution realized as Stage Flow/Deployment via run_deployment(as_subflow=True)",
+    "Step execution realized as Step Subflow via invoke_step dispatch Task",
+    "SPU execution realized as Prefect Task inside Step Subflow",
+    "Domain identities (Pipeline/Stage/Step/SPU/invocation) separate from Prefect operational identities",
+    "Prefect State never substitutes for domain result",
+    "Typed domain results (SPUExecutionResult, StepExecutionResult, StageResult) preserved through Prefect",
+    "Core remains usable with Prefect absent; no Prefect types leak into Core API",
+    "PHASE-01/02 qualification limits respected (production binding unqualified)"
+  ],
+  "definitionOfDone": [
+    "Integration binding tests for Flow/Subflow/Task mapping",
+    "Identity correlation tests (domain vs native)",
+    "Result preservation tests through Prefect execution",
+    "Architecture test: Core does not import Prefect"
+  ],
+  "priority": "high",
+  "status": "pending",
+  "estimatedEffort": "high",
+  "testStrategy": "Integration tests for Prefect mapping; identity correlation tests; result preservation tests; architecture boundary tests"
+}

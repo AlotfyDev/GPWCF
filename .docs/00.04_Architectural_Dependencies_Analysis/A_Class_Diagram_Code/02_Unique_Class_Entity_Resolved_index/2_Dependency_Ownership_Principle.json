@@ -1,0 +1,10 @@
+{
+  "serialNumber": 2,
+  "name": "Dependency Ownership Principle",
+  "category": "Feature / Governing Principle",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "Dependency ownership follows semantic and operational responsibility, not repository proximity or current developer environment installation.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

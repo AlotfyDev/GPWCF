@@ -1,0 +1,10 @@
+{
+  "serialNumber": 9,
+  "name": "Generic Error Handling Capability",
+  "category": "Architectural Design / Feature",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/10.00_Error_Handling.json",
+  "description": "Wave 4 detailed design (artifact 2) defining the reusable optional Error Handling capability as a specialized Supporting Pattern, including generic type boundaries, unit/association/lifecycle ownership, operation-result aggregation, and dependency isolation, without promoting any consumer Error Model into GPWCF Core.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

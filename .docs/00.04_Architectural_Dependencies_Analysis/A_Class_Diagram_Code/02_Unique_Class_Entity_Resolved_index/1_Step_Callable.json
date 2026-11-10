@@ -1,0 +1,10 @@
+{
+  "serialNumber": 1,
+  "name": "Step Callable",
+  "category": "Architectural Design / Feature",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/04.00_Step_Callable.json",
+  "description": "Wave 2 detailed design (artifact 1) defining the stable Stage-facing callable boundary of a Step, including explicit invocation identity and parent Stage correlation, while preserving the Step Aggregate as the owner of its internal Step Composition and the sole public boundary for Step execution and StepExecutionResult.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

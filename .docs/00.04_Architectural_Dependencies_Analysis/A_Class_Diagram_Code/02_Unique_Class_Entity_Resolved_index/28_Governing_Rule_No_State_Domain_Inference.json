@@ -1,0 +1,10 @@
+{
+  "serialNumber": 28,
+  "name": "Governing Rule: No State/Domain Inference",
+  "category": "Feature / Governing Rule",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+  "description": "Governing rule: Prefect State and native identifiers describe how the external runtime executed and recorded a native Flow/Task; GPWCF domain identities, invocation acceptance, results, outcomes, lifecycle, and custody describe what the domain contract accepted, produced, and settled. Neither namespace substitutes for the other (noStateInference and noDomainInference).",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

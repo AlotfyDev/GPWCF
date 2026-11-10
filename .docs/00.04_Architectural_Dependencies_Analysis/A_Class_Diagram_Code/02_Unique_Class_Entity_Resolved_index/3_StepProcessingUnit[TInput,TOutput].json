@@ -1,0 +1,10 @@
+{
+  "serialNumber": 3,
+  "name": "StepProcessingUnit[TInput,TOutput]",
+  "category": "Class / Generic Type",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+  "description": "Generic callable contract of the SPU; each concrete SPU binds TInput and TOutput to the types required by its own Step responsibility. No common concrete input or output type across Steps is imposed.",
+  "resolvedFrom": "02,00_Step_SPU_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "step-spu-level-domain-features-entities-classes-components-index"
+}

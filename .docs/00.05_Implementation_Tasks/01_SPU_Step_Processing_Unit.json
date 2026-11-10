@@ -1,0 +1,40 @@
+{
+  "taskId": "01_SPU_Step_Processing_Unit",
+  "serialNumber": 1,
+  "target": "SPU / Step Processing Unit",
+  "category": "Core Component",
+  "description": "Implement the StepProcessingUnit[TInput,TOutput] generic callable contract and SPUExecutionResult[TOutput] result aggregate. The SPU performs one assigned processing responsibility inside its owning Step, returns a structured result (processingArtifact, spuErrorOccurrences, validatorResult), registers its own SPUErrorTypeDefinition instances, and creates SPUError occurrences. It must NOT assemble StepExecutionResult or decide Step flow transitions.",
+  "implementationClasses": [
+    "StepProcessingUnit[TInput,TOutput]",
+    "SPUExecutionResult[TOutput]",
+    "SPUError[TErrorOccurrenceContext]",
+    "SPUErrorTypeDefinition[TErrorContent,THandlingAction]",
+    "SPUErrorTypeDefinitionRegistry"
+  ],
+  "relatedDiagrams": {
+    "class": "03_Diagrams_Codes_Files/01_SPU_Step_Processing_Unit.dot",
+    "sequence": "B_Sequencial_Diagram_Code/01_SPU_Execution_Sequence.puml",
+    "association": "C_Association_Diagram_Code/01_SPU_Step_Processing_Unit_Associations.puml",
+    "dependency": "D_Architectural_Dependency_Diagram_Code/02_Architectural_Level_Dependency_Graph.dot"
+  },
+  "dependencies": [
+    "11_Core_Identities_Diagnostics"
+  ],
+  "acceptanceCriteria": [
+    "SPU execute(input: TInput) -> SPUExecutionResult[TOutput] signature implemented",
+    "SPUExecutionResult carries processingArtifact, spuErrorOccurrences, validatorResult as independently optional elements",
+    "SPU defines and registers its own SPUErrorTypeDefinition instances via Pipeline-assigned registry",
+    "SPU creates SPUError occurrences for its own processing errors",
+    "No reverse package dependency from SPU to Step",
+    "Prefect State never substitutes for SPUExecutionResult"
+  ],
+  "definitionOfDone": [
+    "Unit tests cover execute success, error occurrence creation, result optionality",
+    "Architecture test enforces SPU does not import Step Composition",
+    "Integration test confirms SPUExecutionResult distinct from StepExecutionResult"
+  ],
+  "priority": "high",
+  "status": "pending",
+  "estimatedEffort": "medium",
+  "testStrategy": "Unit tests for SPU contract; architecture tests for dependency direction; integration test through Step Composition"
+}

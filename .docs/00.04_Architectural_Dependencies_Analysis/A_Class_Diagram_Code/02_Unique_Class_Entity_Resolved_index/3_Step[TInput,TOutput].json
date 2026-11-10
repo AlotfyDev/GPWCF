@@ -1,0 +1,10 @@
+{
+  "serialNumber": 3,
+  "name": "Step[TInput,TOutput]",
+  "category": "Class / Generic Type",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+  "description": "Generic Step contract with type parameters TInput (input type accepted from owning Stage) and TOutput (output artifact type exposed to owning Stage). No common concrete types imposed across Steps.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

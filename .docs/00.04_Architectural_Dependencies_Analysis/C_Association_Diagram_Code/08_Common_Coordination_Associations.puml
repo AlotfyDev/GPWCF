@@ -1,0 +1,54 @@
+@startuml
+title Common Coordination Associations (Framework-Level)
+skinparam monochrome true
+skinparam roundcorner 0
+
+class "StepCompositionAssociationCoordination" as SACC <<Contract>> {
+  documentId: pipeline.step-composition.association-coordination.contract
+}
+class "StepCompositionInternalComponentLifecycleCoordination" as SILCC <<Contract>> {
+  documentId: pipeline.step-composition.internal-component-lifecycle-coordination.contract
+}
+class "Association" as Assoc <<Entity>> {
+  associationIdentity
+  componentInstanceIdentity
+  associationTargetIdentity
+  stepInstanceIdentity
+}
+class "InvocationBinding" as IB <<Entity>> {
+  selects association context
+}
+class "Component Instance Identity" as CII <<Concept>> {
+  concrete runtime component instance
+}
+class "Component Association Identity" as CAI <<Concept>> {
+  one relationship instance
+}
+class "Component Invocation Identity" as CIII <<Concept>> {
+  one invocation/activity
+}
+class "Runtime Instance Lifetime" as RIL <<Lifetime>> { }
+class "Association Lifetime" as AL <<Lifetime>> { }
+class "Invocation Lifetime" as IL <<Lifetime>> { }
+class "Operation Lifetime" as OL <<Lifetime>> { }
+class "Step Composition" as SC <<Component>> {
+  + association coordination authority
+  + lifecycle coordination authority
+}
+
+SACC --> Assoc : governs relationships
+SACC --> IB : governs invocation binding
+SILCC --> RIL : defines milestones
+SILCC --> AL : defines association lifetime
+SILCC --> IL : defines invocation lifetime
+SILCC --> OL : defines operation lifetime
+SC .> SACC : owned by
+SC .> SILCC : owned by
+Assoc ..> CII : identifies component instance
+Assoc ..> CAI : distinct relationship identity
+Assoc ..> CIII : identifies invocation
+
+note right of SACC : Commonality = pair of Step Composition responsibilities
+All Association/Lifecycle specialization kept per pattern
+
+@enduml

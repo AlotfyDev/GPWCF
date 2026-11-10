@@ -1,0 +1,380 @@
+{
+  "documentId": "pipeline.error-handler-result.contract",
+  "documentVersion": "0.1.5",
+  "status": "design-baseline",
+  "title": "ErrorHandlerResult Contract",
+  "scope": {
+    "architecturalLevel": "stage-step-component",
+    "component": "Step Error Handling",
+    "owningLevel": "step",
+    "purpose": "Define the Step-specific ErrorHandlerResult contract for representing executed error-handling operations and identifying the SPUError occurrences targeted by each operation.",
+    "appliesTo": "A concrete Step that selects one or more Step Supporting Error Handling Unit instances and a Step-specific Error Handling Composition, with each Unit associated with a Step, SPU, or other Step-defined internal target scope.",
+    "normativeBoundary": "This contract defines the aggregate representation of error-handling operation results and their occurrence targets. It does not define SPU error types or occurrences, prescribe error-handling policy, execute handling operations, determine whether an error is resolved, or control Step, Stage, or Pipeline flow."
+  },
+  "contract": {
+    "name": "ErrorHandlerResult",
+    "genericType": "ErrorHandlerResult[THandlingOperationEntry, TErrorHandlingContext]",
+    "definedBy": "The Step-specific error-handling contract.",
+    "assembledBy": "The Step-specific Error Handling Composition aggregates accepted operation entries; Step Composition integrates the resulting value into StepExecutionResult[TOutput].",
+    "purpose": "Represent one or more error-handling operation executions while preserving the producing Unit, exact Unit Association and target scope, invocation, operation-attempt and execution identities, target occurrence references, and operation-specific structured results.",
+    "coreMeaning": "ErrorHandlerResult is an aggregate of error-handling operation entries. It is not an ErrorResult, an SPUError occurrence, an error type definition, or a Step execution status.",
+    "nonResponsibilities": [
+      "Define, register, or own SPUErrorTypeDefinition instances or their Registry Instances.",
+      "Create or replace SPUError occurrences.",
+      "Contain, copy, mutate, remove, or subsume ErrorResult.",
+      "Execute handling operations or prescribe which operations must be selected.",
+      "Define a universal handling-action taxonomy, success/failure status, retry policy, or resolution policy.",
+      "Assert that a targeted occurrence has been resolved, removed, or made irrelevant merely because an operation result exists.",
+      "Determine Step, Stage, or Pipeline control flow.",
+      "Automatically convert thrown exceptions into operation results."
+    ],
+    "stepSpecializationRequirement": "Each Step defines concrete THandlingOperationEntry and TErrorHandlingContext and reconciles entry identity/semantics with the mandatory publication specialization in 01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json."
+  },
+  "typeParameters": [
+    {
+      "name": "THandlingOperationEntry",
+      "meaning": "The Step-specialized entry type used to represent one error-handling operation execution and its structured operation result.",
+      "specialization": "Defined by the owning Step. It must preserve the identity of the producing Error Handling Unit, the Handling Operation Attempt identity, the actual operation identity, the target occurrence references, and the operation-specific structured result. It may accommodate multiple Error Handling Unit result specializations when a Step composes results from multiple units."
+    },
+    {
+      "name": "TErrorHandlingContext",
+      "meaning": "The Step-specific context associated with the aggregate of error-handling operations, when such context is required.",
+      "specialization": "Its structure, semantics, presence, and use are defined by the owning Step. This contract does not prescribe a universal context schema. This aggregate context is distinct from the TErrorHandlingUnitInput supplied to an individual Error Handling Unit. If post-invocation occurrence resolution is required while ErrorResult is absent, the Step-specific context or an associated handle must identify the retained resolution scope."
+    }
+  ],
+  "operationEntry": {
+    "genericConcept": "ErrorHandlingOperationEntry[THandlingOperationResult]",
+    "purpose": "Represent one actual error-handling operation execution for which a structured operation result was produced.",
+    "requiredStructuralElements": [
+      {
+        "name": "errorHandlingUnitIdentity",
+        "conceptualType": "ErrorHandlingUnitIdentity",
+        "meaning": "Identifies the concrete Step Supporting Error Handling Unit runtime instance that performed the represented operation.",
+        "constraints": [
+          "Identifies the operation producer, not the Step, Association, target scope, error occurrence, or error type definition.",
+          "Must remain associated with the operation entry when results from multiple Unit instances are aggregated.",
+          "Its assignment, uniqueness scope, and lifetime are defined by the Supporting Error Handling Unit and detailed operation-execution contracts."
+        ]
+      },
+      {
+        "name": "handlingOperationAttemptIdentity",
+        "conceptualType": "HandlingOperationAttemptIdentity",
+        "meaning": "Identifies the specific pre-execution attempt whose reservation authorized the represented operation execution and publication.",
+        "constraints": [
+          "The attempt identity is assigned before requesting PublicationReservation and does not itself mean execution began.",
+          "It must match the handlingOperationAttemptIdentity bound to the PublicationReservation used to publish this entry.",
+          "A reservation-rejected attempt has no operation entry.",
+          "A distinct execution retry uses a new attempt identity; a publication retry for the same execution retains the original attempt identity.",
+          "Its scope and generation rules are defined by ErrorHandlingUnit_Contract.json and PublicationReservation_Contract.json."
+        ]
+      },
+      {
+        "name": "handlingOperationIdentity",
+        "conceptualType": "HandlingOperationIdentity",
+        "meaning": "Identifies this particular operation execution within the identity scope of its producing Error Handling Unit.",
+        "constraints": [
+          "Identifies an operation execution, not merely an operation kind or a reusable handling-action description.",
+          "Distinct operation executions must remain distinguishable even when they perform the same kind of handling activity or target the same occurrences.",
+          "Its per-operation generation and uniqueness requirements are defined by ErrorHandlingUnit_Contract.json."
+        ]
+      },
+      {
+        "name": "targetOccurrenceReferences",
+        "conceptualType": "Collection[HandledErrorOccurrenceReference]",
+        "meaning": "References the SPUError occurrences that this particular operation targeted.",
+        "constraints": [
+          "Each reference consists of producerSPUIdentity and occurrenceIdentity, as defined by the Step Error Model contract.",
+          "Each reference identifies an original occurrence; it does not embed ErrorResult or copy the occurrence.",
+          "The same occurrence may be targeted by different operation entries; such entries remain distinct operations.",
+          "Duplicate references within one operation entry are not permitted unless the Step-specific contract gives repeated targeting a distinct and explicit meaning.",
+          "The default cardinality is one or more occurrence references; a Step may explicitly permit zero only for a defined non-occurrence target scope, as specified by ErrorHandlingUnit_Contract.json."
+        ]
+      },
+      {
+        "name": "operationResult",
+        "conceptualType": "THandlingOperationResult",
+        "meaning": "The structured result produced by the Error Handling Unit for this particular operation execution.",
+        "constraints": [
+          "The result type and semantics are defined by the producing Error Handling Unit and the owning Step.",
+          "It must remain associated with the operation execution and its target occurrence references.",
+          "It represents the outcome or information produced by the operation according to its specialized contract; the common contract does not impose a universal status or interpretation."
+        ]
+      },
+      {
+        "name": "stepInstanceIdentity",
+        "conceptualType": "StepInstanceIdentity",
+        "meaning": "Identifies the concrete Step instance whose composition authorized the represented handling operation.",
+        "constraints": [
+          "Must identify the owning Step scope and remain stable for the lifetime required by retained operation entries and aggregates."
+        ]
+      },
+      {
+        "name": "errorHandlingUnitAssociationIdentity",
+        "conceptualType": "ErrorHandlingUnitAssociationIdentity",
+        "meaning": "Identifies the exact association under which the represented invocation and operation were authorized.",
+        "constraints": [
+          "Must refer to the Association selected for the invocation; it is distinct from errorHandlingUnitIdentity and associationTargetIdentity.",
+          "Must remain historically interpretable after dissociation."
+        ]
+      },
+      {
+        "name": "associationTargetIdentity",
+        "conceptualType": "AssociationTargetIdentity",
+        "meaning": "Identifies the Step-defined target scope bound to the selected Unit Association.",
+        "constraints": [
+          "Must match the target bound to errorHandlingUnitAssociationIdentity.",
+          "It identifies the association scope, not necessarily the exact occurrence/resource target of this operation."
+        ]
+      },
+      {
+        "name": "errorHandlingInvocationIdentity",
+        "conceptualType": "ErrorHandlingInvocationIdentity",
+        "meaning": "Identifies the exact invocation of the Unit within which the represented operation execution occurred.",
+        "constraints": [
+          "Must be unique within the Step-defined invocation identity scope.",
+          "All operation entries from the same Unit invocation carry the same invocation identity.",
+          "It is distinct from handlingOperationAttemptIdentity and handlingOperationIdentity."
+        ]
+      }
+    ],
+    "compositeIdentity": {
+      "name": "HandlingOperationEntryIdentity",
+      "conceptualType": "CompositeIdentity",
+      "elements": [
+        "errorHandlingUnitIdentity",
+        "handlingOperationIdentity"
+      ],
+      "meaning": "Identifies one actual operation execution unambiguously within an ErrorHandlerResult that may aggregate entries from multiple Error Handling Units.",
+      "constraints": [
+        "The composite identity does not replace either identity stored by the operation entry.",
+        "It is distinct from HandledErrorOccurrenceReference; operation identity and occurrence identity identify different entities.",
+        "handlingOperationAttemptIdentity is preserved as the originating reservation-authorized attempt identity, but does not replace the composite identity of the actual operation execution.",
+        "The complete entry also preserves Step, Association, association-target, and invocation provenance; these fields do not replace the operation composite identity."
+      ]
+    },
+    "stepSpecificRequirement": "The concrete Step entry preserves the immutable entry identity used for idempotent retry and is the complete representation covered by reserved capacity and the no-fail ownership-transfer strategy."
+  },
+  "elements": [
+    {
+      "name": "handlingOperations",
+      "type": "Collection[THandlingOperationEntry]",
+      "cardinality": "One or more entries for a produced ErrorHandlerResult.",
+      "meaning": "The collection of error-handling operation executions represented by this ErrorHandlerResult.",
+      "constraints": [
+        "The collection may contain operation entries produced by one Error Handling Unit or by multiple Error Handling Units associated with the Step.",
+        "Each entry represents one distinct operation execution for which a structured operation result was produced.",
+        "Each entry retains its producing Error Handling Unit identity, operation identity, target occurrence references, and operation-specific result.",
+        "Distinct operation executions must not be merged merely because they target the same occurrences or produce similar results.",
+        "The collection implementation, mutability, and concrete ordering are defined by the Step specialization."
+      ]
+    },
+    {
+      "name": "errorHandlingContext",
+      "type": "Optional[TErrorHandlingContext]",
+      "absentValue": "null or the Step-specialized equivalent of absence",
+      "meaning": "Optional Step-specific context describing the aggregate of handling operations represented by ErrorHandlerResult.",
+      "constraints": [
+        "The common contract does not prescribe the structure or semantics of this context.",
+        "A Step may omit this element when no aggregate-level handling context is required.",
+        "The context must not replace or absorb the identity, target references, or operation-specific result of any entry."
+      ]
+    }
+  ],
+  "operationAndTargetSemantics": {
+    "operationMeaning": "An operation entry represents an actual handling operation execution that yielded the required structured operationResult. It does not merely represent a declared handlingAction or a planned operation.",
+    "targetRelationship": {
+      "cardinality": "One operation entry targets one or more occurrence references; one occurrence may be targeted by multiple distinct operation entries.",
+      "rules": [
+        "A target reference identifies an occurrence using producerSPUIdentity plus occurrenceIdentity.",
+        "The referenced occurrence's SPUErrorTypeDefinitionReference remains part of the original occurrence and is not duplicated or replaced by the target reference.",
+        "When the corresponding ErrorResult is present, each target reference that is represented in that ErrorResult must resolve to its matching occurrence entry.",
+        "The optionality of ErrorResult and ErrorHandlerResult remains independent. If ErrorResult is absent, target-reference resolution and occurrence lifetime are governed by the Step-specific occurrence-reference contract; this contract does not require ErrorResult to be embedded or made mandatory.",
+        "Targeting an occurrence does not imply that the operation succeeded, that the occurrence was resolved, or that the occurrence should be removed from ErrorResult.",
+        "An operation may target multiple occurrences, and multiple operations may target the same occurrence.",
+        "The Step-specific cardinality for each operation kind, including any permitted non-occurrence target scope, is defined under ErrorHandlingUnit_Contract.json."
+      ]
+    },
+    "identityPreservation": [
+      "Preserve errorHandlingUnitIdentity, handlingOperationAttemptIdentity, and handlingOperationIdentity for every operation entry.",
+      "Preserve every target occurrence reference exactly as defined by the Step Error Model contract.",
+      "Preserve the complete operationResult according to the producing Error Handling Unit contract.",
+      "Do not replace operation identity with attempt identity, occurrence identity, or error type identity.",
+      "Do not infer operation identity from target references or operation-result content.",
+      "Preserve stepInstanceIdentity, errorHandlingUnitAssociationIdentity, associationTargetIdentity, and errorHandlingInvocationIdentity for every operation entry.",
+      "Association target provenance is distinct from targetOccurrenceReferences; the latter identify the exact error occurrences acted upon by the operation."
+    ],
+    "aggregationRules": [
+      "The Step-specific error-handling contract defines which operation results participate in a particular ErrorHandlerResult.",
+      "Once selected for inclusion, each produced operation result must be represented without silent loss.",
+      "No automatic deduplication or merging of distinct operation executions is imposed.",
+      "The Step defines whether collection order is meaningful and how entries are ordered; no universal chronological, execution, severity, or priority order is imposed.",
+      "The Step defines TErrorHandlingContext and any aggregate-level metadata without weakening per-entry identity and target-preservation requirements.",
+      "The Error Handling Unit instance and operation identity scopes must satisfy the uniqueness and lifetime rules in ErrorHandlingUnit_Contract.json."
+    ]
+  },
+  "handlingActionBoundary": {
+    "principle": "A handling-action description carried by SPUErrorTypeDefinition is not itself an executed operation and is not an ErrorHandlerResult.",
+    "rules": [
+      "The THandlingAction value in SPUErrorTypeDefinition describes handling semantics according to the error-definition contract.",
+      "An Error Handling Unit may use that description when selecting or performing an operation, according to the Step design.",
+      "The presence of a handling-action description does not prove that an operation was executed.",
+      "An operation entry records an actual operation execution and its produced operationResult.",
+      "This contract does not require a one-to-one mapping between a handling-action description and an operation execution."
+    ]
+  },
+  "StepExecutionResultIntegration": {
+    "field": "errorHandlerResult",
+    "type": "Optional[ErrorHandlerResult]",
+    "producer": "Step Composition",
+    "rules": [
+      "The Step-specific Error Handling Composition assembles ErrorHandlerResult from accepted operation entries.",
+      "Step Composition integrates ErrorHandlerResult as the independent optional errorHandlerResult element of StepExecutionResult[TOutput].",
+      "ErrorHandlerResult remains separate from ErrorResult and does not contain, mutate, remove, or subsume it."
+    ]
+  },
+  "exceptionBoundary": {
+    "rules": [
+      "An operation entry requires a structured operationResult; an operation that throws before producing that result is not represented as though it had returned one.",
+      "A thrown exception is not automatically converted into THandlingOperationResult or an ErrorHandlerResult operation entry.",
+      "Any handling-operation exception capture, translation, or recovery behavior must be defined by the applicable Error Handling Unit, SPU, or Stage exception contract.",
+      "This contract does not prescribe whether the SPU propagates, catches, or otherwise responds to an exception raised by an Error Handling Unit."
+    ]
+  },
+  "responsibilityAllocation": {
+    "ErrorHandlingUnit": [
+      "Perform the handling operation assigned by the owning Step design.",
+      "Identify the SPUError occurrences targeted by the operation using the Step-defined HandledErrorOccurrenceReference.",
+      "Produce the operation-specific structured THandlingOperationResult.",
+      "Publish the complete operation entry through the invocation-bound Publisher; the Step-specific Error Handling Composition owns ErrorHandlerResult assembly.",
+      "Accept the Step-specialized TErrorHandlingUnitInput and use only the authorized occurrence access supplied for that invocation.",
+      "Generate or obtain a distinct handlingOperationIdentity for each operation execution according to ErrorHandlingUnit_Contract.json.",
+      "Generate or obtain a distinct handlingOperationAttemptIdentity before requesting a PublicationReservation, then associate the resulting reservation and actual handlingOperationIdentity with the published entry."
+    ],
+    "StepErrorHandlingContract": [
+      "Define the ErrorHandlerResult contract and its Step-specific specialization.",
+      "Define the operation-entry representation and identity-preservation rules.",
+      "Define how operation results from one or more Error Handling Units are selected and aggregated.",
+      "Define the Step-specific TErrorHandlingContext, ordering, and any operation-to-target cardinality refinements where required."
+    ],
+    "StepSpecificErrorHandlingComposition": [
+      "Operates as a Step-owned composition capability coordinated by Step Composition.",
+      "Implements operation-entry collection, publication reconciliation, and aggregation according to the Step specialization.",
+      "Preserves complete Step, Unit, Association, invocation, attempt, operation, target, and result provenance.",
+      "Constructs ErrorHandlerResult according to this contract."
+    ],
+    "ConcreteSPU": [
+      "Make SPUError occurrences produced by its own processing responsibility available to Step Composition with producer and occurrence identities preserved.",
+      "Provide SPU-specific context or authorized occurrence access only when Step Composition assigns that interaction to the SPU.",
+      "A Concrete SPU does not own the Error Handling Unit Association or its lifecycle merely because it is an association target."
+    ],
+    "PipelineAndStage": [
+      "This contract does not assign ErrorHandlerResult construction or operation execution to Pipeline.",
+      "This contract does not assign error-handling policy or Step-internal operation selection to Stage Composition."
+    ],
+    "StepComposition": [
+      "Owns association, provisioning/admission, invocation authorization, reuse, quiescence, and release decisions for Error Handling Unit instances at the Step level.",
+      "Selects the applicable Association and target context for each invocation, including SPU, Step-wide, or other Step-internal scopes.",
+      "Coordinates the Step-specific Error Handling Composition and ensures accepted entries and unresolved custody evidence remain available.",
+      "Integrates the independently assembled ErrorHandlerResult into StepExecutionResult."
+    ]
+  },
+  "explicitNonGoals": [
+    "No universal THandlingOperationResult schema is imposed.",
+    "No universal TErrorHandlingContext schema is imposed.",
+    "No universal success, failure, handled, resolved, ignored, retried, or compensated status is imposed.",
+    "No universal handling-action taxonomy or mapping from THandlingAction to concrete operations is imposed.",
+    "No universal operation ordering, retry, idempotency, transaction, compensation, or concurrency policy is imposed.",
+    "No universal requirement that every ErrorResult occurrence be targeted by an operation is imposed.",
+    "No universal requirement that every operation target only one occurrence is imposed.",
+    "No ErrorResult containment, mutation, or ownership is introduced.",
+    "No exception-to-operation-result conversion is imposed.",
+    "No language-specific class hierarchy, collection implementation, serialization format, or memory ownership model is mandated.",
+    "No reservation, Publisher capacity, or publication acknowledgement semantics are defined here; these are defined by PublicationReservation_Contract.json and OperationEntryPublisher_Contract.json."
+  ],
+  "relationships": [
+    {
+      "from": "SPUError occurrence",
+      "to": "HandledErrorOccurrenceReference",
+      "relationship": "is-addressed-by-producer-SPU-identity-and-original-occurrence-identity"
+    },
+    {
+      "from": "Error Handling Unit",
+      "to": "ErrorHandlingOperationEntry",
+      "relationship": "produces-operation-identity-target-references-and-operation-result"
+    },
+    {
+      "from": "ErrorHandlingOperationEntry collection",
+      "to": "ErrorHandlerResult",
+      "relationship": "forms-Step-specific-error-handling-operation-aggregate"
+    },
+    {
+      "from": "Step Error Handling contract",
+      "to": "ErrorHandlerResult",
+      "relationship": "defines-structure-semantics-and-aggregation-rules"
+    },
+    {
+      "from": "ErrorHandlerResult",
+      "to": "StepExecutionResult[TOutput].errorHandlerResult",
+      "relationship": "is-carried-as-an-independent-optional-result-element"
+    },
+    {
+      "from": "ErrorResult",
+      "to": "ErrorHandlerResult",
+      "relationship": "related-through-occurrence-references-only-without-containment-or-mutation"
+    }
+  ],
+  "references": [
+    {
+      "document": "../01.01_Step_Error_Model/Step_Error_Model_Contract.json",
+      "relationship": "canonical-SPUError-occurrence-reference-and-ErrorResult-separation-contract"
+    },
+    {
+      "document": "../01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "relationship": "aggregate-result-field-and-independent-optionality-contract"
+    },
+    {
+      "document": "../01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      "relationship": "SPU-coordination-and-StepExecutionResult-assembly-boundary"
+    },
+    {
+      "document": "../../../Common/Error_Model.json",
+      "relationship": "SPUError-type-definition-and-occurrence-identity-contract"
+    },
+    {
+      "document": "ErrorHandlingUnit_Contract.json",
+      "relationship": "Error-Handling-Unit-callable-input-operation-result-identity-lifecycle-and-target-access-contract"
+    },
+    {
+      "document": "PublicationReservation_Contract.json",
+      "relationship": "attempt-to-reservation binding and publication ownership boundary"
+    },
+    {
+      "document": "OperationEntryPublisher_Contract.json",
+      "relationship": "atomic acceptance and publication delivery semantics"
+    },
+    {
+      "document": "Single_Step_Publication_Specialization_Contract.json",
+      "relationship": "mandatory per-Step entry identity, transfer representation, and custody trace"
+    },
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Contract.json",
+      "relationship": "Normative Unit, Association, invocation, operation, and provenance requirements."
+    },
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Association_Contract.json",
+      "relationship": "Association and target-scope identity carried by every operation entry."
+    },
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Lifecycle_Contract.json",
+      "relationship": "Instance lifecycle and independent result retention."
+    }
+  ],
+  "openDesignDetails": [
+    "Define the concrete THandlingOperationEntry specialization for each Step, including how results from heterogeneous Error Handling Units are represented.",
+    "Define each Error Handling Unit's concrete THandlingOperationResult contract.",
+    "Define the concrete TErrorHandlingContext and operation collection ordering semantics for each Step.",
+    "Define operation-to-target cardinality refinements for each Step if an operation can legitimately target no occurrence or requires additional target metadata.",
+    "Define serialization and cross-boundary reference resolution only if ErrorHandlerResult must cross a process or persistence boundary.",
+    "Each Step instantiates concrete operation-entry/context types and reconciles them with the mandatory publication specialization; the four publication areas may not remain open."
+  ]
+}

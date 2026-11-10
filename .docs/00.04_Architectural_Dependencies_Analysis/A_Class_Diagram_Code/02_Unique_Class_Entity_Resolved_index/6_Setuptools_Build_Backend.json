@@ -1,0 +1,10 @@
+{
+  "serialNumber": 6,
+  "name": "Setuptools Build Backend",
+  "category": "Feature / Build Policy",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "Build backend setuptools.build_meta pinned to setuptools==84.2.1, subject to clean CPython 3.15.1 build verification; supports wheel/sdist build hooks.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 9,
+  "name": "Step Execution Result",
+  "category": "Architectural Design / Feature",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/05.00_Step_Execution_Result.json",
+  "description": "Wave 2 detailed design (artifact 2) defining the Step-level structured result returned to Stage, preserving the processing artifact and independently optional Step-specialized aggregates while adding explicit invocation provenance and type-safe optional-result contribution boundary.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

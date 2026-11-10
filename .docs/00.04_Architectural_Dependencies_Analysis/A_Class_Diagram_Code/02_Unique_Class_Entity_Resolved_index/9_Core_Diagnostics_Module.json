@@ -1,0 +1,10 @@
+{
+  "serialNumber": 9,
+  "name": "Core Diagnostics Module",
+  "category": "Class / Module",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "core.diagnostics is optional and does not become a universal Error Model; dependency closure analysis determines which contracts require diagnostics versus specialized error handling.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

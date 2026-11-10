@@ -1,0 +1,10 @@
+{
+  "serialNumber": 13,
+  "name": "Stage Result Persistence/Retrieval",
+  "category": "Feature / Integration Requirement",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+  "description": "Stage result persistence/retrieval obligations using persist_result=True; Root waits for Deployment Flow Run terminal state and loads persisted Stage domain result through Prefect result reference; multi-host storage remains unqualified.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

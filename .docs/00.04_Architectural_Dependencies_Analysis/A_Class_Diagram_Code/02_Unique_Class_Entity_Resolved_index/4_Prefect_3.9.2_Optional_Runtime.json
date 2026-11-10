@@ -1,0 +1,10 @@
+{
+  "serialNumber": 4,
+  "name": "Prefect 3.9.2 Optional Runtime",
+  "category": "Feature / Dependency Rule",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "Prefect 3.9.2 is an accepted optional external runtime owned only by integrations.prefect; installed only through the optional Prefect profile; never a Core dependency.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,44 @@
+@startuml
+title Publication Associations
+skinparam monochrome true
+skinparam roundcorner 0
+
+class "OperationEntryPublisher" as Pub <<Contract>> {
+  Publisher identity
+  reservation capacity
+  publication acceptance order
+}
+class "PublicationReservation" as Res <<Class>> {
+  publicationReservationIdentity
+  handlingOperationAttemptIdentity
+  state: Reserved/Consumed/Released
+}
+class "ErrorHandlingOperationEntry" as EOE <<Class>> {
+  composite identity: unit + operation
+}
+class "ErrorHandlerResult" as EHR <<Class>> {
+  collection of accepted entries
+}
+class "Step-Specific Error Handling Composition" as Comp <<Component>> {
+  + owns Publisher per invocation
+  + controls Invocation closure
+}
+class "Error Handling Unit" as EHU <<Component>> {
+  + holds reservation during operation
+}
+class "Recovery Owner" as RO <<Component>> {
+  + recovery procedure for indeterminate acceptance
+}
+
+Pub ..> Res : issues / validates / consumes / releases
+Res ..> EOE : authorizes at most one matching entry
+EHU --> Pub : reserve / publish / status / release
+Pub --> EHR : retains accepted entries
+Comp .> Pub : owns & supplies per-invocation
+Comp .> EHR : aggregates for StepExecutionResult
+Comp ..> RO : names recovery owner
+
+note right of Pub : Capacity invariant: TotalCapacity >= Reserved + Occupied
+Publication Acceptance Order != attempt/completion order
+
+@enduml

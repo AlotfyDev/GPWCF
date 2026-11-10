@@ -1,0 +1,10 @@
+{
+  "serialNumber": 14,
+  "name": "Integration Public API Boundary",
+  "category": "Feature / API Boundary",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+  "description": "Configuration ownership and integration Public API boundary; Core must remain usable with Prefect absent; no Prefect types leak into Core API; Public API is an explicit curated stable boundary under public_api.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

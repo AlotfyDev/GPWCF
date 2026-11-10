@@ -1,0 +1,10 @@
+{
+  "serialNumber": 6,
+  "name": "run_deployment(as_subflow=True) Profile",
+  "category": "Feature / Mechanism",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+  "description": "Accepted Stage invocation mechanism from PHASE-02: Root-owned Prefect dispatch Task calls run_deployment(..., as_subflow=True), creating a deployment Flow Run with synthetic parent linkage and explicit Stage result persistence.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

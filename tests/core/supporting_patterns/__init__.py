@@ -1,0 +1,1 @@
+"""GPWCF supporting_patterns tests package."""

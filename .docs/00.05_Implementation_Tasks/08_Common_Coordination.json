@@ -1,0 +1,47 @@
+{
+  "taskId": "08_Common_Coordination",
+  "serialNumber": 8,
+  "target": "Common Coordination (Association & Lifecycle)",
+  "category": "Framework Contract",
+  "description": "Implement the two Framework-level coordination contracts: StepCompositionAssociationCoordination (association-coordination.contract) governing association relationships, and StepCompositionInternalComponentLifecycleCoordination (internal-component-lifecycle-coordination.contract) governing lifecycle authority/eligibility/quiescence/release/evidence independence. Commonality is a pair of Step Composition responsibilities; all Association/Lifecycle specialization kept per pattern.",
+  "implementationClasses": [
+    "StepCompositionAssociationCoordination",
+    "StepCompositionInternalComponentLifecycleCoordination",
+    "Association",
+    "AssociationTarget",
+    "AssociationIdentity",
+    "InvocationBinding",
+    "Component Instance Identity",
+    "Component Association Identity",
+    "Component Invocation Identity",
+    "Runtime Instance Lifetime",
+    "Association Lifetime",
+    "Invocation Lifetime",
+    "Operation Lifetime",
+    "Resource Capability Lifetime",
+    "Output and Evidence Retention Lifetime"
+  ],
+  "relatedDiagrams": {
+    "class": "03_Diagrams_Codes_Files/08_Common_Coordination.dot",
+    "association": "C_Association_Diagram_Code/08_Common_Coordination_Associations.puml",
+    "dependency": "D_Architectural_Dependency_Diagram_Code/03_Dependency_Direction_Rules.dot"
+  },
+  "dependencies": [],
+  "acceptanceCriteria": [
+    "Association coordination contract defines explicit component-instance-to-target relationships",
+    "Lifecycle coordination contract defines eligibility/admission/quiescence/release/evidence independence",
+    "Component identity roles distinct (instance, association, invocation, target)",
+    "Conceptual lifetimes distinct (runtime instance, association, invocation, operation, resource capability, output/evidence retention)",
+    "No universal Generic Supporting Unit or universal runtime component type defined",
+    "Step Composition owns association and lifecycle authority"
+  ],
+  "definitionOfDone": [
+    "Association contract tests for identity/validity/dissociation",
+    "Lifecycle contract tests for milestones and authority",
+    "Architecture test: no universal supporting unit abstraction imposed"
+  ],
+  "priority": "high",
+  "status": "pending",
+  "estimatedEffort": "medium",
+  "testStrategy": "Contract unit tests; architecture tests for identity role separation; lifecycle milestone tests"
+}

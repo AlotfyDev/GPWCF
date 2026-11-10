@@ -1,0 +1,10 @@
+{
+  "serialNumber": 3,
+  "name": "Integration Boundary / Responsibility",
+  "category": "Feature / Boundary",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+  "description": "Defines the boundary that binds GPWCF domain contracts to Prefect-native execution constructs while preserving domain ownership, identities, results, and operational evidence as distinct from Prefect operational records.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

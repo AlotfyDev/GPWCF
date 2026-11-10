@@ -1,0 +1,10 @@
+{
+  "serialNumber": 13,
+  "name": "StageResult Contract",
+  "category": "Class / Contract",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/02.00_Stage_Result.json",
+  "description": "Runtime-independent Stage result contract owned by core.stage. Defines semantic boundary and ownership of StageResult; generic envelope fields for identity and correlation; separate typed slots for Stage outputs, Stage Flow Result, and Stage domain outcome.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

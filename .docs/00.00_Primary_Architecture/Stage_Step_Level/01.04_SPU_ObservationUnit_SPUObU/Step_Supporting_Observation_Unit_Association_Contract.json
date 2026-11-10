@@ -1,0 +1,204 @@
+{
+  "documentId": "pipeline.step-supporting-observation-unit.association.contract",
+  "documentVersion": "0.1.2",
+  "status": "design-baseline",
+  "title": "Step Supporting Observation Unit Association Contract",
+  "scope": {
+    "architecturalLevel": "stage-step",
+    "component": "StepSupportingObservationUnitAssociation",
+    "owningLevel": "StepComposition",
+    "purpose": "Define how an Observation Unit instance is associated with a Step-owned observation target scope, how that association is identified and governed, and how its historical identity is preserved.",
+    "appliesTo": "Each concrete Step specialization that associates an Observation Unit instance with one or more internal target scopes."
+  },
+  "definition": {
+    "association": "An explicit Step-owned relationship that makes a particular Observation Unit instance applicable to observe a particular Step-owned target scope under a defined specialization.",
+    "associationIsNot": [
+      "Ownership of the Observation Unit instance by the target.",
+      "Transfer of association-management authority to the Observation Unit or target SPU.",
+      "An observation invocation, observation record, or observation destination.",
+      "A guarantee that observation is currently active or that the Unit is lifecycle-ready.",
+      "A guarantee that every event or fact about the target will be observed."
+    ]
+  },
+  "identities": {
+    "stepInstanceIdentity": "Identifies the owning Step instance within which the association exists.",
+    "observationUnitIdentity": "Identifies the concrete Observation Unit runtime instance participating in the association.",
+    "associationTargetIdentity": "Identifies the Step-owned target scope to which the Observation Unit is applicable.",
+    "observationUnitAssociationIdentity": "Identifies one particular relationship between one Observation Unit instance and one target scope within one Step instance."
+  },
+  "targetScope": {
+    "permittedKinds": [
+      "A specific SPU instance or SPU-defined observation scope.",
+      "The owning Step instance as a whole.",
+      "Another explicitly identified internal Step scope, operation, execution context, or component boundary defined by the concrete Step."
+    ],
+    "rules": [
+      "The common contract does not assume that an Observation Unit is associated only with an SPU.",
+      "The target scope must be identifiable independently of the Observation Unit instance and association.",
+      "A target may expose an observation surface, events, state, or context without transferring ownership or orchestration authority to the Observation Unit.",
+      "The concrete Step defines the target identity representation and the exact observation-relevant boundary.",
+      "associationTargetIdentity must distinguish the target scope kind and the concrete target instance within the owning Step."
+    ]
+  },
+  "multiplicity": {
+    "permitted": [
+      "One Observation Unit instance may have multiple associations to distinct target scopes where the concrete Step permits it.",
+      "Multiple Observation Unit instances may be associated with the same target where the concrete Step permits it."
+    ],
+    "notMandated": [
+      "One-to-one mapping.",
+      "One-to-many mapping.",
+      "Exclusivity of an instance or target.",
+      "A universal cardinality or association limit."
+    ],
+    "identityRule": "Each association is a separately identifiable relationship, even when the instance or target is shared."
+  },
+  "authorityAndOwnership": {
+    "authority": "The owning Step Composition is authoritative for creating, activating, changing, rebinding, deactivating where applicable, and ending Observation Unit Associations.",
+    "rules": [
+      "Association creation and changes are Step-specific composition decisions.",
+      "An Observation Unit may use an association context supplied to it but cannot create, mutate, select a replacement for, or terminate that association.",
+      "An SPU may be an association target but does not thereby gain association-management authority.",
+      "Association authority remains with Step Composition even if the Observation Unit is implemented as a callback registered with the target or as a subscriber to a target event source.",
+      "Association does not by itself transfer ownership of target resources, event sources, subscriptions, or observation destinations; each resource owner is defined separately."
+    ],
+    "separation": [
+      "Association existence is distinct from instance readiness/admission under the Lifecycle Contract.",
+      "Association existence is distinct from an active observation activity or subscription.",
+      "Association termination is distinct from instance release.",
+      "Association metadata retention is distinct from observation record retention."
+    ]
+  },
+  "associationEstablishment": {
+    "preconditions": [
+      "The Observation Unit instance is known to the owning Step Composition and has a stable observationUnitIdentity.",
+      "The target scope is known and has an associationTargetIdentity within the owning Step instance.",
+      "The instance satisfies the Lifecycle Contract conditions required for association establishment by the concrete specialization.",
+      "The Step specialization defines the capability/target compatibility required for this association."
+    ],
+    "establishment": [
+      "Step Composition creates a distinct observationUnitAssociationIdentity for the relationship.",
+      "The association records the stepInstanceIdentity, observationUnitIdentity, and associationTargetIdentity binding.",
+      "Step Composition establishes specialization-defined target observation surfaces, callback registrations, subscriptions, or access arrangements without transferring association authority.",
+      "The association becomes usable for new observation activity only when its concrete establishment/activation conditions are satisfied."
+    ],
+    "activationBoundary": "The common contract does not require association creation to activate observation immediately. The concrete Step may establish an association before an observation activity is enabled and may define explicit activation/deactivation semantics."
+  },
+  "invocationBinding": {
+    "rule": "Every observation activity performed under an association is correlated with exactly one observationUnitAssociationIdentity and the corresponding associationTargetIdentity.",
+    "provenance": [
+      "stepInstanceIdentity",
+      "observationUnitIdentity",
+      "observationUnitAssociationIdentity",
+      "associationTargetIdentity",
+      "observationInvocationIdentity"
+    ],
+    "constraints": [
+      "An Observation Unit instance with multiple associations must receive or resolve an explicit association context for each activity.",
+      "The target identity used for an activity must match the target bound to the selected association.",
+      "An activity already authorized under an association is not silently redirected if the association changes or ends while work is in progress.",
+      "The concrete Step defines whether an active subscription/callback is bound to one association for its full activation lifetime or whether each delivered event carries a separately resolved association context; either model must preserve unambiguous provenance.",
+      "Observation records retain the association identity historically after the association ends."
+    ]
+  },
+  "associationChanges": {
+    "rules": [
+      "A change in target scope or applicability is represented by an explicit Step Composition-managed association change, not by silently mutating historical identity.",
+      "If a change alters the identity of the target relationship, the concrete Step should end the old association and establish a new association identity unless its specialization explicitly defines a safe in-place change with equivalent provenance guarantees.",
+      "An observation activity already in progress remains attributable to the association under which it was authorized.",
+      "The concrete Step defines how target-side registrations, callbacks, subscriptions, and handles are updated and reconciled."
+    ],
+    "noImplicitEffects": [
+      "Changing an association does not automatically create, release, or replace an Observation Unit instance.",
+      "Changing an association does not delete or rewrite already emitted observation records.",
+      "Changing an association does not decide whether pending observation records are delivered, retained, or recovered."
+    ]
+  },
+  "dissociation": {
+    "authority": "Step Composition exclusively coordinates and authorizes association termination.",
+    "rules": [
+      "Dissociation ends the association's authority to authorize new observation activities.",
+      "Dissociation does not imply Observation Unit instance release or shutdown.",
+      "Dissociation does not automatically cancel or erase records already produced or accepted.",
+      "The concrete Step defines how active subscriptions, callbacks, queued events, and in-flight observation activities are stopped or reconciled.",
+      "The concrete Step defines whether an in-flight activity may complete under its original association after dissociation begins; any such completion retains the original association provenance.",
+      "The association identity remains historically interpretable for as long as retained observations or other evidence refer to it."
+    ]
+  },
+  "historicalProvenance": {
+    "requiredRecordAttribution": [
+      "stepInstanceIdentity",
+      "observationUnitIdentity",
+      "observationUnitAssociationIdentity",
+      "associationTargetIdentity",
+      "observationInvocationIdentity",
+      "observationRecordIdentity"
+    ],
+    "rules": [
+      "Dissociation does not invalidate historical observation records produced under the association.",
+      "Retaining association metadata does not require retaining the Observation Unit runtime instance, target runtime object, callback, subscription handle, or other resource.",
+      "Historical association identity must not be reused in a way that makes prior records ambiguous.",
+      "The concrete Step defines metadata retention sufficient to interpret historical records and audit their association provenance."
+    ]
+  },
+  "specializationRequirements": {
+    "required": [
+      "Define concrete identity representation and uniqueness scope for Step, Observation Unit, target, and association identities.",
+      "Define permitted target kinds and observation-relevant scope boundaries.",
+      "Define allowed multiplicity and whether one instance may observe multiple targets or multiple instances may observe one target.",
+      "Define compatibility rules between the Observation Unit capability and target scope.",
+      "Define establishment, activation, deactivation, change, and dissociation mechanics.",
+      "Define ownership and release of callbacks, event subscriptions, target access surfaces, and other association resources.",
+      "Define in-flight activity and queued-event behavior during association change or dissociation.",
+      "Define historical association metadata retention and correlation with observation records."
+    ],
+    "completionRule": "A concrete association specialization is complete when target scope, identity, multiplicity, authority, activation, change/dissociation, in-flight activity, and historical provenance rules are explicit."
+  },
+  "explicitNonGoals": [
+    "No universal association-to-SPU-only rule.",
+    "No universal cardinality, exclusivity, or one-to-one mapping.",
+    "No ownership transfer from Step Composition to Observation Unit or target SPU.",
+    "No automatic instance creation, admission, release, or result retention caused solely by association changes.",
+    "No mandatory subscription, callback, event bus, registry, or central association manager.",
+    "No universal observation trigger, event ordering, or delivery guarantee."
+  ],
+  "references": [
+    {
+      "document": "Step_Supporting_Observation_Unit_Contract.json",
+      "relationship": "Behavior performed under an established association and observation-result provenance."
+    },
+    {
+      "document": "Step_Supporting_Observation_Unit_Lifecycle_Contract.json",
+      "relationship": "Instance readiness and lifecycle preconditions for association establishment and use."
+    },
+    {
+      "document": "../00.00_Step/Step_Composition_Contract.json",
+      "relationship": "Step Composition authority over internal association and lifecycle coordination."
+    },
+    {
+      "document": "../00.00_Step/Step_Contract.json",
+      "relationship": "Step aggregate boundary and internal component association."
+    },
+    {
+      "document": "../Stage_Step_Level_Architecture.json",
+      "relationship": "Supporting-unit target scope may be SPU, Step, or another Step-defined internal scope."
+    },
+    {
+      "document": "../../../Common/Step_Composition_Association_Coordination_Contract.json",
+      "relationship": "Framework-level association coordination invariants refined by this specialized Association Contract; specialized identity names and behavior remain authoritative."
+    }
+  ],
+  "frameworkCoordination": {
+    "commonContract": "../../../Common/Step_Composition_Association_Coordination_Contract.json",
+    "conformance": "This contract specializes the shared Step Composition coordination invariants. Where the shared contract defines only conceptual identity roles or lifecycle distinctions, this document supplies the component-specific identity names, semantics, mechanics, and constraints.",
+    "precedence": "The common contract governs cross-cutting Step Composition coordination invariants. This specialized contract governs component-specific behavior and mechanics. Neither contract changes the component pattern?s distinct behavioral result semantics."
+  },
+  "frameworkIdentityRoleMapping": {
+    "stepInstanceIdentity": "stepInstanceIdentity",
+    "componentInstanceIdentity": "observationUnitIdentity",
+    "associationTargetIdentity": "associationTargetIdentity",
+    "componentAssociationIdentity": "observationUnitAssociationIdentity",
+    "componentInvocationIdentity": "observationInvocationIdentity",
+    "targetIdentitySemantics": "associationTargetIdentity identifies both the target scope kind and the concrete target instance within the owning Step; it must not be represented by a bare SPU identity when the target scope may instead be Step-wide or another Step-internal scope."
+  }
+}

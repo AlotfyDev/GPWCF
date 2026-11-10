@@ -1,0 +1,351 @@
+{
+  "documentId": "pipeline.step-supporting-validator-unit.lifecycle.contract",
+  "documentVersion": "0.1.1",
+  "status": "design-baseline",
+  "title": "Step Supporting Validator Unit Lifecycle Contract",
+  "scope": {
+    "architecturalLevel": "stage-step",
+    "component": "StepSupportingValidatorUnitLifecycle",
+    "owningLevel": "Step",
+    "purpose": "Define reusable lifecycle obligations for a concrete Step Supporting Validator Unit instance, independently of the lifetimes of its associations and retained validation evidence.",
+    "appliesTo": "A concrete Step specialization that provisions or otherwise admits one or more Step Supporting Validator Unit instances."
+  },
+  "terminology": {
+    "validatorUnitInstance": "One concrete runtime realization of a Step Supporting Validator Unit, identified independently of its associations and validation invocations.",
+    "instanceLifecycle": "The progression of the validator-unit instance from provisioning/admission through availability, use, optional retention, and eventual release.",
+    "associationLifetime": "The validity interval of one association between a validator-unit instance and one Step-defined target scope. It is governed by the Association Contract and is not the instance lifecycle.",
+    "evidenceRetentionLifetime": "The period for which validation results, invocation records, and provenance remain retained and interpretable. It is governed by the concrete Step result/evidence policy and is not the instance lifecycle.",
+    "admission": "The Step Composition decision that makes a provisioned and sufficiently prepared validator-unit instance eligible for use within the owning Step. Admission is not an association and does not itself invoke the unit.",
+    "release": "The lifecycle action that ends the owning Step's right and ability to use the validator-unit instance and discharges the instance's runtime-resource obligations according to its specialized lifecycle."
+  },
+  "architecturalPrinciples": {
+    "independentLifetimes": [
+      "The validator-unit instance lifecycle is independent of the lifetime of each association in which the instance participates.",
+      "The validator-unit instance lifecycle is independent of the retention lifetime of validation results, invocation evidence, and historical association provenance.",
+      "Ending an association does not by itself release, dispose, or invalidate the validator-unit instance.",
+      "Retaining historical results or provenance does not by itself require the validator-unit runtime instance to remain alive or callable.",
+      "Releasing the validator-unit instance does not authorize deletion or rewriting of retained results, invocation evidence, or historical association descriptors."
+    ],
+    "optionalityAndSpecialization": [
+      "A Step is not required to select, provision, or admit a validator-unit instance.",
+      "The common contract defines lifecycle responsibilities and safety constraints, not a mandatory implementation state machine.",
+      "The concrete Step defines the actual lifecycle policy, required phases, transitions, reuse rules, and release conditions consistent with this contract.",
+      "Different validator-unit implementations may require different provisioning, initialization, readiness, shutdown, and release procedures."
+    ],
+    "compositionAuthority": [
+      "The owning Step Composition coordinates and is authoritative for admitting, making available, retaining for reuse, quiescing, and releasing validator-unit instances within the Step.",
+      "A validator unit may implement or internally perform its own initialization and shutdown mechanics, but those mechanics do not transfer lifecycle policy or admission/release authority away from Step Composition.",
+      "An SPU that is an association target does not acquire lifecycle ownership or authority over the validator-unit instance.",
+      "No Pipeline-wide manager, global lifecycle service, or central mediator is required by this contract."
+    ]
+  },
+  "lifecycleIdentity": {
+    "instanceIdentity": "validatorUnitIdentity",
+    "requirements": [
+      "validatorUnitIdentity identifies one concrete validator-unit runtime instance within the identity scope defined by the owning Step specialization.",
+      "The identity remains stable for the lifetime of that instance, including periods in which the instance has no active associations or is retained for reuse.",
+      "A new runtime instance receives a distinct validatorUnitIdentity even when it uses the same implementation, configuration, or underlying resource category as a released instance.",
+      "Association identity and validator invocation identity are distinct from validatorUnitIdentity.",
+      "An instance identity is not a memory address, operating-system handle, resource identifier, or generation number unless the concrete Step explicitly defines a separate mapping and preserves the identity requirements.",
+      "Historical results and evidence may continue to reference validatorUnitIdentity after the runtime instance has been released; such a reference is historical identity, not proof that the instance remains alive."
+    ],
+    "replacement": "Replacing a released, failed, or otherwise unusable instance with another runtime instance creates a new instance identity. The replacement may inherit configuration or logical role, but it must not impersonate the previous instance identity."
+  },
+  "lifecycleResponsibilityAndAuthority": {
+    "StepComposition": [
+      "Determine whether the concrete Step requires a validator-unit instance and select the required specialized implementation/configuration.",
+      "Coordinate provisioning or acquisition of an instance through the mechanism selected by the concrete Step.",
+      "Coordinate required initialization and determine whether the instance satisfies the Step-defined readiness criteria.",
+      "Admit the instance into the Step's internal composition before making it eligible for association or invocation.",
+      "Maintain the authoritative instance identity and lifecycle/admission state needed for safe coordination.",
+      "Determine whether and under what conditions the instance may be reused, shared across associations, or invoked concurrently.",
+      "Prevent new invocations when the instance is not admitted, is quiescing, has failed, or has been released.",
+      "Coordinate quiescence and reconcile active invocations before release, subject to the concrete Step's cancellation and recovery policies.",
+      "Ensure all live associations are ended or otherwise made unusable before releasing the instance.",
+      "Coordinate the instance-specific shutdown and release procedure and record its outcome.",
+      "Keep instance release independent from the retention and interpretation of already-produced results and evidence."
+    ],
+    "StepSupportingValidatorUnit": [
+      "Expose or satisfy the lifecycle capabilities and readiness requirements declared by its specialized behavioral/lifecycle realization.",
+      "Perform its implementation-specific initialization, readiness checks, quiescence, and shutdown mechanics when invoked or coordinated under its contract.",
+      "Report lifecycle failures or inability to accept work to Step Composition without independently changing its admission or association state.",
+      "Reject or safely fail invocations that violate its declared readiness, concurrency, or shutdown conditions.",
+      "Preserve the integrity of results already produced and returned according to its result and custody contracts."
+    ],
+    "SPU": [
+      "May be associated with a validator-unit instance as a target scope.",
+      "Does not provision, admit, initialize, retain, quiesce, shut down, or release the validator-unit instance by virtue of being its association target.",
+      "May report target-specific constraints or request that Step Composition reconsider validator availability; such a report does not itself change lifecycle state."
+    ],
+    "StageComposition": [
+      "Invokes the owning Step through the Step contract and does not directly manage the lifecycle of internal validator-unit instances."
+    ],
+    "Pipeline": [
+      "Does not impose a global validator-unit instance lifecycle or own individual Step validator-unit runtime instances under this contract."
+    ]
+  },
+  "lifecyclePhases": {
+    "nature": "The following are conceptual lifecycle milestones, not a mandatory enum, linear state machine, or requirement that every implementation materialize each phase as a separate state.",
+    "phases": [
+      {
+        "name": "ProvisionedOrAcquired",
+        "meaning": "A concrete runtime instance has been created, obtained, or otherwise made available to the Step's lifecycle coordination.",
+        "entryAuthority": "Step Composition coordinates the acquisition/provisioning outcome.",
+        "constraints": [
+          "Provisioning does not by itself establish readiness or authorize invocation.",
+          "The concrete Step defines whether provisioning creates a new instance or obtains a reusable instance from a Step-scoped source."
+        ]
+      },
+      {
+        "name": "Prepared",
+        "meaning": "The implementation-specific initialization and preparation required for the instance have completed sufficiently for readiness evaluation.",
+        "entryAuthority": "The validator implementation performs its preparation mechanics; Step Composition coordinates and observes completion.",
+        "constraints": [
+          "Preparation requirements are validator-implementation-specific.",
+          "Partial or failed preparation must not be treated as readiness."
+        ]
+      },
+      {
+        "name": "Ready",
+        "meaning": "The instance satisfies the concrete Step's declared prerequisites for admission and intended use.",
+        "entryAuthority": "Step Composition determines readiness according to the specialized readiness criteria and available evidence.",
+        "constraints": [
+          "Ready does not mean admitted, associated, or currently executing.",
+          "Readiness may be invalidated by implementation-specific conditions; the concrete Step defines detection and response."
+        ]
+      },
+      {
+        "name": "Admitted",
+        "meaning": "Step Composition has accepted the instance into the Step's internal composition and may establish associations or authorize invocations according to the other applicable contracts.",
+        "entryAuthority": "Step Composition exclusively controls admission.",
+        "constraints": [
+          "Admission is a Step-level eligibility decision and is distinct from association with any target.",
+          "An admitted instance may have zero, one, or multiple associations as permitted by the Association Contract specialization.",
+          "Admission alone does not require immediate invocation."
+        ]
+      },
+      {
+        "name": "AvailableOrInUse",
+        "meaning": "The admitted instance is eligible for invocation and may have zero or more active invocations within its declared concurrency constraints.",
+        "entryAuthority": "Step Composition authorizes invocation; the validator executes its specialized behavior.",
+        "constraints": [
+          "The concrete Step defines whether the instance is single-use, reusable, sequentially reusable, or concurrently shareable.",
+          "Invocation activity is tracked distinctly from association count and instance identity."
+        ]
+      },
+      {
+        "name": "Quiescing",
+        "meaning": "Step Composition has stopped admitting new invocations and is reconciling, completing, or cancelling active work before a lifecycle change or release.",
+        "entryAuthority": "Step Composition.",
+        "constraints": [
+          "The concrete Step defines whether quiescence waits, cancels, drains, or applies another safe policy to active invocations.",
+          "No new invocation may be authorized while the instance is quiescing.",
+          "Quiescence does not erase already-produced results or evidence."
+        ]
+      },
+      {
+        "name": "RetainedForReuse",
+        "meaning": "The instance remains alive under Step Composition coordination but is not necessarily associated or currently executing, and may be reused if its readiness and reuse conditions still hold.",
+        "entryAuthority": "Step Composition.",
+        "constraints": [
+          "Retention for reuse is an explicit lifecycle choice, not an automatic consequence of ending an association.",
+          "The concrete Step defines the conditions and duration for retaining an idle instance.",
+          "Retaining an instance for reuse is distinct from retaining validation evidence."
+        ]
+      },
+      {
+        "name": "Released",
+        "meaning": "The instance is no longer admitted or usable by the owning Step, and its required instance-specific release procedure has completed or reached a separately recorded failure/uncertain outcome.",
+        "entryAuthority": "Step Composition coordinates release and records the outcome.",
+        "constraints": [
+          "Released denotes successful completion of the required release procedure. A failed or uncertain release remains a separately represented unresolved lifecycle outcome and must not be labelled Released.",
+          "Any later replacement runtime instance receives a new validatorUnitIdentity.",
+          "Historical evidence may still refer to the released instance identity."
+        ]
+      }
+    ]
+  },
+  "admissionAndReadiness": {
+    "rules": [
+      "An instance must satisfy the concrete Step's readiness criteria before Step Composition admits it for invocation.",
+      "The concrete Step defines required initialization, configuration, dependency availability, resource acquisition, and validation of operational prerequisites.",
+      "The concrete Step defines whether readiness is a one-time admission check or must be re-evaluated before individual invocations or after relevant changes.",
+      "Association establishment is permitted only for an instance admitted to the owning Step, consistent with the Association Contract.",
+      "Admission may be revoked or suspended by Step Composition when readiness is lost, a lifecycle failure occurs, or the concrete Step's policy requires it.",
+      "Revocation of admission prevents new invocation authorization but does not itself determine whether the instance is immediately released."
+    ],
+    "readinessFailure": "A readiness failure is a lifecycle fact. The concrete Step defines whether to retry preparation, retain the instance for diagnosis, replace it, or release it; no universal retry or failure policy is imposed."
+  },
+  "associationIndependence": {
+    "rules": [
+      "An admitted validator-unit instance may exist without any active association when the concrete Step permits such retention.",
+      "One instance may participate in multiple associations only when the Association Contract specialization permits it.",
+      "Ending one association does not change the lifecycle state of the instance or terminate its other associations.",
+      "Ending the final association does not automatically release the instance; Step Composition applies the concrete Step's independent reuse/retention/release policy.",
+      "An association must not remain usable for new invocations after its effective end point, even if the instance remains admitted and ready.",
+      "Before releasing an instance, Step Composition must ensure that every association involving that instance has been ended or otherwise invalidated under the Association Contract.",
+      "The association registry or retained association metadata may outlive the runtime instance when required for historical provenance; that metadata does not constitute a live association."
+    ],
+    "coordinationBoundary": "The Association Contract governs relationship identity, target binding, validity, and dissociation. This Lifecycle Contract governs the validator-unit instance. Neither contract transfers its authority to the other."
+  },
+  "invocationAndQuiescence": {
+    "rules": [
+      "Step Composition authorizes invocations only while the instance is admitted and satisfies the concrete Step's invocation-readiness conditions.",
+      "The concrete Step defines whether invocations may overlap, the maximum concurrency if bounded, reentrancy guarantees, synchronization requirements, and whether mutable internal state is permitted.",
+      "The concrete Step defines how active invocation count or equivalent in-flight activity is known reliably enough to prevent unsafe release.",
+      "A transition to quiescing prevents new invocation authorization before the release procedure proceeds.",
+      "The concrete Step defines how active invocations complete, drain, cancel, time out, fail, or transfer unresolved custody during quiescence.",
+      "A thrown exception or uncertain invocation outcome must be reconciled according to the behavioral/result and Step recovery contracts before the instance is considered safe to release, where that outcome may still involve instance-owned work or result custody.",
+      "Results already produced remain subject to their result/custody contracts and are not discarded by quiescence or release."
+    ],
+    "notMandated": [
+      "A universal invocation counter representation.",
+      "A universal lock, reference count, lease, scheduler, or asynchronous task model.",
+      "A universal cancellation or timeout mechanism.",
+      "A universal rule that all validator units must support concurrent invocation."
+    ]
+  },
+  "reuseAndRetention": {
+    "rules": [
+      "Reuse is permitted only while the instance remains admitted and satisfies the concrete Step's reuse/readiness conditions.",
+      "The concrete Step defines whether reuse is allowed across different associations, target scopes, or Step invocation boundaries.",
+      "The concrete Step defines whether instance state must be reset, reinitialized, isolated, or otherwise reconciled between invocations or association contexts.",
+      "An instance retained for reuse remains the same instance and retains its validatorUnitIdentity.",
+      "A replacement instance is a new instance and receives a new validatorUnitIdentity.",
+      "The concrete Step defines any retention limits, idle conditions, resource pressure responses, and release triggers.",
+      "Retention for reuse must not be inferred from the retention of results or evidence, and evidence retention must not be implemented by retaining the instance."
+    ],
+    "reuseSafety": "The concrete Step must ensure that state or context from one association or invocation cannot improperly affect another association or invocation. The required isolation, reset, or serialization mechanism is specialization-specific."
+  },
+  "releaseContract": {
+    "preconditions": [
+      "Step Composition has stopped authorizing new invocations of the instance.",
+      "The instance is no longer admitted for new use.",
+      "All associations involving the instance have been ended or invalidated for future invocation under the Association Contract.",
+      "Active invocations and implementation-owned asynchronous work have been completed, cancelled, drained, or otherwise reconciled under the concrete Step's policy.",
+      "Any produced result or evidence whose custody is unresolved has been reconciled under its applicable custody/recovery contract to the extent required for safe release.",
+      "The concrete Step's implementation-specific release prerequisites have been satisfied."
+    ],
+    "execution": [
+      "Step Composition coordinates the release operation through the validator-unit lifecycle mechanism defined by the concrete implementation.",
+      "The validator implementation performs its own resource shutdown/disposal mechanics as defined by its specialized contract.",
+      "Release completion, failure, or uncertain outcome is recorded distinctly; an attempted release is not automatically treated as successful release.",
+      "If release fails or its outcome is uncertain, the concrete Step defines whether the instance remains quarantined, requires reconciliation, or is considered unusable while cleanup continues."
+    ],
+    "postconditions": [
+      "The instance is no longer eligible for association or invocation within the owning Step.",
+      "The same runtime instance identity is not silently reused for a replacement instance.",
+      "Historical validation results, invocation records, and association provenance remain subject to their independent retention policy.",
+      "Release does not imply deletion of result payloads, evidence records, or historical identity descriptors.",
+      "Release does not imply that all historical references to validatorUnitIdentity must be removed."
+    ],
+    "releaseFailure": "A failed or uncertain release is not silently represented as Released. The concrete Step defines the state and recovery procedure for the instance and any resources whose release remains unresolved."
+  },
+  "failureAndRecovery": {
+    "rules": [
+      "Provisioning, initialization, readiness, invocation, quiescence, and release failures are lifecycle or execution facts distinct from validation outcomes.",
+      "The concrete Step defines whether a failed instance may be retried, reinitialized, quarantined, replaced, or released.",
+      "Replacing an instance creates a new validatorUnitIdentity; historical results remain attributed to the original instance.",
+      "An instance whose lifecycle state is unresolved must not be treated as ready or admitted for new work unless the concrete Step's reconciliation explicitly establishes that condition.",
+      "Lifecycle failure does not fabricate a validation result and does not rewrite results already produced.",
+      "Exceptions remain distinct from structured lifecycle or validation results unless a specialized contract explicitly defines a representation for them."
+    ],
+    "notMandated": [
+      "A common lifecycle error taxonomy.",
+      "Automatic retry, restart, replacement, or compensation.",
+      "Automatic conversion of lifecycle failures into validator results.",
+      "A universal recovery owner or quarantine implementation."
+    ]
+  },
+  "evidenceAndResultRetentionBoundary": {
+    "principle": "Validation results, invocation evidence, and historical association provenance may outlive the validator-unit runtime instance; their retention does not extend instance lifetime.",
+    "rules": [
+      "The concrete Step defines the retention duration, ownership, representation, and release conditions of validation results and invocation evidence under the applicable result/behavioral contracts.",
+      "Any retained evidence that refers to an instance or association must preserve sufficient historical identity/provenance to remain interpretable after instance release.",
+      "Historical references to validatorUnitIdentity or validatorUnitAssociationIdentity do not imply that the referenced runtime instance or association remains active.",
+      "Evidence storage or retention must not hold runtime handles, object references, leases, or other resources in a way that unintentionally prevents instance release, unless the concrete Step independently requires that resource to remain alive for a different reason.",
+      "If result content directly depends on instance-owned resources, the concrete Step must define how that content is materialized, detached, or otherwise made valid before those resources are released.",
+      "Release of an instance must not delete, mutate, or invalidate already-produced result content that the Step's retention policy requires to preserve.",
+      "The concrete Step may release historical evidence before, at, or after instance release according to its own retention policy; neither lifetime is universally required to contain the other."
+    ],
+    "minimumHistoricalAttribution": [
+      "stepInstanceIdentity where applicable",
+      "validatorUnitIdentity",
+      "validatorUnitAssociationIdentity where the result was produced under an association",
+      "associationTargetIdentity where required to interpret the result scope",
+      "validatorInvocationIdentity as defined by the behavioral contract"
+    ],
+    "nonImplications": [
+      "Retained evidence does not imply a live validator instance.",
+      "A released validator instance does not imply expired evidence.",
+      "No active association does not imply that the validator instance has been released.",
+      "An active validator instance does not imply that any validation evidence must be retained."
+    ]
+  },
+  "explicitNonGoals": [
+    "No mandatory validator-unit lifecycle for Steps that do not select a validator unit.",
+    "No universal lifecycle state enum or fixed linear state machine.",
+    "No universal object construction, factory, dependency injection, pooling, ownership, or disposal mechanism.",
+    "No universal thread, task, scheduler, lock, reference-count, lease, or concurrency implementation.",
+    "No universal association topology or rule that an instance must have an association while alive.",
+    "No coupling of validator instance release to evidence expiration or historical association metadata deletion.",
+    "No requirement that a released instance remain alive to answer historical queries.",
+    "No transfer of lifecycle authority to an SPU because it is an association target.",
+    "No Pipeline-wide lifecycle manager or central mediator."
+  ],
+  "specializationRequirements": [
+    "Define the concrete provisioning/acquisition mechanism and the identity assignment point for validatorUnitIdentity.",
+    "Define initialization/preparation requirements and readiness criteria.",
+    "Define the admission decision and the conditions under which admission may be suspended or revoked.",
+    "Define whether the instance is single-use, reusable, shareable, or concurrently invocable, including required isolation guarantees.",
+    "Define whether an instance may remain alive with no active associations and the policy for retaining it for reuse.",
+    "Define how active invocations and implementation-owned asynchronous work are tracked and reconciled before quiescence/release.",
+    "Define the dissociation coordination required before instance release, consistently with Step_Supporting_Validator_Unit_Association_Contract.json.",
+    "Define implementation-specific shutdown/release operations and how failed or uncertain release is represented and recovered.",
+    "Define which produced results/evidence must be detached from instance-owned resources before release.",
+    "Define result/evidence retention independently from instance lifetime and preserve the required historical provenance.",
+    "Define replacement behavior, ensuring a replacement runtime instance receives a new validatorUnitIdentity.",
+    "Define lifecycle behavior when the owning Step itself is quiesced, failed, or released."
+  ],
+  "references": [
+    {
+      "document": "Step_Supporting_Validator_Unit_Association_Contract.json",
+      "relationship": "Association identity, admission prerequisite, association validity/dissociation, and historical association provenance."
+    },
+    {
+      "document": "../00.00_Step/Step_Composition_Contract.json",
+      "relationship": "Step Composition authority over internal component lifecycle coordination and reuse/release decisions."
+    },
+    {
+      "document": "../00.00_Step/Step_Contract.json",
+      "relationship": "Owning Step boundary and Stage-facing lifecycle containment."
+    },
+    {
+      "document": "../01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      "relationship": "SPU boundary when it is an association target; no transfer of validator lifecycle authority."
+    },
+    {
+      "document": "../01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "relationship": "Step-level retention and composition boundary for validation results."
+    },
+    {
+      "document": "Step_Supporting_Validator_Unit_Contract.json",
+      "relationship": "Validator-unit behavioral capabilities, invocation, and result semantics."
+    },
+    {
+      "document": "../../../Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+      "relationship": "Framework-level lifecycle coordination invariants refined by this specialized Lifecycle Contract; component-specific phases, resources, and custody remain authoritative."
+    }
+  ],
+  "openDesignDetails": [
+    "Define the concrete validator-unit identity and invocation identity fields in the behavioral contract.",
+    "Define the exact validator result ownership and detachment requirements before instance release.",
+    "Define the concrete Step's lifecycle policy for validator instances when the Step invocation ends but the Step instance remains alive.",
+    "Define whether validator instances may be shared across concurrent Step invocations and the required isolation/concurrency guarantees."
+  ],
+  "frameworkCoordination": {
+    "commonContract": "../../../Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+    "conformance": "This contract specializes the shared Step Composition coordination invariants. Where the shared contract defines only conceptual identity roles or lifecycle distinctions, this document supplies the component-specific identity names, semantics, mechanics, and constraints.",
+    "precedence": "The common contract governs cross-cutting Step Composition coordination invariants. This specialized contract governs component-specific behavior and mechanics. Neither contract changes the component pattern?s distinct behavioral result semantics."
+  }
+}

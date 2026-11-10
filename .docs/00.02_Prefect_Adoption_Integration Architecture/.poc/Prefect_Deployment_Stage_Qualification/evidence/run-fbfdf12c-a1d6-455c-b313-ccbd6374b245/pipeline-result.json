@@ -1,0 +1,99 @@
+{
+  "pipelineInvocationIdentity": "fbfdf12c-a1d6-455c-b313-ccbd6374b245",
+  "nativeRootFlowRunId": "1f69ebea-6127-4ab4-895c-d8cc9261a006",
+  "stageCount": 2,
+  "stages": [
+    {
+      "stageIdentity": "STAGE-A",
+      "stageInvocationIdentity": "36c93b2c-c34d-4101-a70f-38d1695f3781",
+      "deploymentName": "gpwcf-stage-a/stage-a-worker",
+      "deploymentFlowRunId": "3757b9e3-2580-4a2c-91d7-3eebc756d209",
+      "deploymentParentTaskRunId": "9b58f03c-109f-4953-a4a8-69810b823b9f",
+      "rootDispatchTaskRunId": "01a1bc9a-fad2-76ac-a183-d78ad6fb171b",
+      "prefectStateName": "Completed",
+      "prefectStateType": "COMPLETED",
+      "domainResult": {
+        "stageIdentity": "STAGE-A",
+        "stageInvocationIdentity": "36c93b2c-c34d-4101-a70f-38d1695f3781",
+        "pipelineInvocationIdentity": "fbfdf12c-a1d6-455c-b313-ccbd6374b245",
+        "nativeStageFlowRunId": "3757b9e3-2580-4a2c-91d7-3eebc756d209",
+        "rootFlowRunId": "1f69ebea-6127-4ab4-895c-d8cc9261a006",
+        "stepResultCount": 2,
+        "stepResults": [
+          {
+            "processing_artifact": {
+              "normalization": {
+                "normalized": "stage-a-alpha"
+              },
+              "measurement": {
+                "characterCount": 15
+              }
+            },
+            "validator_result": null,
+            "error_result": null,
+            "error_handler_result": null
+          },
+          {
+            "processing_artifact": {
+              "normalization": {
+                "normalized": "stage-a-beta"
+              },
+              "measurement": {
+                "characterCount": 14
+              }
+            },
+            "validator_result": null,
+            "error_result": null,
+            "error_handler_result": null
+          }
+        ]
+      }
+    },
+    {
+      "stageIdentity": "STAGE-B",
+      "stageInvocationIdentity": "0794a7e5-cb33-4b0d-917c-97c374879694",
+      "deploymentName": "gpwcf-stage-b/stage-b-worker",
+      "deploymentFlowRunId": "a7c05a2b-edf4-4a7d-a6c0-57406b88c503",
+      "deploymentParentTaskRunId": "50f7b584-4b57-47bf-bd4b-4e076333afdb",
+      "rootDispatchTaskRunId": "01a1bc9a-fadd-7bb7-9908-e1df0c12be04",
+      "prefectStateName": "Completed",
+      "prefectStateType": "COMPLETED",
+      "domainResult": {
+        "stageIdentity": "STAGE-B",
+        "stageInvocationIdentity": "0794a7e5-cb33-4b0d-917c-97c374879694",
+        "pipelineInvocationIdentity": "fbfdf12c-a1d6-455c-b313-ccbd6374b245",
+        "nativeStageFlowRunId": "a7c05a2b-edf4-4a7d-a6c0-57406b88c503",
+        "rootFlowRunId": "1f69ebea-6127-4ab4-895c-d8cc9261a006",
+        "stepResultCount": 2,
+        "stepResults": [
+          {
+            "processing_artifact": {
+              "normalization": {
+                "normalized": "stage-b-alpha"
+              },
+              "measurement": {
+                "characterCount": 15
+              }
+            },
+            "validator_result": null,
+            "error_result": null,
+            "error_handler_result": null
+          },
+          {
+            "processing_artifact": {
+              "normalization": {
+                "normalized": "stage-b-beta"
+              },
+              "measurement": {
+                "characterCount": 14
+              }
+            },
+            "validator_result": null,
+            "error_result": null,
+            "error_handler_result": null
+          }
+        ]
+      }
+    }
+  ]
+}

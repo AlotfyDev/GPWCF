@@ -1,0 +1,10 @@
+{
+  "serialNumber": 7,
+  "name": "src/gpwcf Source Layout",
+  "category": "Feature / Package Layout",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "Package uses src/gpwcf layout with PEP 621 metadata in pyproject.toml; source package discovery and package-data policy defined for the distribution.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}

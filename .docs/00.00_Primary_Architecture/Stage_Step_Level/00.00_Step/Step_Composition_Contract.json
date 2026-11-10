@@ -1,0 +1,531 @@
+{
+  "documentId": "pipeline.step-composition.contract",
+  "documentVersion": "0.3.0",
+  "status": "design-baseline",
+  "title": "Step Composition Contract",
+  "scope": {
+    "architecturalLevel": "stage-step",
+    "component": "StepComposition",
+    "owningLevel": "Step",
+    "purpose": "Define the internal orchestration responsibility that coordinates a concrete Step's SPU and applicable supporting-unit instances, retains invocation evidence, applies Step-specific flow decisions, and supplies the information required to assemble StepExecutionResult.",
+    "appliesTo": "Every concrete Step Instance that realizes its internal processing through a Step Composition."
+  },
+  "definition": {
+    "name": "StepComposition",
+    "description": "The Step-owned internal composition boundary responsible for coordinating the pluggable processing and supporting components required by one concrete Step, while keeping their topology and execution policy hidden behind the public Step contract.",
+    "architecturalNature": [
+      "Internal orchestration boundary of the Step Aggregate Root.",
+      "Composition and coordination role for SPU and supporting-unit instances.",
+      "Owner of the Step-specific internal flow decisions and invocation-scoped flow evidence.",
+      "Internal collaborator of the concrete Step, not a Stage-facing component."
+    ],
+    "realization": "The contract defines a responsibility and its logical obligations. It does not require StepComposition to be a separately allocated runtime object, a base class, a generic runtime engine, or a particular implementation pattern."
+  },
+  "ownershipAndBoundaries": {
+    "owner": "The concrete Step Instance.",
+    "authority": [
+      "The Step Composition is authoritative for the Step's internal component composition and Step-specific orchestration decisions.",
+      "The Step Composition selects and coordinates the SPU and supporting-unit instances required by the concrete Step under their applicable specialized contracts.",
+      "Association and internal-component lifecycle coordination are governed by the referenced Framework-level coordination contracts and the selected component-pattern specializations."
+    ],
+    "boundaries": [
+      "The owning Step remains the Stage-facing Aggregate Root and exposes Step[TInput,TOutput].execute(TInput) -> StepExecutionResult[TOutput].",
+      "Stage Composition invokes the Step and does not invoke, select, or coordinate the Step's internal SPUs or supporting units.",
+      "SPUs perform their assigned processing responsibilities and return SPUExecutionResult for normally completed invocations; they do not own Step flow control.",
+      "Supporting units retain their own specialized contracts and result semantics; Step Composition coordinates them without absorbing their distinct responsibilities.",
+      "The Step Error Model defines ErrorResult semantics and aggregation rules; Step Composition performs the physical aggregation where applicable.",
+      "The Step-specific Error Handling Composition aggregates accepted operation entries into ErrorHandlerResult; Step Composition coordinates that capability and integrates its result.",
+      "Observation activity remains outside StepExecutionResult unless a concrete Step defines an explicit separate application-specific integration."
+    ],
+    "ownershipDoesNotImply": [
+      "Owning every resource or object referenced by an internal component.",
+      "Owning Pipeline-level SPUErrorTypeDefinitionRegistry instances assigned to SPUs.",
+      "Requiring a single lifecycle mechanism for all component categories.",
+      "Requiring a central mediator or global manager for internal components."
+    ]
+  },
+  "logicalExecutionResponsibility": {
+    "entryPoint": {
+      "publicCaller": "The concrete Step implementation.",
+      "input": "The Step-specialized TInput supplied through Step.execute.",
+      "logicalResponsibility": "Coordinate the internal processing required to realize the concrete Step responsibility and provide the retained invocation evidence and aggregate inputs needed to construct StepExecutionResult[TOutput].",
+      "interfaceConstraint": "No public or universal StepComposition callable signature is mandated. The concrete Step defines the internal delegation/interface shape used to realize this responsibility."
+    },
+    "executionRealization": {
+      "generalRule": "The responsibilities listed here define the logical obligations and semantic ownership of Step Composition; they do not mandate that Step Composition itself be a scheduler or execute every operation through a GPWCF-owned runtime.",
+      "externalWorkflowFramework": "When an external Workflow Framework is used, the native Step Subworkflow executes the internal graph and invokes the bound executable elements. The external runtime performs native scheduling/dispatch and transition evaluation/enactment, while the Step specialization and Step Composition remain authoritative for the meaning, constraints, specialized contracts, and result/custody rules.",
+      "inProcessRealization": "Where no external Workflow Framework is used, a concrete Step may realize these logical obligations through its own implementation and collaborators, subject to the same specialized contracts.",
+      "boundary": "Neither realization changes the public Step contract or permits Stage Composition to bypass the Step boundary."
+    },
+    "responsibilities": [
+      "Establish or obtain the invocation context required by the concrete Step.",
+      "Coordinate the Step-defined internal flow among selected SPU instances and applicable supporting-unit instances.",
+      "Supply each SPU with input conforming to that SPU's specialized TInput contract.",
+      "Invoke SPUs through their StepProcessingUnit[TInput,TOutput] contracts.",
+      "Consume and retain each SPUExecutionResult returned by a normally completed SPU invocation.",
+      "Coordinate applicable validator units and retain their produced results under the concrete Step's result and flow contracts.",
+      "Coordinate Error Handling Unit instances and their Step-specific publication composition when that capability is selected.",
+      "Collect and retain accepted error-handling operation entries and reconcile uncertain publication outcomes under the applicable publication specialization.",
+      "Collect eligible SPUError occurrences and assemble ErrorResult according to the Step Error Model when applicable.",
+      "Coordinate Observation Units without automatically incorporating their events or results into StepExecutionResult.",
+      "Define and own the meaning, conditions, and permitted outcomes of each Step-specific transition. When an external Workflow Framework executes the Step as a native nested workflow, its runtime may evaluate and enact those GPWCF-defined conditions and transitions under the declared semantics; this does not transfer semantic ownership or create a second GPWCF scheduler.",
+      "Retain execution facts, returned results, and exceptions required by the Step's internal Flow Result and recovery obligations.",
+      "Supply the Step-level processing artifact and applicable aggregate results required to assemble StepExecutionResult[TOutput].",
+      "Apply the concrete Step's exception, retry, continuation, compensation, and termination policies where those policies are defined."
+    ]
+  },
+  "flowControlContract": {
+    "decisionOwner": "The concrete Step specialization, realized by its Step Composition.",
+    "principle": "The common contract assigns semantic flow-control authority to the concrete Step specialization, realized through Step Composition, but does not define the Step's actual flow graph, topology, or transition policy. This authority defines the meaning, permitted conditions, and outcomes of transitions; it does not require Step Composition to execute a separate scheduler or dispatch loop.",
+    "permittedTopologies": [
+      "Sequential",
+      "Conditional or branching",
+      "Iterative or cyclic",
+      "Concurrent or parallel",
+      "Event-driven",
+      "Data-dependent",
+      "Hybrid or another Step-defined topology"
+    ],
+    "rules": [
+      "The Step specialization defines which internal components participate and the conditions under which each is invoked.",
+      "The Step specialization defines the meaning of each transition and the evidence/results used to select it.",
+      "A component result may inform a transition but does not itself own or perform the Step-level flow decision.",
+      "A component exception is an execution fact, not an implicit flow decision.",
+      "The common contract does not require every produced result to trigger a transition, nor every transition to depend on a result.",
+      "No universal ordering among validation, processing, error production, error handling, observation, or result assembly is imposed.",
+      "The concrete Step defines whether a failed or exceptional component invocation causes termination, continuation, branching, retry, compensation, recovery, or another response.",
+      "The concrete Step defines any concurrency, synchronization, reentrancy, cancellation, timeout, and ordering guarantees it requires."
+    ],
+    "notMandated": [
+      "A linear pipeline.",
+      "A predefined graph representation or graph execution algorithm.",
+      "A fixed number of SPUs or supporting units.",
+      "One SPU per Step.",
+      "One supporting unit per SPU.",
+      "Mandatory participation of every supporting-unit category.",
+      "A universal scheduler, state machine, runtime engine, or execution interpreter."
+    ]
+  },
+  "externalWorkflowIntegration": {
+    "purpose": "Define how the Step Composition's GPWCF-owned internal composition semantics are realized by an external Workflow Framework without creating a competing GPWCF execution engine.",
+    "semanticAuthority": [
+      "The concrete Step specialization and its Step Composition own the selected internal functional responsibilities, component participation rules, input/output meanings, permitted dependencies, transition conditions, exception policy, and StepCompositionFlowResult/StepExecutionResult assembly semantics.",
+      "This ownership defines what each internal function means, when it is permitted to participate, what its inputs and outputs mean, and how its result or failure affects the Step. It does not require GPWCF to schedule or dispatch the native execution graph."
+    ],
+    "nativeExecutionRealization": [
+      "Where an external Workflow Framework is selected, the Step's internal composition may be realized as a native nested workflow/subworkflow within the native Stage Parent Workflow.",
+      "The external runtime executes the native internal graph, including scheduling/dispatch and evaluation/enactment of the GPWCF-defined transition conditions, subject to the Step's declared semantic constraints.",
+      "The native nested workflow must remain behind the public Step execution boundary. Stage Composition invokes the Step contract; it does not invoke the Step's internal native nodes directly.",
+      "The integration must not create a second GPWCF scheduler, universal graph executor, or alternate source of Step flow semantics."
+    ],
+    "functionalBinding": [
+      "Each executable SPU or applicable executable Supporting Unit is bound to a native executable element using its own specialized callable, input, output/result, exception, event, identity, and lifecycle contract.",
+      "Non-executable semantic contracts, including the Step Error Model, remain semantic definitions and are not represented as executable nodes unless a separate specialized contract defines an executable responsibility.",
+      "Functional binding does not require an Association unless the selected component's specialized contract explicitly requires one. Any such Association remains separately governed by its existing coordination and pattern-specific contracts."
+    ],
+    "resultAndFailurePreservation": [
+      "Native execution outputs must be mapped back to the exact specialized GPWCF result contracts and retained according to the Step's result and custody obligations.",
+      "Returned structured results remain distinct from thrown exceptions, task failures, cancellation, timeout, and unresolved execution/custody outcomes.",
+      "StepCompositionFlowResult remains the Step-internal evidence boundary, and StepExecutionResult remains the public Step result; neither is replaced by a native workflow status.",
+      "Parent/child invocation identities, correlation context, and result provenance must remain traceable across the native nested-workflow boundary."
+    ],
+    "nonMandates": [
+      "No universal native node interface, plugin manager, registry, loader, scheduler, runtime adapter, or generic result model is introduced by this contract.",
+      "No particular graph format, workflow engine, node type, or relationship mechanism is mandated.",
+      "The external runtime's execution authority does not make it the owner of GPWCF component semantics or Step result assembly rules."
+    ]
+  },
+  "internalFlowResult": {
+    "name": "StepCompositionFlowResult",
+    "scope": "One concrete Step invocation.",
+    "nature": "An internal, invocation-scoped record of the execution facts and retained component results needed by the Step-specific composition and recovery logic.",
+    "producer": "The owning Step Composition.",
+    "consumer": "The owning Step implementation and its Step-specific result-assembly/recovery logic.",
+    "visibility": "Internal to the Step boundary. It is not returned to Stage as a substitute for StepExecutionResult.",
+    "purpose": [
+      "Preserve the outcomes of internal component invocations independently of later flow decisions.",
+      "Keep returned structured results distinguishable from thrown exceptions.",
+      "Provide the evidence needed to understand and continue or recover the Step-specific flow.",
+      "Provide the retained inputs from which Step-level output and applicable aggregate results can be assembled."
+    ],
+    "logicalEntryCategories": [
+      {
+        "name": "componentInvocationEntry",
+        "meaning": "Records one actual invocation of an SPU or supporting unit, its component identity/scope, and its invocation outcome.",
+        "outcomeDistinction": [
+          "A normally returned structured result, retained with its concrete result type and producer identity.",
+          "An invocation that returned normally without a result only where that component's contract permits such behavior.",
+          "An exception that prevented the component from returning its declared result.",
+          "An invocation whose outcome or result custody remains unresolved under an explicitly defined protocol."
+        ]
+      },
+      {
+        "name": "flowTransitionEntry",
+        "meaning": "Records a Step-specific flow decision or transition when the concrete Step requires such evidence.",
+        "specialization": "The concrete Step defines transition identity, source/target representation, decision evidence, and ordering semantics. The common contract does not prescribe a graph or transition schema."
+      },
+      {
+        "name": "exceptionEntry",
+        "meaning": "Records an exception observed at an internal component or composition boundary, separately from any structured result.",
+        "specialization": "The concrete Step defines exception identity, diagnostic representation, correlation to invocation/component, retention, and response policy."
+      },
+      {
+        "name": "custodyEntry",
+        "meaning": "Records result-production, acceptance, transfer, recovery, or unresolved-custody facts when required to prove that a produced result has not been silently lost or duplicated.",
+        "specialization": "Publication protocols retain their own authoritative identities and status contracts; this entry does not replace OperationEntryPublisher status or publication records."
+      }
+    ],
+    "invariants": [
+      "Every SPUExecutionResult returned by an SPU invocation and required by the concrete Step's retention contract remains available to Step-specific composition until explicitly consumed, transferred, or released under that contract.",
+      "A later SPU or supporting-unit failure does not authorize discarding an earlier retained structured result.",
+      "Every structured supporting-unit result actually produced and accepted into Step custody is retained according to its own result contract and the concrete Step's retention rules.",
+      "An exception that prevents a component from returning its declared result is recorded separately and is never fabricated into that result type.",
+      "A result is not considered absent merely because a later invocation threw an exception.",
+      "A result whose transfer or acceptance is indeterminate remains explicitly unresolved and subject to the applicable recovery contract; it is not silently treated as rejected or absent.",
+      "Distinct component invocations and their results remain distinguishable, including repeated invocations of the same component instance.",
+      "The Step defines the lifetime and release conditions of retained entries and any referenced result content."
+    ],
+    "representation": [
+      "The common contract defines logical entry categories and preservation invariants only.",
+      "The concrete Step defines concrete entry types, heterogeneous result representation, storage strategy, mutability, and access model.",
+      "The common contract does not mandate chronological ordering, a flat list, an event log, a graph, a database, or serialization.",
+      "The concrete Step may retain references, owned values, or faithful representations, provided the required result content and lifetime guarantees are preserved."
+    ],
+    "nonEquivalence": [
+      "StepCompositionFlowResult is not SPUExecutionResult; the latter is the structured result of one SPU invocation.",
+      "StepCompositionFlowResult is not StepExecutionResult; the latter is the Step-level aggregate returned to Stage.",
+      "StepCompositionFlowResult is not Stage Flow Result or Pipeline status.",
+      "StepCompositionFlowResult is not an ErrorResult or ErrorHandlerResult.",
+      "StepCompositionFlowResult does not automatically include Observation Unit events or telemetry."
+    ],
+    "exposureRule": "The internal Flow Result may be a concrete value, retained invocation context, or another Step-specialized representation. The common contract does not require a separately materialized object or a universal public accessor."
+  },
+  "resultCollectionAndComposition": {
+    "spuResults": [
+      "Each normally completed SPU invocation returns its own SPUExecutionResult[TOutput].",
+      "Step Composition retains the returned result and makes it available to the Step-specific composition logic.",
+      "The Step defines how results from zero or more SPUs contribute to its processingArtifact and other Step-level aggregates.",
+      "Step Composition does not reinterpret an SPUExecutionResult as StepExecutionResult."
+    ],
+    "supportingUnitResults": [
+      "Each supporting unit retains its own specialized result contract.",
+      "Step Composition collects the results of applicable supporting-unit invocations and preserves their producer and invocation associations.",
+      "The Step defines whether and how validator results are combined into StepValidatorResult.",
+      "Error handling operation results remain represented through their complete operation entries and the applicable ErrorHandlerResult contract.",
+      "Observation Unit results remain outside StepExecutionResult by default."
+    ],
+    "stepResultAssembly": {
+      "result": "StepExecutionResult[TOutput]",
+      "producer": "Concrete Step / Step Composition.",
+      "assemblyInputs": [
+        "The Step-defined processing artifact derived from retained internal results.",
+        "Applicable validator results or their Step-specific aggregate.",
+        "ErrorResult assembled according to the Step Error Model, when applicable.",
+        "ErrorHandlerResult assembled from accepted operation entries by the Step-specific Error Handling Composition, when applicable."
+      ],
+      "rules": [
+        "Step Composition performs the physical assembly of StepExecutionResult according to the concrete Step specialization.",
+        "The Step Error Model defines ErrorResult semantics and aggregation rules; Step Composition applies those rules.",
+        "The Step-specific Error Handling Composition constructs ErrorHandlerResult from accepted operation entries; Step Composition integrates it.",
+        "processingArtifact, validatorResult, errorResult, and errorHandlerResult remain independently optional as defined by StepExecutionResult_Contract.json.",
+        "The presence or absence of any optional result element does not by itself establish universal success or failure.",
+        "The common contract does not prescribe a universal Step status, success boolean, or result-assembly algorithm."
+      ]
+    }
+  },
+  "exceptionAndRecoveryBoundary": {
+    "principle": "Exceptions are distinct execution facts. Step Composition records and correlates them with the relevant invocation, then applies only the response policy defined by the concrete Step.",
+    "rules": [
+      "An exception thrown by an SPU that prevents SPUExecutionResult from being returned does not create an SPUExecutionResult.",
+      "An exception is not automatically converted into an SPUError occurrence or inserted into ErrorResult.",
+      "A supporting-unit exception does not fabricate that unit's declared structured result.",
+      "Previously returned and retained results remain available after a later exception.",
+      "Results produced by an internal operation before an exception remain subject to their publication/custody contracts and must not be silently discarded.",
+      "The Step defines whether an exception is propagated through Step.execute, represented in a Step-specific result, handled internally, or causes another response.",
+      "If an exception escapes the Step invocation, the concrete Step defines which Flow Result and retained evidence remain accessible and for how long.",
+      "Recovery must not cause duplicate aggregation or duplicate ownership transfer of a result already accepted by another owner."
+    ],
+    "notMandated": [
+      "A common exception hierarchy.",
+      "A common catch-all policy.",
+      "Automatic retry or compensation.",
+      "Automatic conversion of exceptions into error occurrences.",
+      "A universal rule to terminate or continue after an exception."
+    ]
+  },
+  "supportingUnitCoordination": {
+    "generalRule": "Step Composition selects and coordinates only the supporting-unit instances required by the concrete Step. Where a selected component pattern defines associations, their target scopes, identities, multiplicity, validity, invocation binding, changes, and dissociation are governed by Step_Composition_Association_Coordination_Contract.json and the applicable pattern-specific Association Contract.",
+    "validatorUnits": {
+      "coordination": "Select, provision, invoke, collect, and retain applicable validator-unit results according to the Step specialization.",
+      "constraints": [
+        "No validator unit is mandatory for every SPU or Step.",
+        "Validation timing and whether validation gates another operation are Step-specific.",
+        "The validator's result semantics remain defined by its own contract."
+      ],
+      "boundary": "Validator Units are executable supporting components with their own contracts/results. Step Composition coordinates invocation and retention; the concrete validator contract defines validation semantics and result structure."
+    },
+    "errorModel": {
+      "nature": "The Step Error Model is a Step-specific contract/specification that defines ErrorResult structure and aggregation semantics; it is not presumed to be an executable runtime unit or a component instance.",
+      "coordination": "Step Composition collects eligible SPUError occurrences and performs the physical ErrorResult assembly by applying the Step Error Model's rules.",
+      "constraints": [
+        "Each SPU creates SPUError occurrences for errors arising within its own processing responsibility and makes them available to the owning Step Composition.",
+        "Step Composition selects/collects occurrences and performs physical ErrorResult assembly; the Step Error Model defines the representation and aggregation semantics, not the runtime orchestration.",
+        "Occurrence identity, producerSPUIdentity, and the complete error-type-definition reference remain preserved as required by the Step Error Model contract.",
+        "A thrown exception is not an SPUError occurrence and is not automatically converted into one.",
+        "ErrorResult remains distinct from ErrorHandlerResult."
+      ]
+    },
+    "errorHandlingUnits": {
+      "coordination": "Select and coordinate the Error Handling Unit instances and the Step-specific Error Handling Composition required by the concrete Step. Association and lifecycle decisions follow the Framework-level coordination contracts and the Error Handling-specific specializations.",
+      "constraints": [
+        "The Step-specific Error Handling Composition aggregates accepted entries into ErrorHandlerResult.",
+        "Step Composition supplies the Unit's specialized input, authorized target-occurrence access, and invocation-bound OperationEntryPublisher where the publication pattern is used.",
+        "Each produced operation result remains associated with its complete operation entry and applicable reservation/attempt identities.",
+        "Step Composition coordinates collection and reconciliation of accepted or uncertain publications.",
+        "When the publication pattern is used, the concrete Step must satisfy Single_Step_Publication_Specialization_Contract.json."
+      ],
+      "boundary": "Error Handling Units execute handling operations and publish complete operation entries under the applicable publication contract. The Step-specific Error Handling Composition aggregates accepted entries into ErrorHandlerResult. Step Composition coordinates this capability without absorbing the Unit's operation semantics or the Publisher's acceptance/custody guarantees."
+    },
+    "observationUnits": {
+      "coordination": "Coordinate observation capabilities at the Step-defined scope and timing.",
+      "constraints": [
+        "Observation is optional.",
+        "Observation Units retain their independent result/event contracts.",
+        "Observation activity does not become StepExecutionResult content merely because Step Composition coordinates it.",
+        "Observation failure handling is defined by the concrete Step and observation contracts; it does not impose a universal processing-flow policy."
+      ],
+      "boundary": "Observation Units own their observation semantics and any event/result contract. Step Composition coordinates applicable invocation/association only; it does not make observation data part of StepExecutionResult by default."
+    }
+  },
+  "lifecycleAndInstanceManagement": {
+    "decisionOwner": "The concrete Step Composition, under the Framework-level Internal Component Lifecycle Coordination Contract and each selected component pattern's Lifecycle Contract.",
+    "coordinationResponsibility": "The concrete Step Composition selects the instances and lifecycle arrangements required by its Step-specific composition, makes the applicable lifecycle decisions, and coordinates their realization. The shared Lifecycle Coordination Contract is the normative source for common identity/lifetime distinctions, readiness and admission, invocation authorization, quiescence, reuse, release confirmation, recovery, and evidence/resource independence. It also coordinates internal settlement for a Step-level RetainForReuse or TerminalRetirement request: internal admission closure, accepted-work reconciliation, and component-specific release, reporting confirmed or unresolved facts to Step.",
+    "specializationBoundary": "The selected component pattern's Lifecycle Contract defines its technical lifecycle mechanics, activity/operation/resource lifetimes, output custody, and specialized preconditions. The concrete Step defines only the Step-specific selections and policies left open by those contracts. The public lifecycle boundary and Stage-facing outcome remain owned by Step; Step Composition reports internal settlement facts and does not expose internal topology to Stage.",
+    "nonMandated": "No universal lifecycle interface, state machine, factory, container, pool, manager, or technical lifecycle mechanism is introduced."
+  },
+  "specializationRequirements": {
+    "required": [
+      "The concrete Step's internal component set and the responsibility of each selected SPU.",
+      "Each SPU's specialized input/output contract and its identity/correlation scope.",
+      "The selected supporting-unit patterns, their applicable specialized contracts, and the concrete Step's selection/binding of the instances and associations it actually uses.",
+      "The Step-specific flow topology, transition conditions, and decision authority.",
+      "The concrete StepCompositionFlowResult representation or an explicit statement that no separately materialized Flow Result is required, together with equivalent evidence-retention guarantees.",
+      "The result-retention rules for SPUExecutionResult and supporting-unit results, including behavior after later failures.",
+      "The exception boundaries, exception correlation, recovery ownership, and Step-specific response policies.",
+      "The derivation of Step TOutput and the assembly rules for StepExecutionResult.",
+      "An explicit conformance mapping to the Framework-level Association Coordination and Internal Component Lifecycle Coordination Contracts and to every selected pattern-specific Association/Lifecycle Contract, recording the Step-specific choices required where those contracts leave decisions open.",
+      "Define how the concrete Step Composition receives/correlates RetainForReuse and TerminalRetirement requests from its owning Step.",
+      "Define accepted Step invocations and internal work/result/custody obligations that must be settled for each disposition.",
+      "Define internal admission closure consistent with the Step public invocation-admission boundary.",
+      "Define disposition-specific retention/reuse or terminal-release conditions for every selected component pattern.",
+      "Define the internal settlement report supplied to Step, including confirmed, failed, indeterminate outcomes and unresolved Recovery Owner.",
+      "Define preservation/recovery of produced SPU/supporting results, StepCompositionFlowResult, publication entries, and observation evidence through settlement."
+    ],
+    "conditional": [
+      "If validator units are used, define validator result collection and StepValidatorResult aggregation.",
+      "If a Step Error Model is used, define ErrorResult specialization, occurrence selection, and aggregation semantics.",
+      "If Error Handling Units and OperationEntryPublisher are used, instantiate every obligation in Single_Step_Publication_Specialization_Contract.json.",
+      "If Observation Units are used, define their association, event/result contract, and failure-isolation policy.",
+      "If execution is concurrent, define correlation, synchronization, deterministic aggregation requirements where applicable, and result custody under concurrent completion.",
+      "If a Step exposes recovery after an exception, define the lifetime and access mechanism for its retained Flow Result and component results."
+    ],
+    "completionRule": "A concrete Step is composition-contract complete only when its applicable specialization requirements are explicit and consistent with the common contracts of all selected components."
+  },
+  "explicitNonGoals": [
+    "No mandatory Step Composition runtime engine or scheduler.",
+    "No mandatory graph, DAG, state-machine, or workflow representation.",
+    "No universal internal execution order or topology.",
+    "No fixed SPU or supporting-unit count or cardinality.",
+    "No mandatory use of all supporting-unit categories.",
+    "No universal StepCompositionFlowResult storage schema or serialization format.",
+    "No universal execution status or success/failure boolean.",
+    "No universal exception, retry, compensation, cancellation, timeout, or recovery policy.",
+    "No universal component lifecycle manager, dependency-injection mechanism, factory, pool, or service locator.",
+    "No central mediator or global manager for Step-internal components.",
+    "No exposure of internal component topology or Flow Result to Stage by default.",
+    "No merging of SPUExecutionResult, StepCompositionFlowResult, StepExecutionResult, ErrorResult, or ErrorHandlerResult into one result concept.",
+    "No Step Composition lifecycle report is exposed directly to Stage; Step remains the public lifecycle boundary.",
+    "No assumption that Step relinquishment for reuse is equivalent to terminal release of internal instances.",
+    "No successful settlement while accepted invocations, release-sensitive work, or result-custody obligations remain unresolved.",
+    "No universal policy for cancellation completion, retries, quarantine, replacement, or Stage flow response."
+  ],
+  "relationships": [
+    {
+      "from": "Step",
+      "to": "StepComposition",
+      "relationship": "owns-and-delegates-internal-orchestration-responsibility-to"
+    },
+    {
+      "from": "StepComposition",
+      "to": "SPU Instances",
+      "relationship": "selects-coordinates-invokes-and-collects-per-invocation-results-from"
+    },
+    {
+      "from": "SPU Instance",
+      "to": "SPUExecutionResult",
+      "relationship": "returns-one-structured-result-for-each-normally-completed-invocation"
+    },
+    {
+      "from": "StepComposition",
+      "to": "StepCompositionFlowResult",
+      "relationship": "records-and-retains-invocation-scoped-flow-evidence"
+    },
+    {
+      "from": "StepComposition",
+      "to": "Supporting Unit Instances",
+      "relationship": "coordinates-applicable-associations-lifecycle-invocation-and-result-collection"
+    },
+    {
+      "from": "StepComposition",
+      "to": "StepExecutionResult",
+      "relationship": "assembles-Step-level-result-from-retained-internal-results-and-Step-specific-rules"
+    },
+    {
+      "from": "Stage Composition",
+      "to": "Step",
+      "relationship": "invokes-only-through-the-public-Step-contract"
+    },
+    {
+      "from": "Step",
+      "to": "StepComposition.stepLifecycleSettlement",
+      "relationship": "delegates-internal-settlement-for-retention-or-terminal-retirement-and-consumes-settlement-facts"
+    }
+  ],
+  "references": [
+    {
+      "document": "Step_Contract.json",
+      "relationship": "Step ownership, public boundary, and internal composition responsibility"
+    },
+    {
+      "document": "../01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      "relationship": "SPU callable contract and internal coordination boundary"
+    },
+    {
+      "document": "../01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+      "relationship": "per-SPU invocation result and preservation contract"
+    },
+    {
+      "document": "../01.01_Step_Error_Model/Step_Error_Model_Contract.json",
+      "relationship": "ErrorResult semantics, occurrence identity, and aggregation rules"
+    },
+    {
+      "document": "../01.02_Step_Error_Handling/ErrorHandlingUnit_Contract.json",
+      "relationship": "Error Handling Unit invocation, identity, lifecycle, and operation-result publication"
+    },
+    {
+      "document": "../01.02_Step_Error_Handling/ErrorHandlerResult_Contract.json",
+      "relationship": "operation-entry structure and ErrorHandlerResult aggregation"
+    },
+    {
+      "document": "../01.02_Step_Error_Handling/OperationEntryPublisher_Contract.json",
+      "relationship": "operation-entry publication, acceptance, status reconciliation, and custody protocol"
+    },
+    {
+      "document": "../01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json",
+      "relationship": "mandatory concrete Step publication and recovery specialization when applicable"
+    },
+    {
+      "document": "../01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "relationship": "distinct Stage-facing Step aggregate result"
+    },
+    {
+      "document": "../Stage_Step_Level_Architecture.json",
+      "relationship": "Step-level structural architecture and Stage boundary"
+    }
+  ],
+  "frameworkCoordinationContracts": {
+    "associationCoordination": {
+      "document": "../../../Common/Step_Composition_Association_Coordination_Contract.json",
+      "role": "Detailed reusable invariants for associations between selected Step-internal component instances and Step-owned target scopes."
+    },
+    "internalComponentLifecycleCoordination": {
+      "document": "../../../Common/Step_Composition_Internal_Component_Lifecycle_Coordination_Contract.json",
+      "role": "Detailed reusable invariants for lifecycle decisions, eligibility, quiescence, reuse, release, and output/evidence independence."
+    },
+    "applicationRule": "These are the normative Framework-level sources for cross-cutting association and internal-component lifecycle coordination. This Step Composition Contract states ownership, selection, and application boundaries only; it does not restate their detailed invariants. They do not impose component categories, association use, lifecycle mechanics, execution topology, or runtime infrastructure. Selected component patterns retain their own specialized contracts."
+  },
+  "stepLifecycleSettlement": {
+    "authorityAndBoundary": {
+      "requestSource": "The owning Step initiates internal settlement in response to its public lifecycle interaction with Stage.",
+      "coordinationOwner": "The concrete Step Composition coordinates settlement of the Step-owned internal composition.",
+      "componentAuthority": "Each component performs its technical quiescence/release mechanics under its specialized Behavioral, Association, and Lifecycle contracts.",
+      "outerBoundary": "Stage Composition does not invoke/manage internal components and receives no internal topology or component-level lifecycle controls."
+    },
+    "settlementObligations": [
+      {
+        "name": "CloseInternalAdmission",
+        "requirement": "After Step closes public execute admission and freezes the accepted-invocation set, restrict internal admission so no unrelated/new Step work, independent activity, or new association can begin. However, continue to authorize the internal SPU/supporting-unit work causally required by already-accepted Step invocations until those invocations settle; do not prematurely block their legitimate downstream progress."
+      },
+      {
+        "name": "SettleAcceptedStepInvocations",
+        "requirement": "Account for every Step invocation accepted before public admission closure. Complete, cancel, drain, or reconcile each invocation and nested/asynchronous work under the concrete Step policy. Cancellation request or timeout alone is not proof of settlement."
+      },
+      {
+        "name": "FinalizeInternalAdmissionClosure",
+        "requirement": "After all accepted Step invocations and their causally authorized internal work have settled, close remaining component/activity admission, including new independent observation activities, subscriptions, sampling cycles, and other work not required to finish the accepted set. Then complete component-specific quiescence and release."
+      },
+      {
+        "name": "QuiesceInternalComponents",
+        "requirement": "Coordinate applicable specialized quiescence for active invocations, nested operations, callbacks, subscriptions, sampling cycles, queued work, and association-bound activity. Only obligations applicable to selected patterns are required."
+      },
+      {
+        "name": "ReconcileResultsAndCustody",
+        "requirement": "Ensure each produced result/entry is accepted by its destination, retained by its current owner, or transferred to an explicitly named Recovery Owner. Indeterminate handoffs remain visible and recoverable."
+      },
+      {
+        "name": "ReleaseOrRetainInternalInstances",
+        "requirement": "For RetainForReuse, retain only instances satisfying reset/readiness/isolation/reuse conditions. For TerminalRetirement, obtain required specialized release confirmation. Do not release while a release-sensitive obligation or sole recoverable output remains unresolved."
+      },
+      {
+        "name": "ReportSettlementFactsToStep",
+        "requirement": "Report sufficient facts for Step to determine confirmed, failed, or indeterminate disposition, including outstanding obligations and recovery ownership. This is internal to Step, not a Stage-facing component result."
+      }
+    ],
+    "concurrencyAndCorrelation": [
+      "No internal work is authorized for a Step invocation unless that invocation was accepted at the Step public boundary.",
+      "Preserve correlation between each accepted Step invocation and its internal invocations, activities, operations, results, and custody obligations.",
+      "Concurrent accepted Step invocations are settled independently under the concrete Step concurrency and isolation policy.",
+      "Coordinate internal admission closure with the Step public boundary so no work is admitted after retirement while release is underway.",
+      "No universal scheduler, counter, queue, lock, barrier, or state machine is mandated.",
+      "Internal admission closure is staged: it blocks unrelated/new work immediately after the Step accepted set is frozen, while allowing required descendants of already-accepted Step invocations to complete; full component/activity admission closure follows settlement of that accepted set."
+    ],
+    "resultAndEvidenceCustody": [
+      "Every SPUExecutionResult and supporting-unit result already produced and accepted into Step Composition custody remains available to composition/recovery even if later work or release fails.",
+      "StepCompositionFlowResult and invocation-scoped evidence remain distinct from the Step lifecycle outcome and are not discarded by retirement.",
+      "A StepExecutionResult already returned to Stage remains valid and independent of subsequent Step retirement.",
+      "ErrorHandlerResult publication, reservations, status reconciliation, and Recovery Owner custody remain governed by OperationEntryPublisher and Single_Step_Publication_Specialization; retirement cannot close those responsibilities prematurely.",
+      "Observation records/events and provenance remain governed by Observation contracts; ending activity does not delete captured evidence, and pending delivery is reconciled under the specialization.",
+      "Historical evidence may outlive component instances, associations, and the Step runtime instance without retaining technical handles/resources."
+    ],
+    "dispositionCompletion": {
+      "RetainForReuse": [
+        "Current accepted Step work is completed or otherwise settled as required by the concrete reuse policy.",
+        "Each retained component satisfies specialized reset, readiness, isolation, association, and reuse conditions.",
+        "No prior work, callback, operation, or custody obligation can leak into a later invocation without explicit correlation/isolation.",
+        "Step Composition reports reuse eligibility and any re-admission constraints to Step.",
+        "Ordinary Step admission remains closed during settlement/reset and is reopened only after Step confirms reuse readiness; accepted invocations may complete their required internal work during the settlement interval."
+      ],
+      "TerminalRetirement": [
+        "No new internal work can be authorized.",
+        "All accepted Step invocations and nested work are completed, cancelled, drained, or explicitly reconciled.",
+        "Applicable associations, activities, subscriptions, operations, reservations, and release-sensitive resources are settled.",
+        "Produced outputs/evidence have confirmed custody or an explicit Recovery Owner; no sole recoverable representation is destroyed.",
+        "Every required component release is confirmed, or failure/indeterminate status and unresolved obligations are reported instead of claiming completion.",
+        "The initial admission restriction must not prevent accepted Step invocations from completing their authorized internal processing; full internal admission closure follows settlement of that accepted set."
+      ]
+    },
+    "failureAndIndeterminateHandling": [
+      "A failure in one component release prevents reporting the entire Step composition as terminally released.",
+      "Failed/indeterminate release is not successful release or reuse eligibility unless specialized reconciliation establishes safety.",
+      "Any unresolved invocation, operation, callback, publication, custody, or resource release is reported with its recovery owner.",
+      "Preserve access to recovery evidence; do not destroy the only recoverable state while outcome is unresolved.",
+      "Retry, replacement, quarantine, escalation, and termination policy remain concrete Step decisions."
+    ],
+    "nonMandates": [
+      "No mandatory sequence of separately materialized lifecycle states or phases.",
+      "No common lifecycle method, result type, state enum, manager, coordinator, or runtime service.",
+      "No assumption that every Step uses every supporting pattern or that patterns have identical settlement operations.",
+      "No automatic conversion of lifecycle failures into SPUError, StageError, ErrorResult, ErrorHandlerResult, or StepExecutionResult."
+    ]
+  }
+}

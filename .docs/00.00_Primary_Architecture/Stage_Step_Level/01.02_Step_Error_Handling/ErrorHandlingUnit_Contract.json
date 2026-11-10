@@ -1,0 +1,433 @@
+{
+  "documentId": "pipeline.error-handling-unit.contract",
+  "documentVersion": "0.1.5",
+  "status": "design-baseline",
+  "title": "Error Handling Unit Operation Execution Contract",
+  "scope": {
+    "architecturalLevel": "stage-step-component",
+    "component": "Step Supporting Error Handling Unit operation-execution protocol",
+    "owningLevel": "step",
+    "purpose": "Define the detailed callable, input, operation-result, attempt identity, target-occurrence access, and publication protocol of an Error Handling Unit that conforms to Step_Supporting_Error_Handling_Unit_Contract.json.",
+    "normativeBoundary": "This document refines operation execution and publication mechanics. The common Supporting Unit role, association scope, invocation provenance, and lifecycle authority are governed by the Step_Supporting_Error_Handling_Unit Behavioral, Association, and Lifecycle Contracts."
+  },
+  "contract": {
+    "name": "ErrorHandlingUnit",
+    "genericType": "ErrorHandlingUnit[TErrorHandlingUnitInput, THandlingOperationResult]",
+    "callable": "execute(input: TErrorHandlingUnitInput, operationEntryPublisher: OperationEntryPublisher[THandlingOperationResult]) -> None",
+    "role": "A Step-owned executable collaborator that performs one or more authorized handling operations and publishes one structured operation entry for each operation execution that produces a result, under the broader Supporting Error Handling Unit contract.",
+    "executionMeaning": "One invocation may contain multiple distinct Handling Operation Attempts. Each attempt must obtain its own PublicationReservation before the operation begins. Each operation execution that produces a structured THandlingOperationResult is represented by one entry and published under the reservation bound to that attempt. Accepted entries remain retained independently of later normal or exceptional invocation termination.",
+    "ownership": "The Error Handling Unit is a Step-owned pluggable collaborator. Step Composition owns its association and lifecycle; it may be associated with a particular SPU without transferring orchestration ownership to that SPU.",
+    "nonResponsibilities": [
+      "Define or register SPUErrorTypeDefinition values or own the Pipeline-assigned SPUErrorTypeDefinitionRegistry.",
+      "Create, replace, mutate, or own SPUError occurrences.",
+      "Own the ErrorResult aggregate or change its contents.",
+      "Own or assemble the final StepExecutionResult.",
+      "Control Stage or Pipeline flow.",
+      "Impose a universal handling policy, outcome taxonomy, retry policy, or resolution guarantee.",
+      "Convert thrown exceptions automatically into operation results."
+    ],
+    "stepSpecializationRequirement": "Every Step using this Unit and Publisher must concretely define protocol result types, no-fail result-transfer representation, Publisher Contract Violation Recovery Owner/procedure, identity generation, and status retention in its own contract conforming to 01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json."
+  },
+  "typeParameters": [
+    {
+      "name": "TErrorHandlingUnitInput",
+      "meaning": "The Step-specialized input accepted by one invocation of this Error Handling Unit.",
+      "specialization": "Defined by the owning Step and the concrete Error Handling Unit. It provides the operation context and, for occurrence-targeted operations, controlled access to the candidate SPUError occurrences that the unit is permitted to inspect or target. No universal input class or field layout is imposed."
+    },
+    {
+      "name": "THandlingOperationResult",
+      "meaning": "The structured result type produced by one actual handling operation performed by this Error Handling Unit.",
+      "specialization": "Defined by the concrete Error Handling Unit within the owning Step. It describes the operation-specific result or evidence and is not the result of the entire Error Handling Unit invocation."
+    }
+  ],
+  "operationResultSpecialization": {
+    "principle": "THandlingOperationResult is specialized per concrete Error Handling Unit and represents one operation execution.",
+    "minimumSemanticRequirements": [
+      "Represent the result of one actual operation execution, not an operation plan, declared handling action, or entire unit invocation.",
+      "Carry the operation-specific information required by the owning Step to interpret what the operation produced.",
+      "Remain associated with the corresponding handlingOperationIdentity and target occurrence references through ErrorHandlingOperationEntry.",
+      "Preserve all operation-specific evidence or data required by the Step's handling and audit semantics.",
+      "Be a structured result type; a bare success Boolean is insufficient unless the Step-specific contract explicitly defines why that Boolean is the complete required result."
+    ],
+    "stepSpecificSpecializationMayDefine": [
+      "An operation-specific outcome classification or status, if meaningful for that operation.",
+      "What action was actually performed and what observable effect or evidence resulted.",
+      "Diagnostics, reason codes, or operation-specific failure details when the operation returns such a result.",
+      "Retry, compensation, or follow-up information when required by the Step's own policy.",
+      "Any typed payload needed to communicate the operation result to the Step-specific composition."
+    ],
+    "constraints": [
+      "No common success, failure, handled, resolved, ignored, retried, or compensated field is mandated.",
+      "Producing an operation result does not imply that the targeted occurrence has been resolved.",
+      "An operation that throws before producing THandlingOperationResult does not produce an operation entry by implication.",
+      "When multiple Error Handling Units use different result types, the Step-specific THandlingOperationEntry must preserve the concrete result type and its association with the producing unit; a tagged union, variant, or another Step-defined heterogeneous representation may be used."
+    ]
+  },
+  "inputAndOccurrenceAccess": {
+    "inputPrinciple": "The Error Handling Unit receives Step-specialized input containing the authorized invocation and Association context, operation context, and bounded target-occurrence/resource access required by its assigned operations.",
+    "semanticInputCapabilities": [
+      {
+        "name": "associationContext",
+        "requirement": "The input identifies the exact Step-owned Association selected by Step Composition and its bound associationTargetIdentity.",
+        "constraints": [
+          "The association context includes stepInstanceIdentity, errorHandlingUnitIdentity, errorHandlingUnitAssociationIdentity, and associationTargetIdentity.",
+          "The Unit invocation is bound to exactly one Association; the Unit must not infer or substitute another Association.",
+          "The association target identifies the authorized applicability scope and is not necessarily the exact target occurrence/resource of each operation."
+        ]
+      },
+      {
+        "name": "operationContext",
+        "requirement": "The input provides the Step-specific context needed to select and perform the unit's operations. Its structure is defined by the Step."
+      },
+      {
+        "name": "targetOccurrenceAccess",
+        "requirement": "For operations that target SPUError occurrences, the input provides a bounded, read-only way to enumerate or select eligible occurrences and inspect the occurrence information permitted to the unit.",
+        "constraints": [
+          "The access surface identifies occurrences using producerSPUIdentity plus occurrenceIdentity.",
+          "The access surface resolves references to the original occurrences or to faithful read-only views of those occurrences; it does not manufacture replacement occurrences.",
+          "The unit may target only occurrences made available under the Step-specific input and selection rules.",
+          "The unit does not gain ownership of the source occurrences or permission to mutate ErrorResult through this access surface.",
+          "A Step may omit occurrence access for an explicitly non-occurrence-targeted operation."
+        ]
+      },
+      {
+        "name": "unitConfiguration",
+        "requirement": "The Step may provide configuration or dependencies required by the concrete unit. Their types, ownership, and lifetime are Step-specific."
+      }
+    ],
+    "accessLifetime": [
+      "Any invocation-scoped resolved occurrence view or access handle is valid only for the lifetime guaranteed by the input contract.",
+      "The Error Handling Unit must not retain a raw pointer, reference, or borrowed view beyond that lifetime unless the Step-specific contract explicitly supplies an owning or lifetime-pinning handle.",
+      "The operation entry retains identity references, not borrowed occurrence pointers."
+    ]
+  },
+  "operationEntryPublication": {
+    "publisherContract": "OperationEntryPublisher[THandlingOperationResult]",
+    "publisherOwner": "The Step-specific Error Handling Composition owns and supplies the Publisher capability for the Invocation.",
+    "attemptProtocol": [
+      "Create a new handlingOperationAttemptIdentity for the intended operation attempt; this identity does not assert that execution has started.",
+      "Call reserve(handlingOperationAttemptIdentity) and do not begin the operation unless a valid PublicationReservation is granted.",
+      "After grant and before operation start, assign a new handlingOperationIdentity to the actual execution. One attempt may start at most one actual execution.",
+      "Execute the operation and produce its specialized THandlingOperationResult.",
+      "If the operation will not produce a result, release the unused reservation. A normal return or exception does not implicitly release it.",
+      "If a result is produced, preserve it locally, prepare the complete ErrorHandlingOperationEntry, and call publish with the same reservation.",
+      "The entry carries handlingOperationAttemptIdentity as well as handlingOperationIdentity, allowing the Publisher to validate the reservation-to-entry binding.",
+      "Every complete operation entry preserves stepInstanceIdentity, errorHandlingUnitAssociationIdentity, associationTargetIdentity, and errorHandlingInvocationIdentity in addition to Unit, attempt, operation, target-occurrence, and result data."
+    ],
+    "publicationSemantics": [
+      "The complete entry is prepared before publish is invoked. The Step-specific type/transfer contract must provide a non-throwing final ownership handoff, either directly or through an already-prepared owning envelope/handle.",
+      "Calling publish does not transfer retention responsibility. Responsibility transfers only at the Publisher atomic-acceptance point.",
+      "PublicationAccepted means the complete entry is retained and the reservation is Consumed.",
+      "A PublicationRejection means no acceptance occurred; the Unit retains responsibility for any produced result.",
+      "A Publisher Contract Violation is distinct from ordinary rejection and must not be relabeled as a normal publication rejection.",
+      "If publish throws or its acknowledgement is not observed, the Unit preserves the result and reservation and queries get_publication_status. Consumed means accepted; Reserved permits retrying the same logical entry; Released while a produced result is pending indicates a contract violation.",
+      "A retry after ambiguous publication reuses the same reservation and same logical entry. It must not create a new operation execution or a second entry.",
+      "An idempotent retry of the same already-accepted entry returns acknowledgement for the original acceptance without duplicate retention.",
+      "Each reservation authorizes one entry for one attempt only. The Publisher retains accepted entries independently of later execute termination.",
+      "The Publisher is the authoritative delivery path; the Unit does not also return a collection of operation entries.",
+      "The entry provenance fields must match the exact Step/Association/target/invocation binding of the invocation-scoped Publisher and its reservation."
+    ],
+    "ownershipAndLifetime": [
+      "The composition owns the Publisher and its accepted-entry storage; the Unit temporarily uses the Publisher as an invocation-scoped capability.",
+      "Before atomic acceptance, the Unit retains responsibility for the produced result and prepared entry.",
+      "After atomic acceptance, the Publisher/Composition retains the complete entry for Step-specific collection and aggregation.",
+      "Publication does not transfer ownership of the Unit or source SPUError occurrences and does not mutate ErrorResult."
+    ],
+    "failurePreservation": [
+      "An exception before result production does not create a synthetic entry; if no result exists, the Unit releases the reservation under the release preconditions.",
+      "An exception after result production but before acceptance does not permit discarding the result or releasing its reservation. The Unit retains the result and follows the Step-specific publication recovery path.",
+      "An exception after atomic acceptance does not revoke acceptance. If acknowledgement was not observed, status lookup resolves the outcome where the Publisher is available.",
+      "Failure of status lookup does not prove rejection and does not authorize discarding the result or starting a replacement execution.",
+      "The Unit and Step-specific Composition must ensure that every produced result remains owned by the Unit before acceptance or by the Publisher/Composition after acceptance, unless an explicit Step-specific recovery owner takes responsibility.",
+      "If execute unwinds exceptionally while a produced result remains unpublished, the Step-specific contract must expose the complete pending result/entry to the composition through an explicit recovery envelope, exception payload, or invocation-scoped recovery record. Merely retaining it in a Unit-local variable that becomes unreachable on unwind is insufficient.",
+      "The concrete Recovery Owner, recovery record/envelope type, custody-transfer operation, and reconciliation/escalation procedure are mandatory Step contract definitions."
+    ]
+  },
+  "callableExecutionContract": {
+    "invocation": "execute(input: TErrorHandlingUnitInput, operationEntryPublisher: OperationEntryPublisher[THandlingOperationResult])",
+    "return": "None; normal return indicates that the invocation completed normally, not that no operation results exist.",
+    "rules": [
+      "Each Handling Operation Attempt receives a distinct handlingOperationAttemptIdentity before its reservation request.",
+      "The Unit must obtain a valid PublicationReservation before beginning the corresponding Handling Operation.",
+      "A rejected reservation means that operation attempt must not begin; a later execution retry requires a new attempt identity and reservation.",
+      "After reservation grant and before operation start, the Unit assigns handlingOperationIdentity to the actual execution. One attempt starts at most one actual execution.",
+      "Each operation execution that produces a structured THandlingOperationResult is represented by one entry carrying handler identity, attempt identity, operation identity, target references, and operation result.",
+      "The Unit prepares the complete entry and publishes it using the reservation bound to the same attempt.",
+      "The invocation may contain zero or multiple attempts and may publish zero or multiple accepted entries; zero entries do not by themselves mean failure.",
+      "The Unit does not return a competing collection of operation entries and does not construct ErrorHandlerResult unless the Step explicitly assigns that responsibility.",
+      "The Unit does not assemble StepExecutionResult.",
+      "Every operation entry published by the invocation carries the same errorHandlingInvocationIdentity and the exact Association context authorized for that invocation."
+    ],
+    "exceptionBoundary": [
+      "An exception before THandlingOperationResult production does not create a synthetic operation entry; the unused reservation is released only if the operation produced no result and no entry is pending.",
+      "If an exception occurs after result production but before atomic publication acceptance, the Unit retains the result and reservation and must not treat the result as absent.",
+      "If an exception occurs after atomic acceptance but before acknowledgement observation, the Unit uses get_publication_status to reconcile the publication state; absence of acknowledgement is not proof of rejection.",
+      "An exception thrown by Publisher infrastructure that violates a granted reservation is a Publisher Contract Violation, distinct from a normal PublicationRejection.",
+      "The Unit-specific exception behavior and local recovery remain Step-specialized. No common conversion of exceptions into THandlingOperationResult is imposed."
+    ],
+    "executionMode": "Synchronous/asynchronous behavior is selected by the owning Step contract; this document does not impose one execution mode."
+  },
+  "identityContracts": {
+    "errorHandlingUnitIdentity": {
+      "identifies": "One concrete Error Handling Unit runtime instance within its owning Step instance, independently of the target scopes to which it may be associated.",
+      "assignedBy": "Step Composition or an identity provider supplied by it when the Unit instance is created or admitted into the Step's internal component composition.",
+      "uniquenessScope": "Unique within the owning Step instance for as long as any invocation, operation entry, recovery record, or aggregate carrying that identity may be observed. It is not scoped to a particular SPU association.",
+      "stability": [
+        "Stable for the lifetime of that Error Handling Unit runtime instance, regardless of the number or kinds of Associations it has.",
+        "A newly created replacement instance receives a new identity while results from the prior instance may still be observed.",
+        "A reused instance retains its identity across invocations and association changes during its lifetime."
+      ],
+      "generation": "The Step defines the identity representation and generation mechanism. It must prevent collisions within the stated uniqueness scope; no UUID, counter, timestamp, or other specific mechanism is mandated.",
+      "ownership": "Step Composition is authoritative for assignment within the owning Step identity scope; the Unit receives and retains the assigned identity."
+    },
+    "handlingOperationIdentity": {
+      "identifies": "One actual Handling Operation execution that began after a valid PublicationReservation was granted.",
+      "assignedBy": "The Error Handling Unit, or an identity provider explicitly supplied to it by the owning SPU/Step composition.",
+      "uniquenessScope": "Unique within the lifetime and identity scope of its producing Error Handling Unit instance.",
+      "stability": [
+        "Assigned only after the attempt receives a valid reservation and before the actual operation begins.",
+        "A reservation-rejected attempt has no handlingOperationIdentity because no execution began.",
+        "One Handling Operation Attempt starts at most one actual execution.",
+        "A distinct execution retry requires a new handlingOperationAttemptIdentity and receives a new handlingOperationIdentity.",
+        "An ambiguous publication retry reuses the existing operation identity because it republishes the same execution result."
+      ],
+      "generation": "The concrete unit or its supplied identity provider selects the mechanism. It must preserve uniqueness under the concurrency model permitted by the Step.",
+      "compositeIdentity": "The pair errorHandlingUnitIdentity plus handlingOperationIdentity uniquely identifies an operation entry within the applicable SPU identity scope."
+    },
+    "scopeLimit": [
+      "These identities are runtime identities within the defined SPU/unit lifetime scopes; global uniqueness across process restarts or durable persistence is not implied.",
+      "If a Step needs cross-process or durable identity, it must define the additional execution or persistence scope explicitly.",
+      "Identity values must not be inferred from operation results, target occurrences, operation kinds, or wall-clock timestamps alone."
+    ],
+    "handlingOperationAttemptIdentity": {
+      "identifies": "One distinct attempt to obtain authorization and begin a Handling Operation. An attempt may be rejected before execution begins.",
+      "assignedBy": "The Error Handling Unit or an identity provider supplied by the owning SPU/Step composition, before calling Publisher.reserve.",
+      "uniquenessScope": "Unique within the lifetime/identity scope of its producing Error Handling Unit instance for as long as any attempt, reservation, or result entry carrying it may be observed.",
+      "stability": [
+        "Assigned before reservation request and unchanged throughout the attempt.",
+        "A reservation rejection does not create a handlingOperationIdentity.",
+        "A retry intended to begin a new execution uses a new attempt identity.",
+        "An ambiguous publication retry for the same already-executed attempt reuses the same attempt identity and reservation."
+      ],
+      "compositeAssociation": "The reservation is bound to this attempt identity; the published entry carries it alongside the actual handlingOperationIdentity.",
+      "generation": "The Step defines the representation and generation mechanism; it must prevent collisions under permitted concurrency."
+    },
+    "errorHandlingInvocationIdentity": {
+      "identifies": "One invocation of one Error Handling Unit runtime instance under one selected Association.",
+      "assignedBy": "Step Composition or an identity provider supplied by it before the Unit invocation begins.",
+      "uniquenessScope": "Unique within the owning Step identity scope for as long as any operation entry, recovery record, publication status, or aggregate may refer to the invocation.",
+      "binding": [
+        "Bound to exactly one errorHandlingUnitIdentity and errorHandlingUnitAssociationIdentity.",
+        "Carries the corresponding associationTargetIdentity and stepInstanceIdentity.",
+        "All operation attempts and entries produced by the same invocation carry this identity.",
+        "A repeated invocation receives a new identity even when the same Unit instance and Association are reused."
+      ],
+      "generation": "The concrete Step defines representation and generation; uniqueness must hold under the Step concurrency and retention model."
+    }
+  },
+  "targetCardinality": {
+    "default": "One or more target occurrence references per occurrence-targeted operation entry.",
+    "stepSpecificRefinements": [
+      "A Step may narrow the cardinality to exactly one occurrence for single-occurrence operations.",
+      "A Step may define a bounded or otherwise constrained number of occurrences for batch operations.",
+      "A Step may retain one-or-more semantics for operations that can process a variable-sized group."
+    ],
+    "zeroTargetException": {
+      "permitted": "Only when the Step explicitly defines an operation whose target is not an SPUError occurrence, such as a Step-scoped or context-scoped handling operation.",
+      "requiredSafeguard": "The Step-specialized entry or its THandlingOperationResult/TErrorHandlingContext must identify the non-occurrence target scope unambiguously. An empty target collection without an explicitly defined alternative target scope is invalid.",
+      "meaning": "A zero-target operation is not treated as having implicitly targeted every occurrence."
+    },
+    "multipleOperations": [
+      "One operation may target multiple occurrences.",
+      "Multiple distinct operations may target the same occurrence.",
+      "The same occurrence reference must not be duplicated within one operation entry unless the Step explicitly assigns a distinct meaning to repeated targeting."
+    ],
+    "enforcement": "The owning Step defines and validates the concrete cardinality for each operation kind. This contract supplies the default, not a universal restriction that overrides Step-specific semantics."
+  },
+  "occurrenceReferenceLifetimeAndResolution": {
+    "referenceIdentity": "HandledErrorOccurrenceReference consists of producerSPUIdentity plus occurrenceIdentity, as defined by Step_Error_Model_Contract.json.",
+    "referenceNature": "The reference is an identity value, not an owning pointer and not a copy of the occurrence.",
+    "duringInvocation": [
+      "The SPU makes eligible original occurrences available to the Error Handling Unit through its Step-specialized input/access surface.",
+      "The unit selects and records references only to occurrences available in that invocation's authorized access scope.",
+      "The access surface resolves a selected reference to the original occurrence or a faithful read-only view while its validity guarantee holds."
+    ],
+    "afterInvocation": [
+      "If ErrorResult is present and contains the referenced occurrence, the reference resolves against that original occurrence entry using producerSPUIdentity plus occurrenceIdentity.",
+      "If ErrorResult is absent or does not contain the occurrence, post-invocation resolution is guaranteed only when the Step retains and exposes a separate occurrence-resolution scope or another explicitly defined stable resolution mechanism.",
+      "If no such resolution mechanism is retained, the reference remains a correlation identity only; dereferencing occurrence content after the invocation is not guaranteed.",
+      "The ErrorHandlerResult does not own the occurrence and does not extend its lifetime merely by storing the identity reference."
+    ],
+    "lifetimeGuarantees": [
+      "The source occurrence must remain valid for the duration of any Error Handling Unit operation that is inspecting it.",
+      "The Step defines whether occurrence data remains resolvable after the SPU invocation and for how long.",
+      "If post-invocation resolution is required while ErrorResult is absent, the Step-specific TErrorHandlingContext or an associated handle must identify and retain the required resolution scope without embedding ErrorResult.",
+      "A Step must not promise post-invocation dereferencing if its source occurrence storage has already been released.",
+      "No raw pointer or borrowed reference may be used as a substitute for the composite identity in a stored ErrorHandlerResult."
+    ],
+    "independence": "ErrorResult and ErrorHandlerResult remain independently optional. Their independent optionality does not imply that every occurrence reference is always dereferenceable after the invocation."
+  },
+  "lifecycleAndComposition": {
+    "lifecycleOwner": "The owning Step Composition controls association, provisioning, invocation coordination, collection, reuse, and release of Error Handling Unit instances. A Unit may be associated with a particular SPU, but that association does not transfer orchestration or lifecycle ownership to the SPU.",
+    "lifecyclePolicy": "Defined per Step and per Error Handling Unit. The unit may be invocation-scoped or reused across multiple invocations according to the Step's design.",
+    "conceptualPhases": [
+      {
+        "phase": "provision",
+        "responsibility": "Step Composition creates or obtains the Unit, establishes any SPU association required by the Step design, and assigns errorHandlingUnitIdentity."
+      },
+      {
+        "phase": "initialize",
+        "responsibility": "The Unit receives or establishes the dependencies and configuration required by its own contract."
+      },
+      {
+        "phase": "invoke",
+        "responsibility": "The composition supplies specialized input and an invocation-bound Publisher capability. For each operation, the Unit creates an attempt identity, obtains a reservation, then starts execution only after grant."
+      },
+      {
+        "phase": "collect",
+        "responsibility": "Step Composition reconciles publication outcomes and collects accepted entries independently of normal or exceptional Unit termination."
+      },
+      {
+        "phase": "release",
+        "responsibility": "Step Composition releases or retains the Unit according to Step-specific policy. Unused reservations are released only when no result requiring publication exists; pending produced results prevent normal Invocation closure."
+      }
+    ],
+    "compositionRules": [
+      "The Step Composition determines applicable Units, their association with SPUs or Step scope, invocation timing, operation selection, sequential/concurrent execution, and semantic operation ordering.",
+      "The Step Composition supplies an invocation-bound Publisher that implements OperationEntryPublisher_Contract.json.",
+      "Each operation attempt requires its own reservation before execution; the Publisher does not schedule operations.",
+      "The Step Composition retains and aggregates every accepted entry without merging distinct executions.",
+      "The Step Composition reconciles uncertain publication outcomes using reservation status and does not infer rejection from a missing acknowledgement.",
+      "Invocation closure is not complete while a produced result remains unpublished or a granted reservation remains unresolved.",
+      "The Step-specific Error Handling Composition constructs ErrorHandlerResult when at least one operation entry is selected for inclusion; if no entries are produced, no empty ErrorHandlerResult is required.",
+      "Step Composition integrates ErrorHandlerResult into StepExecutionResult and returns the final StepExecutionResult."
+    ],
+    "notMandated": [
+      "No universal constructor, dependency-injection mechanism, factory, pool, or service locator is prescribed.",
+      "No universal initialize/dispose method names or interface shape is prescribed.",
+      "No universal operation scheduling policy, execution concurrency level, semantic ordering, reentrancy, cancellation, or timeout behavior is prescribed; these remain Step-specific.",
+      "No universal Unit reuse scope is prescribed."
+    ]
+  },
+  "errorHandlerResultIntegration": {
+    "operationEntryContract": "ErrorHandlerResult_Contract.json",
+    "rules": [
+      "Each operation entry preserves errorHandlingUnitIdentity, handlingOperationIdentity, targetOccurrenceReferences, and THandlingOperationResult.",
+      "The Error Handling Unit publishes operation entries through the composition-owned publisher; the Step-specific composition aggregates accepted entries into the Step-specialized ErrorHandlerResult.",
+      "Step Composition integrates ErrorHandlerResult as the independent optional errorHandlerResult element of StepExecutionResult.",
+      "ErrorHandlerResult does not contain, mutate, remove, or subsume ErrorResult."
+    ]
+  },
+  "responsibilityAllocation": {
+    "ConcreteSPU": [
+      "Make SPUError occurrences produced by its own processing responsibility available to Step Composition with producer and occurrence identities preserved.",
+      "Provide SPU-specific context or authorized occurrence access to an Error Handling Unit only when Step Composition assigns that interaction to the SPU."
+    ],
+    "ErrorHandlingUnit": [
+      "Perform the operations assigned by the Step design.",
+      "Select only authorized target occurrences through the supplied access surface.",
+      "Generate or obtain a unique handlingOperationIdentity for each distinct operation execution.",
+      "Produce the specialized THandlingOperationResult for each operation and publish its corresponding operation entry through the supplied publisher.",
+      "Publish operation entries through the supplied composition-owned publisher without changing source occurrences or ErrorResult."
+    ],
+    "StepSpecificErrorHandlingComposition": [
+      "Operate as a Step-owned composition capability coordinated by Step Composition.",
+      "Implement the Step-defined selection, invocation, collection, recovery/reconciliation, and aggregation policy.",
+      "Preserve heterogeneous operation result types and all operation/target identities.",
+      "Construct ErrorHandlerResult according to ErrorHandlerResult_Contract.json."
+    ],
+    "PipelineAndStage": [
+      "Pipeline does not own or globally coordinate Error Handling Unit instances through the error-type Registry mechanism.",
+      "Stage Composition does not prescribe Step-internal Error Handling Unit selection, lifecycle, or operation policy."
+    ],
+    "StepComposition": [
+      "Own the association and lifecycle/reuse decisions for Error Handling Unit instances, including units associated with a particular SPU.",
+      "Provide each Unit with its Step-specialized input, authorized target-occurrence access, and invocation-bound Publisher.",
+      "Coordinate operation-entry collection and recovery/reconciliation of uncertain publication outcomes.",
+      "Aggregate accepted operation entries into ErrorHandlerResult according to the Step-specific composition contract.",
+      "Integrate ErrorHandlerResult into StepExecutionResult."
+    ]
+  },
+  "explicitNonGoals": [
+    "No universal THandlingOperationResult schema.",
+    "No universal TErrorHandlingUnitInput schema.",
+    "No universal TErrorHandlingContext schema.",
+    "No universal operation status or error-resolution semantics.",
+    "No global Error Handling Unit registry or central handling gateway.",
+    "No mandatory one-unit-per-occurrence or one-operation-per-invocation rule.",
+    "No mandatory persistent or cross-process occurrence-reference resolution.",
+    "No implicit extension of source occurrence lifetime by ErrorHandlerResult.",
+    "No universal lifecycle or dependency-injection framework.",
+    "No universal publisher concurrency, ordering, or publication-infrastructure failure policy is imposed."
+  ],
+  "references": [
+    {
+      "document": "../01.01_Step_Error_Model/Step_Error_Model_Contract.json",
+      "relationship": "original-SPUError-occurrence-identity-and-preservation-contract"
+    },
+    {
+      "document": "../01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "relationship": "StepExecutionResult.errorHandlerResult-integration-contract"
+    },
+    {
+      "document": "../01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      "relationship": "SPU-coordination-lifecycle-and-final-result-assembly-boundary"
+    },
+    {
+      "document": "../../../Common/Error_Model.json",
+      "relationship": "SPUError-and-SPUErrorTypeDefinition-identity-contract"
+    },
+    {
+      "document": "PublicationReservation_Contract.json",
+      "relationship": "reservation identity, binding, lifecycle, capacity, and ownership boundary"
+    },
+    {
+      "document": "OperationEntryPublisher_Contract.json",
+      "relationship": "reserve, publish, status reconciliation, release, atomic acceptance, concurrency, and Invocation closure"
+    },
+    {
+      "document": "ErrorHandlerResult_Contract.json",
+      "relationship": "published operation-entry structure and aggregation"
+    },
+    {
+      "document": "Single_Step_Publication_Specialization_Contract.json",
+      "relationship": "mandatory per-Step publication/recovery/identity/retention specialization"
+    },
+    {
+      "document": "../00.00_Step/Step_Contract.json",
+      "relationship": "Step Composition ownership and internal component orchestration"
+    },
+    {
+      "document": "../00.00_Step/Step_Contract.json",
+      "relationship": "Step Composition ownership and internal component orchestration"
+    },
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Contract.json",
+      "relationship": "Normative Supporting Unit behavior, invocation identity, association provenance, and custody baseline."
+    },
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Association_Contract.json",
+      "relationship": "Permitted association target scopes and per-invocation association binding."
+    },
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Lifecycle_Contract.json",
+      "relationship": "Unit instance lifecycle authority and independence from association/invocation/result lifetimes."
+    },
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Contract.json",
+      "relationship": "Canonical Supporting Unit invocation and Association provenance."
+    },
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Association_Contract.json",
+      "relationship": "Exact Association context required by the detailed invocation and publication protocol."
+    }
+  ],
+  "openDesignDetails": [
+    "Define concrete TErrorHandlingUnitInput and THandlingOperationResult types for each actual Error Handling Unit introduced by a Step.",
+    "Define concrete TErrorHandlingContext for each Step, including whether it carries a post-invocation occurrence-resolution handle.",
+    "Define occurrence-resolution retention duration and ownership for Steps that require post-invocation resolution when ErrorResult is absent.",
+    "Define per-operation target cardinality and explicit non-occurrence target scopes for each concrete handling operation.",
+    "Define the lifecycle scope, dependency provision, cleanup, reuse, and concurrency guarantees for each concrete Error Handling Unit.",
+    "Every concrete Step must instantiate the protocol type, transfer, recovery, identity, and status-retention obligations in 01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json; these are mandatory Step contract content."
+  ]
+}

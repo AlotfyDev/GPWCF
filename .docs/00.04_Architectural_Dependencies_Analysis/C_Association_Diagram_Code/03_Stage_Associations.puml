@@ -1,0 +1,44 @@
+@startuml
+title Stage Associations
+skinparam monochrome true
+skinparam roundcorner 0
+
+class "Stage" as Stage <<Entity>> {
+  StageCallableContract
+  StageComposition
+  Stage Flow Result
+  StageResult
+}
+class "StageCallableContract" as SCC <<Contract>> {
+  invocation acceptance
+  result / exception distinctions
+}
+class "StageComposition" as SComp <<Component>> {
+  + composes Step Instances
+  + coordinates Step invocation
+}
+class "StageResult[TStagePayload]" as SRes <<Class>> {
+  envelope fields
+  outputs slot
+  flow result slot
+  domain outcome slot
+}
+class "Pipeline Root" as PR <<Entity>> {
+  Pipeline Invocation Identity
+  Stage Result Collection
+}
+class "StageErrorTypeDefinitionRegistry" as SETReg <<Component>> {
+  + register(StageErrorTypeDefinition)
+}
+
+PR --> Stage : invokes via callable
+Stage .> SCC : exposes boundary
+Stage .> SComp : owns composition
+Stage --> SRes : returns result
+PR .> SRes : collects Stage results
+SComp ..> SETReg : registers via Pipeline-assigned instance
+
+note right of Stage : Stage Flow Result independent of StepExecutionResult
+Prefect State != domain result
+
+@enduml

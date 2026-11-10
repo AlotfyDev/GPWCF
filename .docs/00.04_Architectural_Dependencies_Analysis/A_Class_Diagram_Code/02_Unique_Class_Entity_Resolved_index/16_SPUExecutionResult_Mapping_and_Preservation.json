@@ -1,0 +1,10 @@
+{
+  "serialNumber": 16,
+  "name": "SPUExecutionResult Mapping and Preservation",
+  "category": "Feature / Result Handling",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/07.00_SPU.json",
+  "description": "The binding returns the exact SPUExecutionResult without replacing it with Prefect State; SPU constructs and returns the structured result consumed by Step Composition.",
+  "resolvedFrom": "02,00_Step_SPU_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "step-spu-level-domain-features-entities-classes-components-index"
+}

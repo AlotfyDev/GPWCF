@@ -1,0 +1,40 @@
+﻿# Editor / IDE
+.vscode/
+.vs/
+.dependencies/PayloadDescriptionGenerator/
+.dependencies/SMRB.GenericPipelineWorkflowComponentsFramework
+
+# AI tooling / agent folders
+.opencode/
+.kilo/
+.cline/
+.clinerules/
+
+# Environment / secrets
+.env
+
+# vcpkg manifest installation tree
+/vcpkg_installed/
+
+
+# Other solution's projects:
+py_flatbuffers_descriptor_generator/
+py_payload_descriptor_generator/
+SMRB.Commons/
+SMRB.Console/
+SMRB.IPCEndpoints/
+SMRB.Libclang_SmokeTest/
+SMRB.Libclang_Tools/
+SMRB.LibTooling_SmokeTest/
+SMRB.LLVM_StaticLibrary_Consumer_SmokeTest/
+SMRB.LLVM_StaticLibrary_SmokeTest/
+SMRB.NamedPipes/
+SMRB.Payload/
+SMRB.PayloadDescriptionGenerator/
+SMRB.PayloadTypeDescription/
+
+# Python bytecode/cache
+__pycache__/
+*.py[cod]
+
+.pytest_cache/

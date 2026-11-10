@@ -1,0 +1,19 @@
+digraph "08_Common_Coordination" {
+  rankdir=TB;
+  node [shape=record, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=8];
+  label="08 Common Coordination Class Diagram";
+  labelloc=t;
+
+  "Operational_Mapping_Wave_5_Artifact_2" [label="{Operational Mapping (Wave 5 Artifact 2)|Architectural Design / Feature}", tooltip="Wave 5 detailed design (artifact 2) defining the operational mapping between GPWCF domain invocations/results/identities/lifecycle/custody and Prefect-native execution records/identities/States, expli"];
+  "Cancellation_Timeout_Recovery_Mapping_Constraints" [label="{Cancellation/Timeout/Recovery Mapping Constraints|Feature / Mapping Constraint}", tooltip="Mapping constraints for cancellation, timeout, retry, worker loss, recovery, and lifecycle: no universal retry/cancellation/timeout/compensation/recovery policy; unqualified failure/cancellation/timeo"];
+  "Governing_Rule_No_State_Domain_Inference" [label="{Governing Rule: No State/Domain Inference|Feature / Governing Rule}", tooltip="Governing rule: Prefect State and native identifiers describe how the external runtime executed and recorded a native Flow/Task; GPWCF domain identities, invocation acceptance, results, outcomes, life"];
+  "StepCompositionAssociationCoordination" [label="{StepCompositionAssociationCoordination|Component / Coordination Contract}", tooltip="The coordination component owned by Concrete Step Composition that establishes and maintains explicit relationships between Step-internal component instances and Step-owned target scopes, binding each"];
+  "Association" [label="{Association|Entity / Concept}", tooltip="An explicit relationship between one concrete Step-internal runtime component instance and one target scope within the owning Step instance; distinct from both the component instance and the target."];
+  "AssociationTarget" [label="{AssociationTarget|Entity / Concept|Association}", tooltip="The Step-owned scope to which a component is applicable under an association; not necessarily the exact subject/resource acted upon by every invocation or operation."];
+  "AssociationIdentity" [label="{AssociationIdentity|Entity / Concept|Association}", tooltip="The identity of the association relationship itself, distinct from the component instance identity and target identity; identifies exactly one component-instance-to-target relationship within one owni"];
+  "InvocationBinding" [label="{InvocationBinding|Entity / Concept|Association}", tooltip="The explicit selection of one association context under which a particular invocation or activity is authorized; binds each invocation to the exact Association selected by Step Composition."];
+  "StepCompositionInternalComponentLifecycleCoordination" [label="{StepCompositionInternalComponentLifecycleCoordination|Component / Coordination Contract}", tooltip="The coordination component owned by Concrete Step Composition that makes lifecycle decisions (eligibility, admission, invocation authorization, quiescence, reuse, release) without imposing a common te"];
+
+  "InvocationBinding" -> "Association" [label="assoc", style=dashed];
+}

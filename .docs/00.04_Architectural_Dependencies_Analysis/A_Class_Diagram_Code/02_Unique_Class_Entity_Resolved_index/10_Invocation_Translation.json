@@ -1,0 +1,10 @@
+{
+  "serialNumber": 10,
+  "name": "Invocation Translation",
+  "category": "Feature / Responsibility",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+  "description": "Translation of GPWCF domain invocations to native Prefect Flow/Task run invocations while preserving domain identity, invocation acceptance, and result semantics; dispatch Tasks carry no GPWCF business or composition semantics.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

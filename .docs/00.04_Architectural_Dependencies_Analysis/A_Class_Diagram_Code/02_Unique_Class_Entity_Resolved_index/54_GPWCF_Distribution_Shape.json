@@ -1,0 +1,10 @@
+{
+  "serialNumber": 54,
+  "name": "GPWCF Distribution Shape",
+  "category": "Feature / Packaging",
+  "type": "Feature",
+  "link": "../../../../.docs/00.03_Architecture_Closure_Design/04.00_Suggested_ADRs.md",
+  "description": "One GPWCF distribution with dependency-free Core base and optional Prefect extra. Core installs and imports without Prefect; optional extra supplies Prefect Integration runtime. prefect==3.9.2 remains the direct Integration requirement.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

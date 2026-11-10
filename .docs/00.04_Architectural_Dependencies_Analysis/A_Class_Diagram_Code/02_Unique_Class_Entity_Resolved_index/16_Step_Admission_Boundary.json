@@ -1,0 +1,10 @@
+{
+  "serialNumber": 16,
+  "name": "Step Admission Boundary",
+  "category": "Feature / Boundary",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+  "description": "Linearizable ordering at the Step public boundary for admission of execute invocations and closure for RetainForReuse or TerminalRetirement. Invocations accepted before closure belong to the retirement settlement set.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

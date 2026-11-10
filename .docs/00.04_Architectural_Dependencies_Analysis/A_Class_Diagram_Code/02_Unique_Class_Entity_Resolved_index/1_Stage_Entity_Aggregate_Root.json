@@ -1,0 +1,10 @@
+{
+  "serialNumber": 1,
+  "name": "Stage Entity / Aggregate Root",
+  "category": "Class / Entity",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+  "description": "A bounded orchestration component that exposes a Stage-level interface to its consuming workflow and internally coordinates the Step Instances required by that Stage. Architectural level: stage, parent level: pipeline, child level: stage-step.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

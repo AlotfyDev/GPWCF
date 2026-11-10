@@ -1,0 +1,10 @@
+{
+  "serialNumber": 13,
+  "name": "OptionalResultSlot",
+  "category": "Class / Generic Type",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/06.00_Optional_Result_Contributions.json",
+  "description": "Discriminated presence model where each contribution slot is independently present or absent. Absent and Present(None) are distinct; absence alone is not a universal status.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

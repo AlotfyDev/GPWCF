@@ -1,0 +1,10 @@
+{
+  "serialNumber": 18,
+  "name": "Operational Mapping (Wave 5 Artifact 2)",
+  "category": "Architectural Design / Feature",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+  "description": "Wave 5 detailed design (artifact 2) defining the operational mapping between GPWCF domain invocations/results/identities/lifecycle/custody and Prefect-native execution records/identities/States, explicitly preventing operational status from being mistaken for domain outcome or safe settlement.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

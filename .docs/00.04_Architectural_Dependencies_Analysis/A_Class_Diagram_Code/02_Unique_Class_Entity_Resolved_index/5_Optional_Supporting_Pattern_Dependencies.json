@@ -1,0 +1,10 @@
+{
+  "serialNumber": 5,
+  "name": "Optional Supporting Pattern Dependencies",
+  "category": "Feature / Dependency Rule",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "Optional Supporting Patterns remain separately importable and are required only when selected by a concrete Step; consumers that do not select them incur no mandatory pattern package import.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

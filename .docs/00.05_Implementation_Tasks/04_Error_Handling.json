@@ -1,0 +1,46 @@
+{
+  "taskId": "04_Error_Handling",
+  "serialNumber": 4,
+  "target": "Error Handling Unit",
+  "category": "Supporting Pattern",
+  "description": "Implement the Step-owned optional Error Handling Unit callable executing authorized handling operations against target occurrences/resources, producing THandlingOperationResult values until publication acceptance/custody transfer. Implement ErrorHandlerResult aggregate, OperationEntryPublisher reserve/publish/status/release protocol with atomic acceptance, PublicationReservation single-use capability, and Recovery Owner for ambiguous-acceptance escrow.",
+  "implementationClasses": [
+    "ErrorHandlingUnit",
+    "ErrorHandlerResult[THandlingOperationEntry,TErrorHandlingContext]",
+    "ErrorHandlingOperationEntry[THandlingOperationResult]",
+    "OperationEntryPublisher",
+    "PublicationReservation",
+    "Recovery Owner",
+    "Step-specific Error Handling Composition",
+    "Single Step Publication Specialization"
+  ],
+  "relatedDiagrams": {
+    "class": "03_Diagrams_Codes_Files/04_Error_Handling.dot",
+    "sequence": "B_Sequencial_Diagram_Code/02_Error_Handling_Sequence.puml",
+    "association": "C_Association_Diagram_Code/04_Error_Handling_Associations.puml",
+    "dependency": "D_Architectural_Dependency_Diagram_Code/04_Supporting_Pattern_Optional_Dependency.dot"
+  },
+  "dependencies": [
+    "01_SPU_Step_Processing_Unit",
+    "11_Core_Identities_Diagnostics"
+  ],
+  "acceptanceCriteria": [
+    "Error Handling Unit performs handling operations and produces THandlingOperationResult",
+    "OperationEntryPublisher atomic acceptance linearization point implemented",
+    "PublicationReservation states Reserved/Consumed/Released with forbidden transitions",
+    "Capacity invariant: TotalCapacity >= ReservedCapacity + OccupiedCapacity",
+    "ErrorHandlerResult aggregate of operation entries with target occurrence references",
+    "Recovery Owner named with ambiguous-acceptance escrow procedure",
+    "No ErrorResult containment/mutation by ErrorHandlerResult"
+  ],
+  "definitionOfDone": [
+    "Publisher contract tests for reserve/publish/status/release",
+    "Atomic acceptance tests (no partial acceptance, no duplicate entry)",
+    "Recovery Owner custody transfer tests",
+    "Architecture test: no ErrorResult containment by ErrorHandlerResult"
+  ],
+  "priority": "high",
+  "status": "pending",
+  "estimatedEffort": "high",
+  "testStrategy": "Publisher protocol tests; atomic acceptance tests; custody transfer tests; architecture boundary tests"
+}

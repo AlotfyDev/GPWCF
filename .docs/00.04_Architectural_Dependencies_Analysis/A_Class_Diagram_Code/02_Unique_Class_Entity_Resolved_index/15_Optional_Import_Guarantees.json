@@ -1,0 +1,10 @@
+{
+  "serialNumber": 15,
+  "name": "Optional Import Guarantees",
+  "category": "Feature / API Policy",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Optional import guarantees defined for Supporting Patterns and Diagnostics; consumers that do not select optional patterns incur no mandatory import; internal module paths have no consumer compatibility guarantee.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

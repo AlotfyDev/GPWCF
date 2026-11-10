@@ -1,0 +1,10 @@
+{
+  "serialNumber": 19,
+  "name": "StageError Occurrence",
+  "category": "Class / Entity",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+  "description": "A Stage-owned component creates a StageError[TErrorOccurrenceContext] occurrence when an error arises within that component's Stage-owned responsibility. Stage Composition may create occurrences for errors arising within its own responsibility but is not the exclusive occurrence producer.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

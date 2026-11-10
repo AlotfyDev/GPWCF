@@ -1,0 +1,319 @@
+{
+  "documentId": "pipeline.step-supporting-validator-unit.association.contract",
+  "documentVersion": "0.1.3",
+  "status": "design-baseline",
+  "title": "Step Supporting Validator Unit Association Contract",
+  "scope": {
+    "architecturalLevel": "stage-step",
+    "component": "StepSupportingValidatorUnitAssociation",
+    "owningLevel": "Step",
+    "purpose": "Define the architectural relationship between a concrete Step Supporting Validator Unit instance and the Step-defined processing scope or scopes for which that validator unit is applicable.",
+    "appliesTo": "A concrete Step specialization that selects one or more Step Supporting Validator Unit instances."
+  },
+  "terminology": {
+    "stepSupportingValidatorUnit": {
+      "meaning": "A validator component selected by a concrete Step as an optional supporting pattern for validation responsibilities required by that Step.",
+      "classification": "A Step Supporting Pattern with its own specialized behavioral contract; it is not an instance of a universal SupportingUnit base type."
+    },
+    "association": {
+      "meaning": "An explicit, identity-bearing relationship that makes a particular validator-unit instance applicable to a particular Step-owned validation scope under the concrete Step's specialization.",
+      "notEquivalentTo": [
+        "Ownership of the validator unit.",
+        "Invocation of the validator unit.",
+        "A validation result.",
+        "A lifecycle operation.",
+        "A flow-control decision."
+      ]
+    },
+    "associationTarget": {
+      "meaning": "The Step-owned processing scope to which a validator-unit instance is assigned for applicability.",
+      "permittedScopeKinds": [
+        "A concrete SPU instance within the owning Step.",
+        "The owning Step instance as a whole.",
+        "Another explicitly identified internal processing scope defined by the concrete Step."
+      ]
+    }
+  },
+  "architecturalPrinciples": {
+    "optionality": [
+      "A Step is not required to select or associate any Step Supporting Validator Unit.",
+      "The existence of this contract does not make validation mandatory for every Step.",
+      "A concrete Step selects validator units only when its processing responsibility requires validation."
+    ],
+    "scopeFlexibility": [
+      "A validator-unit association is not restricted to one SPU.",
+      "A validator-unit instance may be associated with a Step-level scope, an SPU-level scope, or another Step-defined internal processing scope.",
+      "The concrete Step defines the permitted target scopes for each validator-unit instance and association."
+    ],
+    "specialization": [
+      "This contract defines reusable association semantics and constraints, not a universal association topology.",
+      "The concrete Step specializes target scope, cardinality, multiplicity, exclusivity, validity, and change rules.",
+      "No universal one-validator-per-SPU, one-SPU-per-validator, or one-validator-per-Step relationship is imposed."
+    ],
+    "compositionAuthority": [
+      "The owning Step Composition is authoritative for establishing, admitting, coordinating, changing, and ending validator-unit associations within the Step's internal composition.",
+      "Association with a particular SPU does not transfer association-management authority to that SPU.",
+      "The SPU remains responsible only for its own processing contract and any explicitly assigned interaction with the validator."
+    ]
+  },
+  "associationModel": {
+    "participants": {
+      "validatorUnit": {
+        "identity": "validatorUnitIdentity",
+        "description": "Identifies the concrete validator-unit instance participating in the association."
+      },
+      "target": {
+        "identity": "associationTargetIdentity",
+        "description": "Identifies the Step-owned target scope to which the validator-unit instance is associated."
+      },
+      "association": {
+        "identity": "validatorUnitAssociationIdentity",
+        "description": "Identifies this particular relationship independently of the identities of its participants."
+      },
+      "owningStep": {
+        "identity": "stepInstanceIdentity",
+        "description": "Establishes the Step boundary within which the association is valid."
+      }
+    },
+    "identityRequirements": [
+      "The association must be distinguishable from both the validator-unit instance and its target scope.",
+      "The association identity must be unique within the identity scope defined by the concrete Step for as long as the association or any retained result/reference to it may be observed.",
+      "The association identity remains stable for the lifetime of that association.",
+      "Ending an association and later establishing a logically similar association creates a new association identity when prior association evidence may still be observed.",
+      "The target identity must identify both the target scope kind and the concrete target instance; an SPU identity alone must not be interpreted as a Step-level target.",
+      "The concrete Step defines identity representations and generation mechanisms. No UUID, counter, address, timestamp, or other specific mechanism is mandated.",
+      "validatorUnitIdentity identifies one concrete validator-unit instance within the identity scope defined by the concrete Step; it is independent of every association in which that instance participates.",
+      "Each distinct relationship between that validator-unit instance and one target scope has its own validatorUnitAssociationIdentity. Therefore, one validator-unit instance associated with three distinct target scopes is represented by one validatorUnitIdentity and three distinct association identities.",
+      "Adding, ending, or replacing an association does not create a new validator-unit identity unless the validator-unit instance itself is replaced.",
+      "A validator-unit instance identity must not be derived from, or overloaded to represent, an association target or association identity.",
+      "An association identity identifies exactly one validator-unit instance-to-target relationship within one owning Step instance; it is not a reusable identifier for a relationship to a different target."
+    ],
+    "scopeBinding": [
+      "Every association belongs to exactly one owning Step instance.",
+      "Every association identifies exactly one association target scope.",
+      "A validator-unit instance may participate in multiple associations only when the concrete Step specialization permits that multiplicity.",
+      "An association target may have multiple validator-unit associations only when the concrete Step specialization permits that multiplicity.",
+      "An association must not refer to a target outside the owning Step's internal composition."
+    ],
+    "cardinalityAndMultiplicity": {
+      "commonContractRule": "This contract imposes no universal cardinality or multiplicity beyond the identity and single-target requirements of each individual association.",
+      "specializationObligations": [
+        "The concrete Step defines the allowed number of validator-unit instances associated with each target scope.",
+        "The concrete Step defines whether one validator-unit instance may serve multiple target scopes.",
+        "The concrete Step defines whether multiple validator-unit instances may serve the same target scope.",
+        "The concrete Step defines whether associations are exclusive, shared, or conditionally shared.",
+        "The concrete Step defines any constraints that depend on validator role, validation responsibility, invocation mode, or concurrency."
+      ]
+    },
+    "associationIdentitySemantics": {
+      "relationshipIdentity": "validatorUnitAssociationIdentity identifies one relationship instance, not the validator-unit instance and not the target scope.",
+      "multiTargetExample": {
+        "validatorUnitInstance": "One validator-unit instance identified by validatorUnitIdentity.",
+        "targetScopes": "Three distinct target scopes identified independently.",
+        "requiredAssociations": "Three association records, each with a distinct validatorUnitAssociationIdentity and the same validatorUnitIdentity, each bound to exactly one target identity."
+      },
+      "identityIndependence": [
+        "The validator-unit instance may participate in multiple associations when the concrete Step specialization permits it.",
+        "Each association remains independently identifiable and independently terminable.",
+        "Ending one association does not end another association involving the same validator-unit instance.",
+        "Ending all associations does not, by itself, release or dispose the validator-unit instance."
+      ]
+    }
+  },
+  "associationAuthorityAndResponsibilities": {
+    "StepComposition": [
+      "Select the validator-unit instances admitted into the Step's internal composition according to the concrete Step design.",
+      "Establish and maintain the association between each selected validator-unit instance and its Step-defined target scope.",
+      "Validate that the target scope belongs to the owning Step and is permitted by the concrete Step specialization.",
+      "Assign or obtain the association identity according to the Step's identity rules.",
+      "Coordinate association changes and dissociation without invalidating active invocations or retained evidence.",
+      "Make the applicable validator-unit associations available to the Step-specific invocation and flow coordination.",
+      "Remain the sole authority responsible for creating, changing, rebinding, and ending associations within the Step; any component request for such a change is resolved and enacted by Step Composition.",
+      "Maintain the authoritative association state and the association-to-participant identity mapping for the period required by active use and retained evidence."
+    ],
+    "StepSupportingValidatorUnit": [
+      "Expose or satisfy the association-related identity and applicability requirements defined by its specialized contract.",
+      "Operate only within the target scope and authorized context supplied by the owning Step composition.",
+      "Retain its own validation semantics and result contract; association does not transfer those responsibilities to Step Composition.",
+      "Must not independently create, change, rebind, or end an association, or alter its target or association identity.",
+      "May report that an association appears unusable or request an association change through the owning Step Composition; such a report or request does not itself change association state."
+    ],
+    "SPU": [
+      "May be the target of a validator-unit association.",
+      "Does not acquire ownership of the validator-unit instance merely because the association targets that SPU.",
+      "Does not acquire authority to select, create, change, rebind, or end the association, nor to alter its association identity or target binding.",
+      "May consume the association context or validator result made available under the concrete Step's interaction design, and may report a need for change to Step Composition.",
+      "Any SPU-originated request concerning an association is advisory; Step Composition alone decides whether and how the association is changed."
+    ],
+    "StageComposition": [
+      "Does not select, establish, mutate, or manage associations among a Step's internal validator units and target scopes."
+    ],
+    "Pipeline": [
+      "Does not impose a global validator-unit association registry, manager, or association topology."
+    ]
+  },
+  "associationValidity": {
+    "validityConditions": [
+      "The owning Step instance is identifiable and active under its own lifecycle contract.",
+      "The validator-unit instance is admitted into the owning Step's internal composition.",
+      "The target scope is identifiable, belongs to the owning Step, and is permitted by the concrete Step specialization.",
+      "The association identity is valid and does not collide within its required observation scope.",
+      "The association satisfies the concrete Step's cardinality, multiplicity, exclusivity, and compatibility constraints."
+    ],
+    "invalidationConditions": [
+      "The association is explicitly ended under the concrete Step's dissociation rules.",
+      "The validator-unit instance is no longer admitted for use by the owning Step.",
+      "The target scope ceases to exist or ceases to be a permitted target under the concrete Step's rules.",
+      "A concrete Step-defined condition makes the association invalid, provided active invocations and retained evidence are handled according to the specialization."
+    ],
+    "validationResponsibility": "Step Composition validates and enforces association validity when establishing or changing associations. The concrete Step defines any additional semantic compatibility checks."
+  },
+  "associationChangeAndDissociation": {
+    "changeRules": [
+      "The common contract does not require associations to be mutable after establishment.",
+      "The concrete Step defines whether an association may be changed during the lifetime of the Step instance.",
+      "The concrete Step defines whether association changes are prohibited during an active validator invocation, an active target invocation, or another protected processing interval.",
+      "A change that alters the target or validator participant is treated as ending the previous association and establishing a new association unless the concrete Step explicitly defines a safe in-place modification with preserved identity semantics.",
+      "Association changes must not silently redirect an already-started invocation or rewrite the association identity recorded in previously retained evidence."
+    ],
+    "dissociationRules": [
+      "Dissociation is decided, coordinated, and recorded by Step Composition.",
+      "Step Composition establishes the effective end point of the association. From that point onward, no new validator invocation may rely on that association.",
+      "The concrete Step defines how active invocations are completed, cancelled, or otherwise reconciled before dissociation is considered complete.",
+      "Dissociation does not itself dispose, destroy, or release the validator-unit instance; those actions belong to the applicable Lifecycle Contract and Step lifecycle policy.",
+      "Dissociation does not erase validation results, invocation evidence, or provenance already produced under the association.",
+      "Any retained result or evidence that requires association provenance must preserve sufficient identity information to identify the validator-unit instance, the ended association, its target scope, and the relevant validator invocation, as applicable to the concrete result contract.",
+      "The association identity and the minimum association descriptor needed to interpret retained references remain resolvable for the applicable evidence-retention period; this may be achieved through retained identity metadata and does not require retaining the validator-unit runtime instance.",
+      "Retention of association identity metadata or validation results must not, by itself, extend the validator-unit instance lifetime, prevent its release, or require the instance to remain callable.",
+      "The concrete Step defines evidence/result retention and release conditions independently from validator-unit instance lifecycle and resource release.",
+      "Ending one association does not affect other active associations of the same validator-unit instance.",
+      "Dissociation does not rewrite or reassign the provenance of results produced before its effective end point."
+    ],
+    "postDissociationEvidence": {
+      "principle": "Historical association provenance must remain interpretable without retaining the validator-unit runtime instance solely for that purpose.",
+      "requiredDistinction": [
+        "Association validity for future invocation ends at the association's effective end point.",
+        "Historical identity/provenance may remain referable for as long as retained results or evidence require it.",
+        "Validator-unit runtime lifetime and association-evidence retention are separate concerns."
+      ],
+      "minimumRetainedProvenance": [
+        "stepInstanceIdentity",
+        "validatorUnitIdentity",
+        "validatorUnitAssociationIdentity",
+        "associationTargetIdentity",
+        "validatorInvocationIdentity where defined by the behavioral contract"
+      ],
+      "retentionAuthority": "The concrete Step defines the retention period and storage/representation of result and evidence content. This Association Contract requires provenance continuity but does not prescribe a storage mechanism or a universal retention duration."
+    }
+  },
+  "invocationAndResultBoundary": {
+    "principle": "Association establishes applicability only. It does not define when, how, or how often a validator unit is invoked, nor how its result is interpreted.",
+    "rules": [
+      "Step Composition determines invocation timing and coordination according to the concrete Step's flow design and the validator-unit behavioral contract.",
+      "The association identity and target identity should be available to invocation evidence whenever required to correlate a validation result with the scope for which it was produced.",
+      "The validator unit retains ownership of validation semantics and its specialized result meaning.",
+      "The concrete Step defines whether and how a validator result contributes to Step-specific flow decisions or StepValidatorResult.",
+      "Association does not imply that validation must occur before, after, or concurrently with SPU processing.",
+      "Association does not imply that a validation failure terminates the Step or prevents another component from being invoked.",
+      "A validator invocation is correlated with the specific association under which it was authorized; the validator-unit identity alone is insufficient to identify which target association applied when one instance participates in multiple associations.",
+      "A result produced under an association retains that association's identity as historical provenance even after the association ends.",
+      "The association identity is not a substitute for a validator invocation identity; repeated invocations under the same association remain distinguishable by invocation identity where the behavioral contract requires it."
+    ]
+  },
+  "lifecycleBoundary": {
+    "principle": "This contract defines association establishment and termination, not the lifecycle of the validator-unit instance.",
+    "rules": [
+      "Provisioning, initialization, readiness, reuse, retention, and release of validator-unit instances are governed by Step_Supporting_Validator_Unit_Lifecycle_Contract.json.",
+      "Association establishment may require an already provisioned or admitted validator-unit instance, but this contract does not prescribe the provisioning sequence.",
+      "Ending an association is not equivalent to releasing the validator-unit instance.",
+      "The concrete Step and its Step Composition coordinate association and lifecycle decisions without assuming that association lifetime and instance lifetime are identical.",
+      "The end of an association does not imply that the validator-unit instance has reached the end of its lifecycle; the same instance may remain admitted and participate in other valid associations.",
+      "Retention of historical association metadata or validation-result provenance must not be implemented by retaining the validator-unit instance unless the separate Lifecycle Contract independently requires that instance to remain alive.",
+      "Step Composition coordinates the association end and separately applies the Lifecycle Contract's instance-retention and release rules."
+    ]
+  },
+  "explicitNonGoals": [
+    "No universal SupportingUnit base type or shared runtime interface is introduced.",
+    "No mandatory validator unit is imposed on any Step.",
+    "No universal association topology, cardinality, multiplicity, or exclusivity is imposed.",
+    "No association with Stage, Pipeline, or an external owner is introduced by this contract.",
+    "No validator execution signature, validation algorithm, validation status taxonomy, or result schema is defined here.",
+    "No invocation ordering, scheduling, retry, concurrency, or flow-control policy is defined here.",
+    "No validator-unit provisioning, initialization, readiness, reuse, disposal, or resource-ownership protocol is defined here.",
+    "No global registry, central manager, service locator, or mediator is required.",
+    "No language-specific class hierarchy, pointer model, serialization format, or storage representation is mandated.",
+    "No rule requires a validator-unit instance to be retained merely because an ended association is still referenced by historical evidence.",
+    "No SPU is granted association-management authority merely because it is the association target.",
+    "No association identity is reused to represent multiple target relationships."
+  ],
+  "specializationRequirements": [
+    "Identify the concrete Step scope or scopes to which validator units may be associated.",
+    "Define the target scope kinds permitted for each validator-unit role.",
+    "Define validator-unit identity and target-scope identity representations and uniqueness scopes.",
+    "Define association identity representation, assignment authority, and observation lifetime.",
+    "Define cardinality, multiplicity, sharing, and exclusivity rules.",
+    "Define semantic compatibility checks between each validator-unit role and its target scope.",
+    "Define whether associations are immutable or mutable and the protected intervals during which changes are prohibited.",
+    "Define dissociation behavior when active invocations or retained validation evidence exist.",
+    "Define the correlation information retained with validator invocation evidence and results.",
+    "Reference the applicable Step_Supporting_Validator_Unit_Contract.json and Step_Supporting_Validator_Unit_Lifecycle_Contract.json specializations.",
+    "Define whether one validator-unit instance may participate in multiple simultaneous associations and the applicable concurrency constraints.",
+    "Define the effective end-point and reconciliation policy for dissociation while validator or target invocations are active.",
+    "Define the minimum association provenance retained with each validation result/evidence item and its retention period independently from validator-unit instance lifetime.",
+    "Define how ended association identities and their minimal descriptors remain resolvable without requiring retention of the validator-unit runtime instance.",
+    "Define the permitted SPU interactions with an association, explicitly excluding independent association creation, mutation, rebinding, or termination."
+  ],
+  "references": [
+    {
+      "document": "../00.00_Step/Step_Composition_Contract.json",
+      "relationship": "Step Composition authority for internal component composition, association coordination, and invocation flow."
+    },
+    {
+      "document": "../00.00_Step/Step_Contract.json",
+      "relationship": "Step Aggregate Root boundary and public Step-facing contract."
+    },
+    {
+      "document": "../01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      "relationship": "SPU identity, processing responsibility, and boundary when an SPU is an association target."
+    },
+    {
+      "document": "../01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+      "relationship": "SPU-scoped validator-result integration and invocation evidence."
+    },
+    {
+      "document": "../01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "relationship": "Step-scoped validator-result integration."
+    },
+    {
+      "document": "Step_Supporting_Validator_Unit_Contract.json",
+      "relationship": "Validator-unit behavioral and result contract."
+    },
+    {
+      "document": "Step_Supporting_Validator_Unit_Lifecycle_Contract.json",
+      "relationship": "Validator-unit instance lifecycle, reuse, retention, and release contract."
+    },
+    {
+      "document": "../../../Common/Step_Composition_Association_Coordination_Contract.json",
+      "relationship": "Framework-level association coordination invariants refined by this specialized Association Contract; specialized identity names and behavior remain authoritative."
+    }
+  ],
+  "openDesignDetails": [
+    "Define the concrete validator-unit identity and invocation-correlation fields in the validator behavioral contract.",
+    "Define the exact Step-level and SPU-level validator result representations in their respective result contracts.",
+    "Define whether one validator-unit instance can be shared across multiple concurrent target invocations and the guarantees required for such sharing.",
+    "Define the concrete Step's evidence-retention period and the minimal historical association descriptor required to interpret retained validator results."
+  ],
+  "frameworkCoordination": {
+    "commonContract": "../../../Common/Step_Composition_Association_Coordination_Contract.json",
+    "conformance": "This contract specializes the shared Step Composition coordination invariants. Where the shared contract defines only conceptual identity roles or lifecycle distinctions, this document supplies the component-specific identity names, semantics, mechanics, and constraints.",
+    "precedence": "The common contract governs cross-cutting Step Composition coordination invariants. This specialized contract governs component-specific behavior and mechanics. Neither contract changes the component pattern?s distinct behavioral result semantics."
+  },
+  "frameworkIdentityRoleMapping": {
+    "stepInstanceIdentity": "stepInstanceIdentity",
+    "componentInstanceIdentity": "validatorUnitIdentity",
+    "associationTargetIdentity": "associationTargetIdentity",
+    "componentAssociationIdentity": "validatorUnitAssociationIdentity",
+    "componentInvocationIdentity": "validatorInvocationIdentity",
+    "targetIdentitySemantics": "associationTargetIdentity identifies both the target scope kind and the concrete target instance within the owning Step; it must not be represented by a bare SPU identity when the target scope may instead be Step-wide or another Step-internal scope."
+  }
+}

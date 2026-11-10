@@ -1,0 +1,37 @@
+# GPWCF project metadata (PEP 621) and build configuration (PEP 517/518).
+#
+# Single gpwcf distribution with a dependency-free Core base and an optional
+# Prefect extra (prefect==3.9.2). Prefect is opt-in only; Core installs and
+# imports without it.
+#
+# Build-system dependencies are isolated from runtime dependencies:
+# setuptools==84.2.1 is declared only under [build-system].requires and is
+# not a GPWCF runtime dependency.
+
+[build-system]
+requires = ["setuptools==84.2.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gpwcf"
+version = "0.1.0"
+description = "Generic Pipeline Workflow Components Framework — Stage/Step/SPU composition with optional Prefect integration."
+readme = "README.md"
+requires-python = ">=3.15,<3.16"
+dependencies = []
+
+[project.optional-dependencies]
+prefect = ["prefect==3.9.2"]
+
+[project.scripts]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gpwcf*"]
+
+[tool.setuptools.package-data]
+gpwcf = ["py.typed"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true

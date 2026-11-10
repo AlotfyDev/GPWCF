@@ -1,0 +1,46 @@
+@startuml
+title SPU & Step Processing Unit Associations
+skinparam monochrome true
+skinparam roundcorner 0
+
+class "StepProcessingUnit[TInput,TOutput]" as SPU <<Class>> {
+  + execute(input: TInput): SPUExecutionResult[TOutput]
+  TInput
+  TOutput
+}
+class "SPUExecutionResult[TOutput]" as SER <<Class>> {
+  processingArtifact: TOutput
+  spuErrorOccurrences: Collection[SPUError]
+  validatorResult: SPUValidatorResult
+}
+class "SPUError[TErrorOccurrenceContext]" as SE <<Class>> {
+  occurrenceIdentity
+  SPUErrorTypeDefinitionReference
+  TErrorOccurrenceContext
+}
+class "SPUErrorTypeDefinition[TErrorContent,THandlingAction]" as SETD <<Class>> {
+  TErrorContent
+  THandlingAction
+}
+class "SPUErrorTypeDefinitionRegistry" as SEReg <<Component>> {
+  + register(SPUErrorTypeDefinition)
+  + resolve(identity): SPUErrorTypeDefinition
+}
+class "Step Composition" as SC <<Component>> {
+  + select SPU
+  + supply input/dependencies
+  + consume SPUExecutionResult
+}
+
+SC .> SPU : selects & invokes
+SPU --> SER : produces
+SPU ..> SE : creates occurrences
+SE ..> SETD : references type definition
+SEReg ..> SETD : stores & resolves
+SC .> SER : consumes result
+SC ..> SEReg : allocated by Pipeline per SPU
+
+note right of SPU : SPU has NO reverse package dependency on Step
+Step Composition retains coordination responsibility
+
+@enduml

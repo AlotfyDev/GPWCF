@@ -1,0 +1,10 @@
+{
+  "serialNumber": 2,
+  "name": "Step Entity / Aggregate Root",
+  "category": "Class / Entity",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/00.00_Step/Step_Contract.json",
+  "description": "A Stage-composable processing and orchestration component that exposes a stable callable contract to its owning Stage while internally coordinating its specialized Step Processing Units and applicable supporting units. Architectural level: stage-step, owning level: Stage.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

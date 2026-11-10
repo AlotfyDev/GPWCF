@@ -1,0 +1,210 @@
+{
+  "documentId": "pipeline.step-composition.association-coordination.contract",
+  "documentVersion": "0.1.0",
+  "status": "design-baseline",
+  "title": "Step Composition Association Coordination Contract",
+  "scope": {
+    "architecturalLevel": "pipeline-framework",
+    "component": "StepCompositionAssociationCoordination",
+    "owner": "Concrete Step Composition",
+    "purpose": "Define reusable association-coordination invariants for Step-internal runtime components whose specialized contracts define association with Step-owned target scopes.",
+    "applicability": "Applies only when a concrete Step selects a component pattern that defines an association. It does not require every component, SPU, or Step to participate in an association."
+  },
+  "architecturalPosition": {
+    "nature": "A cross-cutting coordination contract governing association relationships and their use by Step Composition.",
+    "notAComponentType": [
+      "Does not define a Generic Supporting Unit or a universal runtime component type.",
+      "Does not define a base class, interface, callable signature, association object layout, registry, manager, or runtime service.",
+      "Does not replace the specialized Behavioral, Association, or Lifecycle Contract of any component pattern."
+    ],
+    "authority": "The concrete Step owns its Step Composition. Step Composition remains authoritative for association decisions within that Step.",
+    "specialization": "Each component pattern retains its own identity names, association mechanics, target-access semantics, compatibility rules, and any additional constraints."
+  },
+  "coreConcepts": {
+    "association": "An explicit relationship between one concrete Step-internal runtime component instance and one target scope within the owning Step instance.",
+    "associationTarget": "The Step-owned scope to which the component is applicable under the association. It is not necessarily the exact subject/resource acted upon by every invocation or operation.",
+    "associationIdentity": "The identity of the relationship itself, distinct from the component instance and target identities.",
+    "invocationBinding": "The explicit selection of one association context under which a particular invocation or activity is authorized."
+  },
+  "identityInvariants": {
+    "conceptualIdentityRoles": [
+      {
+        "role": "stepInstanceIdentity",
+        "meaning": "Identifies the owning Step instance."
+      },
+      {
+        "role": "componentInstanceIdentity",
+        "meaning": "Identifies the concrete runtime instance participating in the association."
+      },
+      {
+        "role": "associationTargetIdentity",
+        "meaning": "Identifies the target scope, including its scope kind and concrete target instance."
+      },
+      {
+        "role": "componentAssociationIdentity",
+        "meaning": "Identifies one particular relationship between that component instance and that target scope within the owning Step."
+      },
+      {
+        "role": "componentInvocationIdentity",
+        "meaning": "Identifies one invocation/activity and remains distinct from instance, association, and target identities."
+      }
+    ],
+    "rules": [
+      "The conceptual identity roles are mandatory distinctions; their literal field names and representations are defined by each specialized contract.",
+      "A component instance identity must not be derived from or overloaded to represent an association or target identity.",
+      "An association identity identifies exactly one component-instance-to-target relationship within one owning Step instance.",
+      "Each distinct relationship has a distinct association identity, even when the component instance or target is shared.",
+      "Identities remain unique and interpretable for as long as active work or retained evidence may refer to them; no UUID, counter, address, timestamp, or other generation mechanism is mandated.",
+      "Ending and later recreating a relationship requires a new association identity whenever prior relationship evidence may remain observable.",
+      "The target identity must distinguish target scope kind as well as concrete target instance; a component identity alone is insufficient to identify a different scope kind."
+    ]
+  },
+  "targetScope": {
+    "permittedConceptualKinds": [
+      "A specific SPU instance or SPU-defined internal scope.",
+      "The owning Step instance as a whole.",
+      "Another explicitly identified Step-internal scope, component, processing boundary, or context defined by the concrete Step."
+    ],
+    "invariants": [
+      "The target belongs to the owning Step's internal composition.",
+      "The target is identified independently of the associated component instance and association.",
+      "Association does not transfer ownership of the target or its resources to the associated component.",
+      "The target scope expresses applicability/authorization context; the exact data or resource acted upon is defined by the specialized invocation or operation contract."
+    ],
+    "specialization": [
+      "The concrete Step defines permitted target kinds, target identity representation, compatibility, access mode, and target lifetime.",
+      "The concrete Step defines whether target access is a snapshot, immutable view, borrowed reference, live query, callback, handle, subscription surface, or another mechanism.",
+      "Target access validity and resource lifetime are not inferred from association identity alone."
+    ]
+  },
+  "multiplicityAndCompatibility": {
+    "frameworkRule": "No universal cardinality, exclusivity, or sharing rule is imposed.",
+    "allowedWhenSpecialized": [
+      "One component instance may participate in multiple associations.",
+      "Multiple component instances may be associated with the same target.",
+      "A target may have no associated component."
+    ],
+    "specializationMustDefine": [
+      "Whether an instance may have multiple simultaneous associations.",
+      "Whether a target may have multiple associated instances.",
+      "Any cardinality, exclusivity, sharing, compatibility, or ordering constraints.",
+      "Whether associations may change during active invocations or protected processing intervals."
+    ]
+  },
+  "authorityAndResponsibility": {
+    "stepComposition": [
+      "Selects which component instances participate in the Step's internal composition.",
+      "Establishes, validates, activates where applicable, changes, rebinds, deactivates, and ends associations.",
+      "Maintains authoritative association-to-instance-and-target correspondence for the period required by active work and retained evidence.",
+      "Selects the applicable association for each invocation or activity.",
+      "Coordinates association changes and dissociation without silently redirecting in-flight work or invalidating retained evidence."
+    ],
+    "associatedComponent": [
+      "Consumes the association context supplied or authorized for its invocation/activity.",
+      "Operates only within the supplied target scope and access capabilities.",
+      "May report unusability or request an association change through Step Composition.",
+      "Does not independently create, select, mutate, rebind, or terminate its associations."
+    ],
+    "targetComponent": [
+      "May expose or withdraw target-specific access capabilities under its own contract.",
+      "Does not acquire ownership of the associated component or authority over its association merely by being the target."
+    ],
+    "outerLevels": [
+      "Stage Composition invokes the owning Step and does not manage its internal associations.",
+      "Pipeline does not impose a global association registry, topology, or manager."
+    ]
+  },
+  "associationValidity": {
+    "generalPreconditions": [
+      "The owning Step instance and associated component instance are identifiable within the Step's composition.",
+      "The target scope is identifiable and belongs to the owning Step's internal composition.",
+      "The component satisfies the lifecycle eligibility conditions required by its specialized contract for association.",
+      "The component capability is compatible with the target under the concrete Step's specialization.",
+      "The association identity is valid and unique within its required observation scope."
+    ],
+    "authority": "Step Composition validates and enforces association validity. Specialized contracts may add semantic checks and more restrictive preconditions.",
+    "separation": [
+      "Association existence is not equivalent to technical readiness.",
+      "Association existence is not equivalent to lifecycle admission unless the specialized lifecycle contract explicitly defines that dependency.",
+      "Association existence is not invocation authorization.",
+      "Association does not itself activate observation, processing, or handling behavior."
+    ]
+  },
+  "invocationBinding": {
+    "rule": "Whenever a specialized component invocation or activity is authorized under an association, it is bound to exactly one selected association and the target identity bound to that association.",
+    "requiredConceptualProvenance": [
+      "stepInstanceIdentity",
+      "componentInstanceIdentity",
+      "componentAssociationIdentity",
+      "associationTargetIdentity",
+      "componentInvocationIdentity"
+    ],
+    "invariants": [
+      "Step Composition explicitly selects the association for each invocation when an instance has multiple associations.",
+      "The supplied association target identity must match the selected association.",
+      "The component must not infer, substitute, or silently broaden the association scope.",
+      "An invocation already authorized under an association remains attributable to that original association even if the association changes or ends while work is in progress.",
+      "Repeated invocations receive distinct invocation identities, even when the same component instance and association are reused.",
+      "An invocation's exact subject, validation target, observation subject, error occurrence, or operation resource is defined by the specialized behavior contract and need not equal the association target."
+    ]
+  },
+  "changeAndDissociation": {
+    "changeRules": [
+      "Association mutability is not mandated; the concrete Step defines whether changes are permitted.",
+      "A change that alters the component participant or target is represented as ending the prior relationship and establishing a new association identity unless the specialization defines a safe in-place change with preserved identity semantics.",
+      "A change must not silently redirect an already-authorized invocation or rewrite provenance already retained."
+    ],
+    "dissociationRules": [
+      "Step Composition decides and records the effective end of an association.",
+      "From the effective end point, the association cannot authorize new invocations or activities.",
+      "The concrete Step defines whether in-flight work completes under the original association, is cancelled, or is reconciled before dissociation is considered complete.",
+      "Dissociation does not by itself destroy, release, or replace the component instance.",
+      "Dissociation does not invalidate accepted outputs or historical evidence produced under the association.",
+      "Ending one association does not implicitly end other associations of the same instance."
+    ],
+    "historicalEvidence": [
+      "Retained evidence preserves sufficient association, target, component, Step, and invocation provenance for its interpretation.",
+      "Historical identity metadata may outlive the runtime component and target objects.",
+      "Retaining identity metadata does not require retaining the runtime instance, target handles, borrowed views, callbacks, or resource leases."
+    ]
+  },
+  "specializationRequirements": {
+    "required": [
+      "Map each conceptual identity role to the specialized identity names, representations, issuers, and uniqueness scopes.",
+      "Define target kinds, target identity semantics, and Step-membership validation.",
+      "Define component-target compatibility and any multiplicity/exclusivity constraints.",
+      "Define association establishment, activation, change, and dissociation conditions.",
+      "Define how each invocation/activity receives its exact association context and target access.",
+      "Define in-flight behavior during association change or dissociation.",
+      "Define the minimum historical provenance retained by each specialized output or evidence type."
+    ],
+    "completionRule": "A specialization is association-coordination complete when identity roles, target scope, compatibility, multiplicity, authority, invocation binding, change/dissociation, in-flight work, and historical provenance are explicit."
+  },
+  "explicitNonGoals": [
+    "No Generic Supporting Unit abstraction or universal component base type.",
+    "No mandatory association for every Step-internal component.",
+    "No universal target kind, cardinality, exclusivity, or sharing policy.",
+    "No transfer of ownership or lifecycle authority to the target.",
+    "No automatic invocation, activation, readiness, release, or result aggregation caused by association establishment.",
+    "No universal association registry, service, graph, or runtime manager.",
+    "No universal invocation signature or result schema."
+  ],
+  "references": [
+    {
+      "document": "../Stage_Level/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+      "relationship": "Defines Step Composition ownership and authority over Step-internal composition and flow."
+    },
+    {
+      "document": "../Stage_Level/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Association_Contract.json",
+      "relationship": "Validator-specific association specialization."
+    },
+    {
+      "document": "../Stage_Level/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Association_Contract.json",
+      "relationship": "Observation-specific association specialization."
+    },
+    {
+      "document": "../Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Association_Contract.json",
+      "relationship": "Error Handling-specific association specialization."
+    }
+  ]
+}

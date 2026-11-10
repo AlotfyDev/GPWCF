@@ -1,0 +1,10 @@
+{
+  "serialNumber": 8,
+  "name": "SPU Task Binding",
+  "category": "Feature / Pattern Binding",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+  "description": "Native Prefect realization of SPU execution as a Prefect Task inside the owning Step Subflow; SPU Tasks submit to the Step Flow's ThreadPoolTaskRunner and join their futures; SPUExecutionResult remains distinct from StepExecutionResult.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

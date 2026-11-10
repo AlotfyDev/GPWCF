@@ -1,0 +1,27 @@
+@startuml
+title Step Execution Sequence - Step execute() to Stage
+skinparam sequenceMessageAlign center
+skinparam monochrome true
+skinparam roundcorner 0
+
+participant "Stage" as Stage
+participant "Step Composition" as SC
+participant "Step[TInput,TOutput]" as Step
+participant "StepExecutionResult[TOutput]" as SRes
+participant "OptionalResultContributions" as ORC
+
+Stage -> SC : invoke Step via public callable
+SC -> Step : execute(input: TInput)
+Step -> SC : assemble result
+(processingArtifact + optional validatorResult/errorResult/errorHandlerResult)
+SC -> ORC : group optional contributions
+(validatorResult, errorResult, errorHandlerResult)
+SC --> SRes : StepExecutionResult[TOutput]
+SRes --> Stage : return structured aggregate result
+
+note right of SC : Step owns internal composition
+Stage does NOT invoke SPUs/supporting units directly
+StepExecutionResult independent of Step Aggregate
+OptionalResultSlot: Absent != Present(None)
+
+@enduml

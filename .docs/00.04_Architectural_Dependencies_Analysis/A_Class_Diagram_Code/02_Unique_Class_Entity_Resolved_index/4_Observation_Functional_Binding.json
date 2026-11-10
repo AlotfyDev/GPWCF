@@ -1,0 +1,10 @@
+{
+  "serialNumber": 4,
+  "name": "Observation Functional Binding",
+  "category": "Feature / Pattern Binding",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/08.00_Supporting_Pattern_Functional_Binding.json",
+  "description": "Binding of the Observation Unit pattern to Prefect native execution supporting call, callback, sampling, or subscription activity cardinality; Observation Records remain independent of StepExecutionResult and preserve provenance/custody.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

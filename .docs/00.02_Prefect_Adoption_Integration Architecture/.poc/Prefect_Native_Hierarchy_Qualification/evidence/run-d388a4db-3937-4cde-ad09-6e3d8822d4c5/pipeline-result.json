@@ -1,0 +1,90 @@
+{
+  "pipelineInvocationIdentity": "d388a4db-3937-4cde-ad09-6e3d8822d4c5",
+  "stageCount": 2,
+  "stages": [
+    {
+      "stageIdentity": "STAGE-A",
+      "stageInvocationIdentity": "fd9a4061-1864-4310-b9f3-ed651d000e48",
+      "stepResultCount": 2,
+      "stepResults": [
+        {
+          "processing_artifact": {
+            "normalized": {
+              "normalizedValue": "stage-a-alpha",
+              "source": " STAGE-A-ALPHA "
+            },
+            "measurement": {
+              "characterCount": 15
+            }
+          },
+          "validator_result": null,
+          "error_result": null,
+          "error_handler_result": null
+        },
+        {
+          "processing_artifact": {
+            "normalized": {
+              "normalizedValue": "stage-a-beta",
+              "source": " STAGE-A-BETA "
+            },
+            "measurement": {
+              "characterCount": 14
+            }
+          },
+          "validator_result": null,
+          "error_result": null,
+          "error_handler_result": null
+        }
+      ]
+    },
+    {
+      "stageIdentity": "STAGE-B",
+      "stageInvocationIdentity": "9eac9f93-f7dc-4ed8-93c2-06abf38fdca8",
+      "stepResultCount": 2,
+      "stepResults": [
+        {
+          "processing_artifact": {
+            "normalized": {
+              "normalizedValue": "stage-b-alpha",
+              "source": " STAGE-B-ALPHA "
+            },
+            "measurement": {
+              "characterCount": 15
+            }
+          },
+          "validator_result": null,
+          "error_result": null,
+          "error_handler_result": null
+        },
+        {
+          "processing_artifact": {
+            "normalized": {
+              "normalizedValue": "stage-b-beta",
+              "source": " STAGE-B-BETA "
+            },
+            "measurement": {
+              "characterCount": 14
+            }
+          },
+          "validator_result": null,
+          "error_result": null,
+          "error_handler_result": null
+        }
+      ]
+    }
+  ],
+  "prefectRootState": {
+    "name": "Completed",
+    "type": "COMPLETED"
+  },
+  "exceptionProbe": {
+    "exceptionType": "RuntimeError",
+    "exceptionMessage": "PHASE-01 controlled failure probe; expected and isolated",
+    "prefectTaskRunId": "01a1bc69-32d5-7b4c-8681-f1a4b350e4c7",
+    "prefectTaskStateName": "Failed",
+    "prefectTaskStateType": "FAILED",
+    "domainStructuredResultProduced": false,
+    "prefectProbeFlowStateName": "Completed",
+    "prefectProbeFlowStateType": "COMPLETED"
+  }
+}

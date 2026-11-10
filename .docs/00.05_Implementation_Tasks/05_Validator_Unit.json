@@ -1,0 +1,42 @@
+{
+  "taskId": "05_Validator_Unit",
+  "serialNumber": 5,
+  "target": "SPU Validator Unit",
+  "category": "Supporting Pattern",
+  "description": "Implement the optional SPU Validator Unit supporting pattern selected by a concrete Step for validation responsibilities. The validator produces SPUValidatorResult carried independently in result slots. Validation conclusions remain domain results, not automatic invocation failures. Implement Validator Unit Association (validatorUnitAssociationIdentity distinct from participant identities) and Validator Unit Lifecycle contracts.",
+  "implementationClasses": [
+    "SPUValidatorResult",
+    "Validator Unit Association",
+    "Validator Unit Lifecycle",
+    "validatorUnitIdentity",
+    "validatorUnitAssociationIdentity",
+    "associationTargetIdentity"
+  ],
+  "relatedDiagrams": {
+    "class": "03_Diagrams_Codes_Files/01_SPU_Step_Processing_Unit.dot",
+    "sequence": "B_Sequencial_Diagram_Code/03_Validator_Unit_Sequence.puml",
+    "association": "C_Association_Diagram_Code/05_Validator_Unit_Associations.puml",
+    "dependency": "D_Architectural_Dependency_Diagram_Code/04_Supporting_Pattern_Optional_Dependency.dot"
+  },
+  "dependencies": [
+    "02_Step"
+  ],
+  "acceptanceCriteria": [
+    "Validator Unit validation conclusions are domain results, not invocation failures",
+    "SPUValidatorResult carried independently in optional result slot",
+    "Validator Unit Association identity distinct from participant identities",
+    "Step Composition is sole authority for establishing/changing/ending associations",
+    "Association does not transfer association-management authority to target",
+    "Validator Unit Lifecycle milestones implemented (provisioned, prepared, ready, admitted, ...)"
+  ],
+  "definitionOfDone": [
+    "Validator unit tests for validation conclusion semantics",
+    "Association identity uniqueness and stability tests",
+    "Lifecycle milestone tests",
+    "Architecture test: no universal one-validator-per-SPU relationship imposed"
+  ],
+  "priority": "medium",
+  "status": "pending",
+  "estimatedEffort": "medium",
+  "testStrategy": "Validator unit unit tests; association identity tests; lifecycle milestone tests"
+}

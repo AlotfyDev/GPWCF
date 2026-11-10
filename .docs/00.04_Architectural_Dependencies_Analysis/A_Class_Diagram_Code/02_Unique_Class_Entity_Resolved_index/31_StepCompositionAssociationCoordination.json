@@ -1,0 +1,10 @@
+{
+  "serialNumber": 31,
+  "name": "StepCompositionAssociationCoordination",
+  "category": "Component / Coordination Contract",
+  "type": "Component",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+  "description": "The coordination component owned by Concrete Step Composition that establishes and maintains explicit relationships between Step-internal component instances and Step-owned target scopes, binding each authorized invocation to the exact relationship.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

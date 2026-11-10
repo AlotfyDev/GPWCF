@@ -1,0 +1,644 @@
+{
+  "documentType": "GPWCFDetailedArchitectureDesign",
+  "documentId": "gpwcf.architecture-closure.wave5-operational-mapping",
+  "documentVersion": "1.0.0",
+  "status": "draft-for-architecture-review",
+  "designSequence": {
+    "wave": 5,
+    "waveName": "Prefect Integration Binding and Operational Mapping",
+    "artifactNumber": 2,
+    "predecessorArtifacts": [
+      "12.00_Prefect_Integration_Binding.json",
+      "../Wave!_Stage_Callable_Stage Result_Pipeline Invocation/02.00_Stage_Result.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/05.00_Step_Execution_Result.json",
+      "../Wave4_Generic_Diagnostics_Error_Handling_Publication/11,00_Publication.json",
+      ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-01/PHASE-01_Acceptance_Results.json",
+      ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Acceptance_Results.json",
+      ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Open_Integration_Questions.json"
+    ]
+  },
+  "purpose": "Define the operational mapping between GPWCF domain invocations/results/identities/lifecycle/custody and Prefect-native execution records/identities/States, explicitly preventing operational status from being mistaken for domain outcome or safe settlement.",
+  "scope": {
+    "included": [
+      "The separation of domain and Prefect operational identity namespaces.",
+      "The mapping of Stage, Step, SPU, and Supporting Pattern invocations to native Flow/Task runs.",
+      "Domain result versus Prefect State interpretation.",
+      "Parent/child correlation and synthetic deployment/subflow invocation records.",
+      "Result persistence/retrieval and serialization failure semantics.",
+      "Cancellation, timeout, retry, worker loss, recovery, and lifecycle mapping constraints.",
+      "The exact concurrency/deployment evidence and qualification limits from PHASE-01/02.",
+      "Operational evidence retention and reporting responsibilities."
+    ],
+    "excluded": [
+      "A universal mapping from Prefect State to Stage/Step/SPU domain Outcome.",
+      "A universal GPWCF lifecycle state machine derived from Prefect States.",
+      "A universal retry, cancellation, timeout, compensation, or recovery policy.",
+      "Unqualified multi-host, autoscaling, high-concurrency, or production reliability claims.",
+      "A generic Prefect operational manager or state-to-domain-result adapter."
+    ]
+  },
+  "governingRule": {
+    "statement": "Prefect State and native identifiers describe how the external runtime executed and recorded a native Flow/Task. GPWCF domain identities, invocation acceptance, results, outcomes, lifecycle, and custody describe what the domain contract accepted, produced, and settled. Neither namespace substitutes for the other.",
+    "noStateInference": "No Prefect State value by itself proves a GPWCF domain success, failure, cancellation settlement, result acceptance, publication acceptance, safe release, or absence of side effects.",
+    "noDomainInference": "A GPWCF domain result or outcome does not by itself prove that Prefect persisted, retrieved, or operationally completed every native execution record."
+  },
+  "identityMapping": {
+    "domainNamespace": [
+      {
+        "identity": "PipelineInvocationIdentity",
+        "issuer": "Consumer",
+        "meaning": "One consumer-owned pipeline invocation correlation identity."
+      },
+      {
+        "identity": "StageIdentity",
+        "issuer": "Stage Aggregate/consumer specialization",
+        "meaning": "One concrete Stage entity identity."
+      },
+      {
+        "identity": "StageInvocationIdentity",
+        "issuer": "Stage invocation boundary",
+        "meaning": "One proposed/accepted Stage invocation identity according to the Stage contract."
+      },
+      {
+        "identity": "StepIdentity",
+        "issuer": "Step Aggregate/consumer specialization",
+        "meaning": "One Step instance within its owning Stage scope."
+      },
+      {
+        "identity": "StepInvocationIdentity",
+        "issuer": "Stage Composition caller proposes; Step admission boundary accepts/rejects",
+        "meaning": "One proposed/accepted Step invocation."
+      },
+      {
+        "identity": "SPUIdentity",
+        "issuer": "Concrete SPU identity scope",
+        "meaning": "One concrete SPU processing entity."
+      },
+      {
+        "identity": "SPUInvocationIdentity",
+        "issuer": "Step Composition",
+        "meaning": "One SPU invocation attempt inside one accepted Step invocation."
+      },
+      {
+        "identity": "Supporting Pattern identities",
+        "issuer": "The selected specialized pattern/Step scope",
+        "meaning": "Validator, Error Handling, Observation, Association, target, activity, operation, reservation, and record identities according to their own contracts."
+      }
+    ],
+    "prefectNamespace": [
+      {
+        "identity": "Deployment ID",
+        "issuer": "Prefect",
+        "meaning": "One native deployment definition."
+      },
+      {
+        "identity": "Flow Run ID",
+        "issuer": "Prefect",
+        "meaning": "One native Flow execution record."
+      },
+      {
+        "identity": "Task Run ID",
+        "issuer": "Prefect",
+        "meaning": "One native Task execution record, including synthetic deployment/subflow invocation Task Runs."
+      },
+      {
+        "identity": "Work Pool / Worker ID",
+        "issuer": "Prefect",
+        "meaning": "Native execution infrastructure identity."
+      },
+      {
+        "identity": "State Type / State Name",
+        "issuer": "Prefect",
+        "meaning": "Operational state classification for a native run/task."
+      }
+    ],
+    "mappingRecord": {
+      "owner": "integrations.prefect",
+      "purpose": "Associate one or more native Flow/Task/Deployment records with the relevant domain invocation identities.",
+      "cardinality": "One domain invocation may correlate with multiple native records due to wrapper Tasks, synthetic deployment invocation Tasks, nested Subflows, and explicitly authorized native retries.",
+      "minimumFields": [
+        "Domain invocation identity/type.",
+        "Domain parent identity/correlation where applicable.",
+        "Native Prefect object type and ID.",
+        "Native parent ID/linkage where available.",
+        "Deployment and worker identity where relevant.",
+        "Observed native State and timestamps as operational facts.",
+        "Correlation confidence/source and any unresolved linkage."
+      ],
+      "rules": [
+        "Do not cast a Prefect ID into a GPWCF identity type.",
+        "Do not reuse a Prefect ID as a domain invocation identity.",
+        "Do not assume one domain invocation maps to exactly one native Task/Flow Run.",
+        "Do not infer a GPWCF Association from a Prefect parent/child edge.",
+        "Do not infer domain identity uniqueness/reuse policy from Prefect ID retention."
+      ]
+    }
+  },
+  "nativeParentChildMapping": {
+    "rootToStageDeployment": {
+      "domainRelationship": "Consumer Root invocation dispatches a Stage invocation.",
+      "nativeRelationship": "Root-owned dispatch Task invokes Stage Deployment through run_deployment(..., as_subflow=True).",
+      "observedShape": [
+        "A synthetic deployment invocation Task Run is created by Prefect.",
+        "The Stage Deployment Flow Run parent_task_run_id points to the synthetic invocation Task Run.",
+        "The synthetic Task Run's parent metadata correlates it to the Root dispatch Task Run."
+      ],
+      "rule": "The integration preserves the complete native chain; it does not assume that the Stage Flow Run is a direct child of the user-authored Root dispatch Task."
+    },
+    "stageToStepSubflow": {
+      "domainRelationship": "Stage Composition invokes a Step through the Step public callable boundary.",
+      "nativeRelationship": "Stage-owned dispatch Task invokes the native Step Subflow; Prefect creates a synthetic child-subflow Task Run.",
+      "observedShape": "The Step Flow Run parent_task_run_id points to the synthetic child-subflow Task Run, whose parent metadata correlates to the Stage dispatch Task Run.",
+      "rule": "The native synthetic Task is operational invocation machinery; it is not a GPWCF Step Entity or a second domain Step invocation."
+    },
+    "stepToSpuTask": {
+      "domainRelationship": "Step Composition invokes selected SPUs inside the Step.",
+      "nativeRelationship": "SPU Tasks execute within the owning Step Flow Run.",
+      "observedShape": "SPU Task Runs correlate to their owning Step Flow Runs.",
+      "rule": "The native Task Run is an operational realization of the SPU invocation and does not replace SPUIdentity or SPUInvocationIdentity."
+    },
+    "nativeMetadataCaution": "The PHASE-02 observation of task_inputs['__parents__'] is evidence of Prefect's synthetic parent linkage in the qualified version. It is not a GPWCF field and must not become a Core contract. Integration code should use supported Prefect APIs/metadata and isolate version-specific linkage extraction."
+  },
+  "domainResultVersusPrefectState": {
+    "principle": "The domain result is produced by the GPWCF callable and describes its specialized domain outcome. Prefect State describes the native execution of the Flow/Task wrapper.",
+    "mappingCases": [
+      {
+        "prefectState": "COMPLETED",
+        "domainResult": "StageResult returned with a positive/successful specialized StageOutcome.",
+        "interpretation": "The native wrapper completed normally and the Stage returned its domain result. This is the only case where both operational completion and the specialized domain outcome may independently indicate success."
+      },
+      {
+        "prefectState": "COMPLETED",
+        "domainResult": "StageResult returned with a negative, rejected, partial, or otherwise non-success specialized StageOutcome.",
+        "interpretation": "The Stage invocation completed normally as a callable operation; the domain result expresses its own non-success/negative/partial conclusion. Prefect COMPLETED does not rewrite the domain outcome."
+      },
+      {
+        "prefectState": "COMPLETED",
+        "domainResult": "No persisted/retrievable StageResult is available.",
+        "interpretation": "Operational result persistence/retrieval is unresolved or failed. Do not fabricate StageResult or infer a domain success from COMPLETED."
+      },
+      {
+        "prefectState": "FAILED / CRASHED",
+        "domainResult": "No StageResult was returned.",
+        "interpretation": "The native invocation failed before a domain result was returned or retrieved. Domain outcome remains unknown unless a separate specialized recovery/result record establishes it."
+      },
+      {
+        "prefectState": "FAILED / CRASHED",
+        "domainResult": "A StageResult or partial result evidence was persisted before the later operational failure.",
+        "interpretation": "The existence and validity of the persisted domain value must be established under the Stage result/recovery contract. Native failure does not automatically invalidate a result already returned/accepted, and persisted data must not automatically be treated as a completed invocation."
+      },
+      {
+        "prefectState": "CANCELLED / CANCELLING",
+        "domainResult": "No normal StageResult return.",
+        "interpretation": "The native cancellation request/state is operational evidence. Domain cancellation acceptance, active-work settlement, result custody, and safe release remain unresolved until the Stage contract confirms them."
+      },
+      {
+        "prefectState": "COMPLETED",
+        "domainResult": "StepExecutionResult or SPUExecutionResult contains negative/partial domain evidence.",
+        "interpretation": "A normally returned domain result may contain negative/partial evidence. Prefect Task/Flow completion is not a domain success Boolean."
+      },
+      {
+        "prefectState": "FAILED / CANCELLED",
+        "domainResult": "ErrorResult, ErrorHandlerResult, or Observation Records were previously accepted.",
+        "interpretation": "Previously accepted domain values remain valid and retain their custodian. A later native failure/cancellation does not revoke accepted values."
+      }
+    ],
+    "forbiddenMappings": [
+      "Prefect COMPLETED -> GPWCF Success.",
+      "Prefect FAILED -> universal GPWCF Failure object.",
+      "Prefect CANCELLED -> domain cancellation safely settled.",
+      "Prefect Task COMPLETED -> PublicationAccepted.",
+      "Prefect Flow Run COMPLETED -> Step/Stage lifecycle Released.",
+      "Prefect Task FAILED -> no side effects occurred.",
+      "Missing persisted result -> empty successful result."
+    ]
+  },
+  "invocationAcceptanceMapping": {
+    "stage": {
+      "domainAcceptanceOwner": "Stage Aggregate public invocation boundary.",
+      "nativeEvidence": "Stage Flow Run creation/start and its operational state.",
+      "rule": "A native Flow Run being scheduled/running does not prove the Stage Aggregate accepted the StageInvocation. The Stage boundary's own acceptance record is authoritative."
+    },
+    "step": {
+      "domainAcceptanceOwner": "Step Aggregate public invocation boundary.",
+      "nativeEvidence": "Step Subflow Flow Run and synthetic child-subflow Task Run.",
+      "rule": "Native Step Flow Run creation does not prove the Step accepted StepInvocation; the Step admission boundary is authoritative."
+    },
+    "spu": {
+      "domainAcceptanceOwner": "Step Composition's internal SPU invocation coordination.",
+      "nativeEvidence": "SPU Task Run creation/start.",
+      "rule": "A Prefect Task Run does not by itself prove the SPU domain invocation was accepted or that SPU processing began; Step Composition owns that record."
+    },
+    "supportingPatterns": {
+      "domainAcceptanceOwner": "The selected specialized pattern/Step Composition contract.",
+      "nativeEvidence": "Task/Flow/event activity records as applicable.",
+      "rule": "Native execution creation is not a substitute for Validator, Error Handling, Publisher, or Observation acceptance semantics."
+    }
+  },
+  "failureCancellationTimeoutRetryMapping": {
+    "exceptions": {
+      "rule": "A thrown domain exception that prevents the callable from returning its declared result is preserved as an invocation exception and mapped to the corresponding native Prefect failure state by the wrapper/runtime.",
+      "constraints": [
+        "Do not automatically create ErrorResult or Diagnostic.",
+        "Do not fabricate StageResult, StepExecutionResult, or SPUExecutionResult.",
+        "Previously produced and accepted results retain their custody.",
+        "The native State is retained separately from the exception and any domain error occurrence."
+      ]
+    },
+    "cancellation": {
+      "rule": "Prefect cancellation is an operational request/state, not proof that domain work has stopped or safely settled.",
+      "requiredSequence": [
+        "Record the native cancellation request and relevant Flow/Task IDs.",
+        "Signal the concrete Stage/Step/SPU cooperative cancellation contract where defined.",
+        "Stop admitting new domain invocations when the owning Aggregate's admission boundary closes.",
+        "Reconcile active native work and accepted/unresolved result custody.",
+        "Transfer unresolved results to the named Recovery Owner where required.",
+        "Confirm domain quiescence/release only through the owning lifecycle contract."
+      ],
+      "notQualified": "PHASE-01/02 did not qualify cancellation behavior or safe settlement."
+    },
+    "timeout": {
+      "rule": "A Prefect timeout/late completion is operational evidence and does not prove that the underlying domain operation stopped or that no result was produced.",
+      "requiredHandling": [
+        "Retain the domain invocation identity and native Task/Flow Run identity.",
+        "Determine whether the operation may still be active or may have crossed a side-effect/result acceptance point.",
+        "Do not start a replacement domain attempt unless the specialized idempotency/recovery contract authorizes it.",
+        "Preserve unresolved custody until a definitive settlement/recovery outcome is established."
+      ],
+      "notQualified": "No generic timeout settlement or late-result behavior was qualified."
+    },
+    "retry": {
+      "distinction": [
+        {
+          "kind": "NativeTaskRetrySameDomainInvocation",
+          "meaning": "Prefect retries a native Task Run for the same logical domain invocation only when the specialized contract explicitly permits the retry and the binding preserves idempotency/custody.",
+          "identityRule": "The domain invocation identity remains the same logical invocation; each native retry has its own native Task Run ID. A domain attempt identity may or may not change according to the specialized operation contract."
+        },
+        {
+          "kind": "NewDomainInvocationAttempt",
+          "meaning": "The domain contract authorizes a new logical invocation/attempt.",
+          "identityRule": "A new domain invocation/attempt identity is required according to the owning contract; the native Prefect retry counter is not a domain identity."
+        }
+      ],
+      "rule": "Prefect retry configuration is not a universal GPWCF retry policy. Retrying a side-effecting operation requires explicit idempotency, reservation, custody, and recovery semantics.",
+      "notQualified": "No retry/replay semantics were qualified in PHASE-01/02."
+    },
+    "workerLossAndRecovery": {
+      "rule": "Worker loss or process termination leaves domain side effects and result custody potentially indeterminate. A native crashed/failed state does not prove no operation occurred.",
+      "requiredEvidence": [
+        "Domain invocation and operation identities.",
+        "Native Flow/Task Run identities and last observed State.",
+        "Persisted domain result, if any.",
+        "Publisher acceptance/status evidence, if applicable.",
+        "Recovery Owner and current custody evidence.",
+        "Any active reservation or unresolved handoff."
+      ],
+      "notQualified": "Worker-loss recovery, durable custody, and safe settlement remain unqualified."
+    }
+  },
+  "publicationOperationalMapping": {
+    "domainAcceptance": "OperationEntryPublisher's atomic acceptance and PublicationReservation.Consumed are the authoritative publication/custody facts.",
+    "prefectState": "The Prefect Task State describes the execution of the Task wrapper only.",
+    "mappingCases": [
+      {
+        "prefectTaskState": "COMPLETED",
+        "publication": "PublicationAccepted",
+        "meaning": "The wrapper completed and the Publisher confirmed acceptance. The Publisher's acknowledgement, not Task State, establishes acceptance."
+      },
+      {
+        "prefectTaskState": "FAILED",
+        "publication": "Acceptance may be indeterminate",
+        "meaning": "The wrapper may have failed after publish crossed the acceptance point. Query status and preserve result custody."
+      },
+      {
+        "prefectTaskState": "COMPLETED",
+        "publication": "PublicationRejection",
+        "meaning": "The Task wrapper may complete normally while returning a domain rejection. Task completion does not imply entry acceptance."
+      },
+      {
+        "prefectTaskState": "CANCELLED / CRASHED",
+        "publication": "Unknown/Indeterminate",
+        "meaning": "The operation may have produced an entry and attempted publication before termination. Recovery Owner/escrow and authoritative status reconciliation are required."
+      }
+    ],
+    "prohibited": [
+      "Do not map Prefect Task COMPLETED to Reservation.Consumed.",
+      "Do not map Prefect Task FAILED to Reservation.Released.",
+      "Do not release a reservation because the Task was cancelled.",
+      "Do not count an escrow/unresolved entry as an accepted ErrorHandlerResult entry.",
+      "Do not republish under a new attempt until the previous acceptance state is reconciled."
+    ]
+  },
+  "lifecycleMapping": {
+    "domainLifecycleAuthority": "Stage Aggregate, Step Aggregate, and the selected Supporting Pattern's Lifecycle contract.",
+    "prefectOperationalEvidence": "Flow/Task states, worker liveness, run termination, and deployment status.",
+    "rules": [
+      "Prefect Flow Run COMPLETED does not prove Stage/Step RetainForReuse readiness.",
+      "Prefect Flow Run COMPLETED does not prove TerminalRetirement or native resource release.",
+      "Prefect Flow Run CANCELLED does not prove all domain invocations have stopped.",
+      "Prefect worker shutdown does not prove all results have been transferred or safely retained.",
+      "Ending a domain Association does not imply a Prefect Task/Flow has ended; native execution may still need settlement.",
+      "A native Task/Flow may finish while accepted domain result values remain retained beyond the native run lifetime.",
+      "Domain release/retirement requires the specialized lifecycle contract's explicit confirmation and custody evidence."
+    ]
+  },
+  "resultPersistenceAndRetrievalMapping": {
+    "qualifiedStageProfile": {
+      "persistResult": true,
+      "globalPersistByDefault": false,
+      "setting": "PREFECT_RESULTS_PERSIST_BY_DEFAULT=false",
+      "rootProcedure": [
+        "Wait for the Stage Deployment Flow Run to reach terminal Prefect State.",
+        "Check the native State and preserve it as operational evidence.",
+        "Retrieve the persisted StageResult using the configured result storage.",
+        "Validate StageIdentity, StageInvocationIdentity, PipelineInvocationIdentity, and parent correlation against the original StageInvocation.",
+        "Pass the exact StageResult to the consumer Root's domain aggregation."
+      ],
+      "storageLocationEvidence": "The PHASE-02 local result storage was under C:\\poc\\GPWCF\\prefect-home-deployment\\storage. This is evidence only and must not be hardcoded into GPWCF.",
+      "notGeneralized": "The local SQLite/result-storage configuration is not a multi-host storage design."
+    },
+    "retrievalFailure": [
+      "A missing result after native COMPLETED is an integration result-retrieval/persistence failure, not a successful empty StageResult.",
+      "A deserialization/type mismatch is a result transport failure; do not coerce the value to a generic dictionary.",
+      "A result that exists after native failure is accepted only if the domain return/acceptance contract establishes its validity.",
+      "Never replace a missing domain result with Prefect State."
+    ],
+    "stepAndSpuResults": "StepExecutionResult and SPUExecutionResult are returned through their owning native Step/Task boundary. If persistence is needed, the selected consumer payload and serializer must be explicitly qualified; no universal result serializer is assumed.",
+    "optionalContributions": "OptionalResultSlot Absent/Present discriminators and specialized payloads must survive persistence exactly, including Present(None)."
+  },
+  "concurrencyAndDeploymentEvidence": {
+    "phase01": {
+      "profile": "Root, Stage, and Step each used ThreadPoolTaskRunner(max_workers=4) on Windows x64, CPython 3.15.1, Prefect 3.9.2 with SQLite API server.",
+      "results": [
+        {
+          "metric": "Root Flow completion",
+          "observed": "4/4"
+        },
+        {
+          "metric": "Sibling Stage Flow overlap",
+          "observed": "3/4 repeated runs",
+          "interpretation": "Not deterministic; no universal Stage concurrency guarantee."
+        },
+        {
+          "metric": "Sibling Step Subflow overlap",
+          "observed": "0/8 measured pairs",
+          "interpretation": "No sibling Step concurrency guarantee inferred."
+        },
+        {
+          "metric": "SPU Task fan-out/fan-in overlap",
+          "observed": "16/16 Step invocations",
+          "interpretation": "Fixture Task-level parallelism worked within the tested profile; not a universal concurrency guarantee."
+        }
+      ]
+    },
+    "phase02": {
+      "profile": "SQLite API server with one API worker; Process Work Pool; two Process Workers, each flow-run limit 1; two Stage Deployments; same-host Windows x64.",
+      "results": [
+        {
+          "metric": "Root Flow Runs completed",
+          "observed": "5/5"
+        },
+        {
+          "metric": "Stage Deployment Flow Runs completed",
+          "observed": "10/10"
+        },
+        {
+          "metric": "Root-to-Stage synthetic parent linkage",
+          "observed": "10/10"
+        },
+        {
+          "metric": "Stage-to-Step synthetic parent linkage",
+          "observed": "20/20"
+        },
+        {
+          "metric": "SPU Task Runs correlated to owning Step Flow Runs",
+          "observed": "40"
+        },
+        {
+          "metric": "Sibling Stage overlap",
+          "observed": "5/5 runs"
+        },
+        {
+          "metric": "Sibling Stage distinct worker assignment",
+          "observed": "5/5 runs"
+        },
+        {
+          "metric": "Stage domain results retrieved by Root",
+          "observed": "10/10"
+        }
+      ],
+      "stageOverlapDurationsSeconds": {
+        "minimum": 7.455,
+        "maximum": 14.029,
+        "average": 9.785
+      },
+      "interpretation": "The two-Process-Worker deployment-backed profile is qualified for sibling Stage overlap and the measured hierarchy/result correlation. It is not proof of arbitrary concurrency, autoscaling, or multi-host behavior."
+    },
+    "singleWorkerExperiment": "A single Process Worker with --limit 2 did not produce deterministic sibling Stage overlap in the exploratory trial. The accepted repeatable profile uses two separate Process Workers with flow-run limit 1.",
+    "noPerformanceExtrapolation": "No throughput, resource-sizing, maximum concurrency, or scaling claims are inferred from these five runs."
+  },
+  "operationalObservations": {
+    "windowsAsyncioTeardown": {
+      "observation": "A non-fatal Windows asyncio Proactor ConnectionResetError was observed during client teardown.",
+      "classification": "Operational teardown observation, not a GPWCF domain failure and not evidence that Stage/Step/SPU processing failed.",
+      "handling": "Retain as a Prefect/runtime environment observation. Do not create a generic ErrorResult or Diagnostic unless a specialized operational contract explicitly requires it."
+    },
+    "serviceShutdown": {
+      "observation": "After accepted PHASE-02 runs, API Server and both Workers were stopped and port 4210 was no longer LISTENING.",
+      "classification": "PoC operational cleanup evidence.",
+      "preservation": "Prefect home/database/result storage were preserved."
+    }
+  },
+  "unqualifiedOperationalQuestions": [
+    {
+      "question": "Multi-host code distribution",
+      "status": "open",
+      "impact": "The Stage deployment worker must have the correct consumer code and compatible GPWCF/Prefect environment."
+    },
+    {
+      "question": "Multi-host result storage",
+      "status": "open",
+      "impact": "StageResult and Step/SPU result payload persistence/retrieval require a shared or otherwise qualified storage/serializer profile."
+    },
+    {
+      "question": "Higher Stage concurrency and scaling",
+      "status": "open",
+      "impact": "Only two sibling Stage deployments on two Process Workers were qualified."
+    },
+    {
+      "question": "Failure/cancellation/timeout/retry/worker loss/recovery and safe settlement",
+      "status": "open",
+      "impact": "No operational state mapping can claim safe domain settlement until the owning lifecycle/custody contracts are implemented and tested."
+    },
+    {
+      "question": "Production GPWCF functional binding",
+      "status": "open",
+      "impact": "The PHASE-01/02 fixture topology does not prove production Stage/Step/SPU/Supporting Pattern class binding."
+    },
+    {
+      "question": "PostgreSQL and multi-worker API server requirements",
+      "status": "open",
+      "impact": "The qualified API server used SQLite and one worker."
+    },
+    {
+      "question": "Step sibling Subflow concurrency",
+      "status": "open",
+      "impact": "No sibling Step Subflow overlap was observed in PHASE-01."
+    },
+    {
+      "question": "Publisher capability transport",
+      "status": "open",
+      "impact": "No production Publisher/Reservation object/capability transport across Prefect task/process boundaries was qualified."
+    }
+  ],
+  "dependencyAndOwnershipRules": {
+    "integrationOwns": [
+      "Prefect operational state/run/task records.",
+      "Native ID correlation mapping.",
+      "Result persistence/retrieval configuration and transport failures.",
+      "Version-specific native parent-link extraction."
+    ],
+    "coreOwns": [
+      "Domain invocation acceptance and identity.",
+      "Domain result and outcome semantics.",
+      "Lifecycle and custody settlement requirements.",
+      "Specialized error, validation, observation, and publication semantics."
+    ],
+    "consumerOwns": [
+      "Business interpretation of Stage/Step results.",
+      "Root aggregation and workflow policy.",
+      "Deployment configuration and result payload serialization support."
+    ],
+    "forbidden": [
+      "No generic PrefectStateToDomainOutcome converter.",
+      "No global lifecycle/status registry.",
+      "No retry policy inferred from Prefect retry counters.",
+      "No result reconstruction from Prefect State alone."
+    ]
+  },
+  "conformanceRequirements": [
+    {
+      "id": "OPMAP-001",
+      "requirement": "Domain identities and Prefect native identifiers are distinct namespaces with explicit correlation records."
+    },
+    {
+      "id": "OPMAP-002",
+      "requirement": "One domain invocation may map to multiple native records, including synthetic deployment/subflow invocation Tasks."
+    },
+    {
+      "id": "OPMAP-003",
+      "requirement": "Native parent/child execution edges do not create GPWCF Composition or Association relationships."
+    },
+    {
+      "id": "OPMAP-004",
+      "requirement": "Prefect State never substitutes for StageOutcome, StepExecutionResult, SPUExecutionResult, ErrorResult, ErrorHandlerResult, or Observation Records."
+    },
+    {
+      "id": "OPMAP-005",
+      "requirement": "Prefect COMPLETED may coexist with a negative/partial domain result."
+    },
+    {
+      "id": "OPMAP-006",
+      "requirement": "Prefect FAILED/CANCELLED/CRASHED does not prove no domain side effects or accepted results exist."
+    },
+    {
+      "id": "OPMAP-007",
+      "requirement": "Cancellation, timeout, retry, and worker-loss behavior follow specialized domain admission/custody/recovery contracts."
+    },
+    {
+      "id": "OPMAP-008",
+      "requirement": "Native retries and new domain invocation attempts use distinct identity rules."
+    },
+    {
+      "id": "OPMAP-009",
+      "requirement": "Publication acceptance is established only by the Publisher protocol, never by Prefect Task State."
+    },
+    {
+      "id": "OPMAP-010",
+      "requirement": "Domain lifecycle release/quiescence is confirmed only by the owning lifecycle contract, not by Flow/Task termination."
+    },
+    {
+      "id": "OPMAP-011",
+      "requirement": "Stage result persistence/retrieval is explicit and failure does not fabricate a domain result."
+    },
+    {
+      "id": "OPMAP-012",
+      "requirement": "OptionalResultSlot discriminators and typed payloads survive result persistence exactly."
+    },
+    {
+      "id": "OPMAP-013",
+      "requirement": "Concurrency and deployment claims remain within the exact PHASE-01/02 evidence."
+    },
+    {
+      "id": "OPMAP-014",
+      "requirement": "Multi-host, higher-scale, failure/recovery, and production binding remain unqualified until separately tested."
+    }
+  ],
+  "acceptanceCriteria": [
+    "Every relevant domain identity has a separate Prefect operational correlation mapping.",
+    "The synthetic Root-to-Stage and Stage-to-Step parent chains are represented accurately.",
+    "Domain outcomes/results are never derived solely from Prefect State.",
+    "Cancellation, timeout, retry, worker loss, and recovery preserve unresolved domain custody rather than assuming native termination settles it.",
+    "Publication acceptance and lifecycle release remain governed by their specialized domain contracts.",
+    "Result persistence/retrieval failures remain operational failures and do not fabricate domain results.",
+    "The concurrency evidence is exact and not generalized beyond the qualified two-worker profile.",
+    "All open operational questions remain visible and are not described as qualified.",
+    "No universal state converter, retry manager, lifecycle manager, or operational runtime is introduced.",
+    "No source contract or production source package is modified by this artifact."
+  ],
+  "traceability": [
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-01/PHASE-01_Acceptance_Results.json",
+      "supports": [
+        "Four repeated Root completions.",
+        "Stage sibling overlap 3/4, Step sibling Subflow overlap 0/8 pairs, and SPU Task overlap 16/16.",
+        "Domain result and Prefect operational State separation."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Acceptance_Results.json",
+      "supports": [
+        "Five-run Root/Stage completion and native parent linkage.",
+        "Forty SPU Task Runs correlated to owning Step Flow Runs.",
+        "Sibling Stage overlap and distinct worker assignment 5/5.",
+        "Ten Stage domain results persisted and retrieved by Root."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Repeatability_Evidence.json",
+      "supports": [
+        "Measured Stage overlap durations and repeated-run qualification evidence."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Open_Integration_Questions.json",
+      "supports": [
+        "Multi-host, higher-concurrency, failure/recovery, production binding, API server scaling, and publisher transport remain open."
+      ]
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/05.00_Detailed_Design_Waves/Wave4_Generic_Diagnostics_Error_Handling_Publication/11,00_Publication.json",
+      "supports": [
+        "Publisher atomic acceptance and Reservation.Consumed are domain custody facts independent of Prefect Task State."
+      ]
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/05.00_Detailed_Design_Waves/Wave!_Stage_Callable_Stage Result_Pipeline Invocation/02.00_Stage_Result.json",
+      "supports": [
+        "StageResult is a domain result envelope separate from Prefect operational State."
+      ]
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/05.00_Detailed_Design_Waves/Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/05.00_Step_Execution_Result.json",
+      "supports": [
+        "StepExecutionResult and optional result slots are domain values distinct from native Prefect state."
+      ]
+    }
+  ],
+  "changeControl": {
+    "authority": "Wave 5 detailed design proposal. It becomes an implementation constraint only after architecture review and explicit acceptance.",
+    "sourceContractPolicy": "This artifact does not modify PHASE-01/02 evidence, specialized domain contracts, or Prefect runtime configuration.",
+    "implementationGate": "Do not implement state/correlation/result mapping helpers until Wave 5 and Wave 6 designs are accepted and the exact supported Prefect API surface is pinned.",
+    "nextStep": "Wave 5 detailed design is complete at the artifact level. Validate both Wave 5 artifacts against PHASE-01/02 evidence and against Wave 1-4 domain contracts before proceeding to Wave 6."
+  }
+}

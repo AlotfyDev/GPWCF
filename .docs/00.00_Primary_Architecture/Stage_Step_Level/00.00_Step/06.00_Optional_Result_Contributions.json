@@ -1,0 +1,480 @@
+{
+  "documentType": "GPWCFDetailedArchitectureDesign",
+  "documentId": "gpwcf.architecture-closure.wave2.optional-result-contributions",
+  "documentVersion": "1.0.0",
+  "status": "draft-for-architecture-review",
+  "designSequence": {
+    "wave": 2,
+    "waveName": "Step Callable, StepExecutionResult, Optional Result Contributions",
+    "artifactNumber": 3,
+    "predecessorArtifacts": [
+      "04.00_Step_Callable.json",
+      "05.00_Step_Execution_Result.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlerResult_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Contract.json"
+    ]
+  },
+  "purpose": "Define a closed, typed, independently optional contribution model for the Step-level validation, error, and error-handling aggregates. The design preserves specialized result ownership and keeps optional Supporting Pattern dependencies out of the mandatory Core import path.",
+  "scope": {
+    "included": [
+      "The OptionalResultContributions aggregate and its three baseline result categories.",
+      "The OptionalResultSlot discriminated presence model.",
+      "Generic type relationships between OptionalResultContributions and StepExecutionResult.",
+      "Independent optionality, type safety, result provenance, and custody semantics.",
+      "The distinction between result absence, negative domain conclusions, invocation failure, and operational state.",
+      "The exclusion of Observation Unit output from the common Step result.",
+      "Dependency, Public API, serialization, and conformance requirements."
+    ],
+    "excluded": [
+      "The internal behavior of Validator Units, Error Handling Units, or Step Error Models.",
+      "A generic Error Model or generic error taxonomy.",
+      "A universal Supporting Unit base class or common result inheritance hierarchy.",
+      "An open-ended runtime-discovered contribution set, plugin manager, registry, or untyped dictionary.",
+      "Observation events, logs, telemetry, or Observation Unit results as common Step result contributions.",
+      "A universal serialization format or result storage manager."
+    ]
+  },
+  "governingPrinciples": {
+    "optionalMeansOptional": "A Step may select none, one, or multiple optional Supporting Pattern capabilities. The Core Step result contract must not require installation or import of any optional pattern package.",
+    "semanticOwnership": "Each optional aggregate retains the semantic ownership and schema defined by its specialized contract. OptionalResultContributions groups values for transport through the Step result; it does not redefine their meaning.",
+    "independentSlots": "Each known result category is independently present or absent. The presence or absence of one category does not determine another category.",
+    "absenceIsNotStatus": "An absent slot does not mean success, failure, NotApplicable, NotExecuted, or any other universal status.",
+    "typedNotDynamic": "The contribution bundle is statically typed by the concrete Step specialization. It is not a dynamic collection keyed by strings or discovered through a runtime registry.",
+    "observationSeparation": "Observation is a separate optional capability whose output is independent of the Step result aggregates. Observation records remain outside this common contribution bundle.",
+    "resultCustody": "A contribution is included as Present only after its value has been produced and accepted into Step custody under its specialized contract."
+  },
+  "architecturalOptions": [
+    {
+      "optionId": "OPTIONAL-CONTRIBUTION-A",
+      "name": "DirectOptionalFieldsOnStepResult",
+      "description": "Keep validatorResult, errorResult, and errorHandlerResult as independent top-level generic fields on StepExecutionResult.",
+      "advantages": [
+        "Closest to the existing serialized field layout."
+      ],
+      "disadvantages": [
+        "Scatters the optional contribution contract across the main Step result.",
+        "Does not provide one cohesive typed boundary for the set of optional results.",
+        "Makes future reviewed contribution-set evolution less localized."
+      ],
+      "disposition": "not-selected"
+    },
+    {
+      "optionId": "OPTIONAL-CONTRIBUTION-B",
+      "name": "UntypedDictionary",
+      "description": "Represent optional results as dict[str, object], dict[str, Any], or equivalent string-keyed payloads.",
+      "advantages": [
+        "Accepts arbitrary values without declaring generic type parameters."
+      ],
+      "disadvantages": [
+        "Loses static type safety and stable field semantics.",
+        "Allows misspelled, duplicated, unknown, or incompatible keys.",
+        "Encourages consumers and integrations to rely on undocumented runtime conventions."
+      ],
+      "disposition": "rejected"
+    },
+    {
+      "optionId": "OPTIONAL-CONTRIBUTION-C",
+      "name": "RuntimeContributionRegistry",
+      "description": "Register contribution providers and result types dynamically and discover them at runtime.",
+      "advantages": [
+        "Can accommodate runtime-discovered contribution categories."
+      ],
+      "disadvantages": [
+        "Introduces a plugin/registry subsystem that GPWCF does not own.",
+        "Makes optional pattern participation depend on runtime discovery and registration.",
+        "Creates lifecycle, identity, compatibility, and ordering concerns not established by the result contract."
+      ],
+      "disposition": "rejected"
+    },
+    {
+      "optionId": "OPTIONAL-CONTRIBUTION-D",
+      "name": "TypedClosedContributionBundle",
+      "description": "Use one immutable OptionalResultContributions value object with a fixed set of named, independently typed optional slots for the existing Step-level aggregates.",
+      "advantages": [
+        "Preserves the current specialized result categories and their independent optionality.",
+        "Avoids concrete optional-pattern imports through generic type parameters.",
+        "Provides one stable and explicit contribution boundary.",
+        "Avoids runtime registries, string keys, and untyped payloads."
+      ],
+      "disadvantages": [
+        "A new contribution category requires an explicit reviewed contract revision.",
+        "The existing StepExecutionResult field layout must be revised to contain the bundle."
+      ],
+      "disposition": "recommended"
+    }
+  ],
+  "selectedDesign": {
+    "decision": "Adopt a closed generic OptionalResultContributions value object with three named optional result slots, each represented through OptionalResultSlot[T] = Absent | Present[T].",
+    "aggregateName": "OptionalResultContributions",
+    "genericType": "OptionalResultContributions[TValidatorResult, TErrorResult, TErrorHandlerResult]",
+    "logicalOwnership": "MOD-CORE-STEP-RESULTS",
+    "physicalPackage": "core.step.results",
+    "publicApiSurface": "gpwcf.public_api.core",
+    "aggregatePresence": {
+      "rule": "Every StepExecutionResult contains one OptionalResultContributions value object.",
+      "reason": "This keeps the result envelope structurally stable and prevents the aggregate object's own absence from being confused with the independent absence of its three contribution categories.",
+      "allAbsentMeaning": "A bundle whose three slots are Absent means that no values for these categories are included in this StepExecutionResult. It does not establish whether a pattern was selected, attempted, applicable, or successful."
+    },
+    "slotModel": {
+      "name": "OptionalResultSlot[T]",
+      "conceptualType": "Absent | Present[T]",
+      "variants": [
+        {
+          "name": "Absent",
+          "representation": "A dedicated immutable absence variant/singleton.",
+          "meaning": "No value of this category is included in the StepExecutionResult.",
+          "invariants": [
+            "Absence is not a success/failure or applicability status.",
+            "Absence does not prove that the corresponding capability was not selected or not executed.",
+            "A result type specialized to typing.Never must always use Absent."
+          ]
+        },
+        {
+          "name": "Present[T]",
+          "representation": "An immutable wrapper containing exactly one value of type T.",
+          "meaning": "A value was produced and accepted into Step custody and is included in the StepExecutionResult.",
+          "invariants": [
+            "The wrapped value conforms to the concrete Step specialization's declared result type.",
+            "The wrapped value may itself be None if T permits None.",
+            "Presence does not imply that the represented domain conclusion is successful."
+          ]
+        }
+      ],
+      "whyNotNone": "Using None as the sole absence marker is ambiguous when the specialized domain result type itself permits None. The discriminated Absent/Present representation distinguishes an absent slot from Present(None).",
+      "implementationForm": "A small immutable algebraic/discriminated value type. The exact Python classes, singleton construction, pattern-matching surface, and serialization tags are implementation details to be finalized after architecture acceptance."
+    },
+    "contributionSlots": [
+      {
+        "field": "validator_result",
+        "slotType": "OptionalResultSlot[TValidatorResult]",
+        "specializedMeaning": "StepValidatorResult: the Step-level validation result or aggregate produced from applicable Validator Unit Validation Results.",
+        "semanticOwner": "Concrete Step validation specialization and Step Composition.",
+        "producer": "Step Composition aggregates accepted Validator Unit Validation Results under the concrete Step rules.",
+        "constraints": [
+          "The slot contains the Step-level aggregate, not an individual Validator Unit Validation Result by default.",
+          "A negative validation conclusion is a normally produced validation result and is not automatically an invocation failure.",
+          "A thrown Validator Unit invocation exception does not fabricate a validator_result value.",
+          "The concrete Step defines the aggregation structure and the meaning of each outcome."
+        ]
+      },
+      {
+        "field": "error_result",
+        "slotType": "OptionalResultSlot[TErrorResult]",
+        "specializedMeaning": "The Step-level ErrorResult aggregate defined by the concrete Step Error Model.",
+        "semanticOwner": "Concrete Step Error Model specialization.",
+        "producer": "Step Composition physically aggregates eligible error occurrences according to the selected Step Error Model.",
+        "constraints": [
+          "The generic Core slot does not define error types, occurrences, registries, categories, severity, or retry semantics.",
+          "The current Generator Common Error Model remains consumer-specific and is not imported by Core.",
+          "An exception that prevents a result-producing operation from returning does not automatically create an ErrorResult value.",
+          "The concrete Step Error Model defines the exact aggregation and provenance semantics."
+        ]
+      },
+      {
+        "field": "error_handler_result",
+        "slotType": "OptionalResultSlot[TErrorHandlerResult]",
+        "specializedMeaning": "The Step-level ErrorHandlerResult aggregate of accepted error-handling operation entries and their occurrence targets.",
+        "semanticOwner": "Step-specific Error Handling Composition and the selected Error Handling Unit contracts.",
+        "producer": "The Step-specific Error Handling Composition aggregates accepted operation entries; Step Composition integrates the aggregate.",
+        "constraints": [
+          "ErrorHandlerResult remains distinct from ErrorResult.",
+          "It represents handling-operation records/results and does not by itself assert that an error was resolved.",
+          "It does not contain, mutate, remove, or subsume ErrorResult.",
+          "Publication acceptance, indeterminate outcomes, recovery ownership, and custody remain governed by OperationEntryPublisher and the applicable Single Step Publication specialization."
+        ]
+      }
+    ],
+    "typeSpecializationRules": {
+      "genericParameters": [
+        {
+          "name": "TValidatorResult",
+          "specialization": "The concrete StepValidatorResult aggregate type, or typing.Never when the Step does not select a validator result contribution."
+        },
+        {
+          "name": "TErrorResult",
+          "specialization": "The concrete Step ErrorResult type, or typing.Never when the Step does not select a Step Error Model contribution."
+        },
+        {
+          "name": "TErrorHandlerResult",
+          "specialization": "The concrete ErrorHandlerResult type, or typing.Never when the Step does not select the Error Handling contribution."
+        }
+      ],
+      "neverRule": "When a capability is not selected, its generic result parameter is typing.Never and its slot is statically constrained to Absent. This avoids importing an optional pattern result package for a Step that does not use it.",
+      "selectedButNoValueRule": "When a capability is selected but no value was produced and accepted for this invocation, the slot remains Absent. The concrete Step's own specialization and execution evidence determine applicability and execution facts; the slot itself does not encode them.",
+      "noRuntimeDiscovery": "The generic parameters are fixed by the concrete Step specialization. They are not selected by a runtime registry, plugin scan, or dynamic import."
+    },
+    "constructionAndCustody": {
+      "constructionOwner": "Step Composition, through the owning Step Aggregate.",
+      "constructionRules": [
+        "Create Present(value) only after the corresponding specialized result has been produced and accepted into Step custody.",
+        "Use Absent when no value of that category is included in the returned StepExecutionResult.",
+        "Preserve the exact specialized value and its producer/invocation provenance; do not normalize it into a common result schema.",
+        "Do not create an ErrorHandlerResult from ErrorResult merely because the same error occurrence is referenced.",
+        "Do not infer validator_result from SPUExecutionResult or infer error_result from a thrown exception.",
+        "Do not fabricate a contribution for an operation that did not return its declared result.",
+        "If handoff acceptance is indeterminate, retain the unresolved custody fact under the specialized recovery contract; do not mark the slot Present until acceptance is established."
+      ],
+      "afterLaterFailure": "If the Step invocation later throws and no StepExecutionResult can be returned, accepted contribution values remain preserved in StepCompositionFlowResult or the concrete recovery/custody mechanism. They are not wrapped in a fabricated partial StepExecutionResult.",
+      "postReturnCustody": "After StepExecutionResult is returned, the result bundle and accepted values remain valid under the Step result retention contract, independently of later Step instance reuse or retirement."
+    },
+    "explicitlyExcludedCategories": [
+      {
+        "category": "SPUExecutionResult",
+        "reason": "It is a per-SPU invocation result consumed internally by Step Composition. It is not an optional Step-level Supporting Pattern aggregate."
+      },
+      {
+        "category": "StepCompositionFlowResult",
+        "reason": "It is internal Step invocation evidence, not a Stage-facing result contribution."
+      },
+      {
+        "category": "ObservationRecord and Observation Unit activity results",
+        "reason": "Observation output is independent of the Step result categories and is explicitly excluded by the Observation Unit and StepExecutionResult contracts."
+      },
+      {
+        "category": "Prefect State and native runtime results",
+        "reason": "They are operational execution evidence, not GPWCF domain contributions."
+      },
+      {
+        "category": "Generic diagnostics",
+        "reason": "Generic Diagnostics is a separate Wave 4 design decision; it must not be smuggled into this optional contribution bundle."
+      }
+    ],
+    "futureExtensionPolicy": {
+      "rule": "The baseline contribution set is closed to the three existing Step-level result categories.",
+      "addingCategory": "A new category requires a separately reviewed specialized contract, a declared owner, a generic type slot decision, dependency-closure analysis, and an explicit versioned revision of OptionalResultContributions and StepExecutionResult.",
+      "prohibitedShortcuts": [
+        "Do not add arbitrary extras dictionaries.",
+        "Do not add string-keyed result maps.",
+        "Do not add a runtime contribution registry or plugin discovery.",
+        "Do not add a universal SupportingUnitResult base class merely to make the bundle heterogeneous.",
+        "Do not import every optional Supporting Pattern package into Core."
+      ]
+    }
+  },
+  "stepExecutionResultIntegration": {
+    "genericType": "StepExecutionResult[TOutput, TValidatorResult, TErrorResult, TErrorHandlerResult]",
+    "field": "optional_result_contributions",
+    "fieldType": "OptionalResultContributions[TValidatorResult, TErrorResult, TErrorHandlerResult]",
+    "presence": "Required aggregate object; its individual slots are independently Absent or Present.",
+    "processingArtifact": "Remains a separate OptionalResultSlot[TOutput] field on StepExecutionResult and is not part of OptionalResultContributions.",
+    "identity": "StepExecutionResult carries Step and parent Stage invocation identities separately from the contribution payloads.",
+    "publicAccess": [
+      "result.optional_result_contributions.validator_result",
+      "result.optional_result_contributions.error_result",
+      "result.optional_result_contributions.error_handler_result"
+    ],
+    "semanticRule": "The contribution bundle groups the optional result values for transport and typed access. It does not alter the semantics or ownership of any specialized result."
+  },
+  "dependencyAndPackageAllocation": {
+    "logicalModule": "MOD-CORE-STEP-RESULTS",
+    "canonicalPackage": "core.step.results",
+    "coreDependencies": [
+      "Python standard library typing/value-object primitives only."
+    ],
+    "forbiddenDependencies": [
+      "Concrete Validator Unit package.",
+      "Concrete Error Handling Unit package.",
+      "Generator Common Error Model.",
+      "Observation Unit package.",
+      "Prefect.",
+      "A dynamic plugin or result registry.",
+      "A universal core.shared_contracts or core.results package."
+    ],
+    "optionalPatternDependencyDirection": "Concrete Step specializations import only the optional pattern contracts they select and supply their specialized result types as generic parameters. The generic contribution container does not import those patterns.",
+    "identityDependency": "StepExecutionResult identity fields use canonical core.identities value types; OptionalResultContributions itself has no identity service or runtime dependency.",
+    "publicApi": {
+      "surface": "gpwcf.public_api.core",
+      "exports": [
+        "OptionalResultSlot",
+        "Absent",
+        "Present",
+        "OptionalResultContributions",
+        "StepExecutionResult"
+      ],
+      "stability": "These are supported public contracts after Wave 2 acceptance. Internal constructor helpers and serialization adapters remain private unless explicitly added to the Public API design."
+    }
+  },
+  "prefectAndSerializationBoundary": {
+    "coreRule": "Core contribution values are typed domain values and do not prescribe a wire format.",
+    "prefectRule": "Prefect Integration must preserve Absent versus Present, including Present(None), when persisting/retrieving a StepExecutionResult across a native subworkflow boundary.",
+    "serializerRule": "A serializer must explicitly encode the slot discriminator and the specialized payload. It must not collapse Absent and Present(None) to the same null representation.",
+    "specializedPayloadRule": "Concrete result payload serialization remains the responsibility of the consumer/specialized contract or an explicitly selected integration codec. No dynamic codec registry is introduced.",
+    "operationalSeparation": "Prefect State and native IDs remain separate from OptionalResultContributions and StepExecutionResult.",
+    "qualificationBoundary": "PHASE-01/02 used fixture result objects and did not qualify production OptionalResultContributions serialization, optional pattern binding, multi-host transport, or failure/recovery custody."
+  },
+  "conformanceRequirements": [
+    {
+      "id": "OPTIONAL-CONTRIB-001",
+      "requirement": "OptionalResultContributions is a typed immutable value object with the three baseline named categories."
+    },
+    {
+      "id": "OPTIONAL-CONTRIB-002",
+      "requirement": "validator_result, error_result, and error_handler_result are independently typed and independently present/absent."
+    },
+    {
+      "id": "OPTIONAL-CONTRIB-003",
+      "requirement": "The bundle itself is structurally present in StepExecutionResult; all three slots may be Absent."
+    },
+    {
+      "id": "OPTIONAL-CONTRIB-004",
+      "requirement": "Absent is distinct from Present(None)."
+    },
+    {
+      "id": "OPTIONAL-CONTRIB-005",
+      "requirement": "Absence does not imply success, failure, non-applicability, or non-execution."
+    },
+    {
+      "id": "OPTIONAL-CONTRIB-006",
+      "requirement": "A Step that does not select a capability uses typing.Never for its result type and can only produce Absent for that slot."
+    },
+    {
+      "id": "OPTIONAL-CONTRIB-007",
+      "requirement": "A selected capability's slot becomes Present only after its specialized result is produced and accepted into Step custody."
+    },
+    {
+      "id": "OPTIONAL-CONTRIB-008",
+      "requirement": "ErrorResult and ErrorHandlerResult remain separate and retain their specialized contracts."
+    },
+    {
+      "id": "OPTIONAL-CONTRIB-009",
+      "requirement": "Validator Unit negative domain outcomes remain distinguishable from invocation failures."
+    },
+    {
+      "id": "OPTIONAL-CONTRIB-010",
+      "requirement": "SPUExecutionResult and StepCompositionFlowResult are not included as generic optional contribution categories."
+    },
+    {
+      "id": "OPTIONAL-CONTRIB-011",
+      "requirement": "Observation Unit records/events remain excluded from the common contribution bundle."
+    },
+    {
+      "id": "OPTIONAL-CONTRIB-012",
+      "requirement": "Core imports no concrete optional Supporting Pattern result packages, Generator Error Model, or Prefect."
+    },
+    {
+      "id": "OPTIONAL-CONTRIB-013",
+      "requirement": "No dynamic result registry, string-keyed map, or arbitrary extras dictionary is used."
+    },
+    {
+      "id": "OPTIONAL-CONTRIB-014",
+      "requirement": "Serialization preserves the Absent/Present discriminator and specialized payload type."
+    }
+  ],
+  "requiredGoverningContractChanges": [
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "change": "Replace direct optional aggregate fields with the OptionalResultContributions bundle, preserve each named category as an independently optional slot, and use OptionalResultSlot for explicit presence semantics.",
+      "reason": "Creates a cohesive typed optional contribution boundary without optional pattern imports and preserves Present(None) distinctly from absence.",
+      "changeType": "proposed-result-contract-revision",
+      "approval": "Requires explicit architecture acceptance before source contract editing."
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+      "change": "Define the assembly/custody handoff from selected Supporting Pattern results into the corresponding typed OptionalResultContributions slots.",
+      "reason": "Step Composition is the physical aggregator and custody owner for accepted internal results.",
+      "changeType": "assembly-contract-clarification",
+      "approval": "Requires explicit architecture acceptance before source contract editing."
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Framework_Module_Boundary_Model.json",
+      "change": "Keep StepExecutionResult and OptionalResultContributions in MOD-CORE-STEP-RESULTS; explicitly permit only generic typing/value-object dependencies and prohibit optional pattern imports.",
+      "reason": "The module boundary must reflect the generic optional-result mechanism without coupling Core to all Supporting Patterns.",
+      "changeType": "module-boundary-clarification",
+      "approval": "Required during governing-artifact reconciliation."
+    }
+  ],
+  "decisionsAndRationales": [
+    {
+      "decisionId": "D-OPTIONAL-CONTRIB-01",
+      "decision": "Use a closed typed bundle rather than a dynamic contribution registry.",
+      "rationale": "The currently established result categories are known and specialized; dynamic discovery would add an unowned plugin/runtime subsystem."
+    },
+    {
+      "decisionId": "D-OPTIONAL-CONTRIB-02",
+      "decision": "Use Absent/Present[T] for each slot.",
+      "rationale": "This preserves independent optionality and allows a legitimate None payload without losing presence information."
+    },
+    {
+      "decisionId": "D-OPTIONAL-CONTRIB-03",
+      "decision": "Keep the contribution bundle structurally present in every StepExecutionResult.",
+      "rationale": "A stable envelope with independently absent slots avoids giving the bundle itself a second ambiguous applicability/absence meaning."
+    },
+    {
+      "decisionId": "D-OPTIONAL-CONTRIB-04",
+      "decision": "Keep Observation Unit outputs outside the common bundle.",
+      "rationale": "The Observation contract explicitly separates observation records from validation, error, error handling, and Step result semantics."
+    },
+    {
+      "decisionId": "D-OPTIONAL-CONTRIB-05",
+      "decision": "Require explicit versioned review for new contribution categories.",
+      "rationale": "Prevents the generic result model from turning into an unbounded universal result container."
+    }
+  ],
+  "traceability": [
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "supports": [
+        "The three optional aggregate categories and their independent optionality.",
+        "Absence does not imply success/failure or applicability.",
+        "ErrorResult and ErrorHandlerResult remain distinct.",
+        "Observation results are excluded by default."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+      "supports": [
+        "SPUExecutionResult is an internal per-SPU result and not a Step-level optional aggregate."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlerResult_Contract.json",
+      "supports": [
+        "ErrorHandlerResult is an aggregate of accepted handling operation entries.",
+        "ErrorHandlerResult is distinct from ErrorResult and does not by itself establish resolution."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.03_SPU_ValidatorUnit_SPUVU/Step_Supporting_Validator_Unit_Contract.json",
+      "supports": [
+        "Validator Unit Validation Result is produced per normally completed invocation.",
+        "Step Composition aggregates accepted validator results into a StepValidatorResult.",
+        "Negative validation outcomes are domain results, not automatic invocation failures."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.04_SPU_ObservationUnit_SPUObU/Step_Supporting_Observation_Unit_Contract.json",
+      "supports": [
+        "Observation records and activity results are independent of StepExecutionResult.",
+        "Observation output is not a default Step result contribution."
+      ]
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/05.00_Detailed_Design_Waves/Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/05.00_Step_Execution_Result.json",
+      "supports": [
+        "StepExecutionResult generic type and its OptionalResultContributions field.",
+        "OptionalResultSlot presence model and result preservation invariants."
+      ]
+    }
+  ],
+  "acceptanceCriteria": [
+    "OptionalResultContributions is statically typed and closed to the three established optional Step-level result categories.",
+    "Each contribution slot is independently present/absent and preserves its specialized semantic type.",
+    "Absent and Present(None) are distinct.",
+    "A Step can omit optional pattern dependencies by specializing unused contribution types to typing.Never.",
+    "The contribution bundle does not include SPUExecutionResult, StepCompositionFlowResult, Observation output, diagnostics, or Prefect State.",
+    "The generic contribution contract does not import concrete optional Supporting Pattern or Generator-specific packages.",
+    "Result production, acceptance, custody, and recovery remain governed by the specialized contracts and Step Composition.",
+    "Serialization preserves the discriminated slot state and concrete payload.",
+    "The design is consistent with 04.00_Step_Callable.json and 05.00_Step_Execution_Result.json.",
+    "No source contract or production source package is modified by this artifact."
+  ],
+  "changeControl": {
+    "authority": "Wave 2 detailed design proposal. It becomes an implementation constraint only after architecture review and explicit acceptance.",
+    "sourceContractPolicy": "This artifact does not modify StepExecutionResult_Contract.json, Step_Composition_Contract.json, ErrorHandlerResult_Contract.json, or any optional pattern contract.",
+    "implementationGate": "Do not implement OptionalResultSlot or OptionalResultContributions until all Wave 2 artifacts and required governing contract changes are reviewed and accepted.",
+    "nextStep": "Wave 2 detailed design is complete at the artifact level. Validate all three Wave 2 artifacts together for signature/type/identity/optional-slot consistency before proceeding to Wave 3."
+  }
+}

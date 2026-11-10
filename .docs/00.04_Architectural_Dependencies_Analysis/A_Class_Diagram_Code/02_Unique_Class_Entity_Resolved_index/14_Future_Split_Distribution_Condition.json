@@ -1,0 +1,10 @@
+{
+  "serialNumber": 14,
+  "name": "Future Split Distribution Condition",
+  "category": "Feature / Policy",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "A future split distribution (Core vs Prefect Integration) requires an explicit release/dependency rationale and compatibility policy; not done at initial release.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}

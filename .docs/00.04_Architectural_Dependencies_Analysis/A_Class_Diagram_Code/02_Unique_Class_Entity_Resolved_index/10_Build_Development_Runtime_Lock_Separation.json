@@ -1,0 +1,10 @@
+{
+  "serialNumber": 10,
+  "name": "Build/Development/Runtime Lock Separation",
+  "category": "Feature / Dependency Policy",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "Build-system dependencies isolated from runtime dependencies; build/development/test/verification tools excluded from runtime metadata; separate lock profiles for each category.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}

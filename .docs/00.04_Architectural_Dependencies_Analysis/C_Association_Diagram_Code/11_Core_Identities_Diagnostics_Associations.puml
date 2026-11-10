@@ -1,0 +1,39 @@
+@startuml
+title Core Identities & Diagnostics Associations
+skinparam monochrome true
+skinparam roundcorner 0
+
+class "core.identities" as CI <<Module>> {
+  nominal identity value types only
+}
+class "PipelineInvocationIdentity" as PII <<Class>> { }
+class "StageIdentity" as SI <<Class>> { }
+class "StepIdentity" as StI <<Class>> { }
+class "SPUIdentity" as SPUI <<Class>> { }
+class "InvocationIdentity" as INVI <<Class>> { }
+class "core.diagnostics" as CD <<Module>> {
+  optional Diagnostic value contract
+}
+class "Diagnostic" as Dg <<Class>> {
+  typed, descriptive, optional
+}
+class "Error Occurrence" as EO <<Entity>> { }
+class "Failure" as F <<Entity>> { }
+class "Exception" as Ex <<Entity>> { }
+class "Domain Outcome" as DO <<Entity>> { }
+
+CI --> PII : defines
+CI --> SI : defines
+CI --> StI : defines
+CI --> SPUI : defines
+CI --> INVI : defines
+CD --> Dg : defines
+Dg .- EO : distinct from
+Dg .- F : distinct from
+Dg .- Ex : distinct from
+Dg .- DO : distinct from
+
+note right of CI : dependency-free module
+CD optional, not universal Error Model
+
+@enduml

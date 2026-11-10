@@ -1,0 +1,10 @@
+{
+  "serialNumber": 9,
+  "name": "Optional Diagnostics Public Sub-Surface",
+  "category": "Feature / API Sub-Surface",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Optional Diagnostics public sub-surface under Core Public API; core.diagnostics module is optional and does not become a universal Error Model.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

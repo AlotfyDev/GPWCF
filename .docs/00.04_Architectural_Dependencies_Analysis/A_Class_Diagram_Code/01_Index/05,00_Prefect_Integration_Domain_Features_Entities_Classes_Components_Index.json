@@ -1,0 +1,207 @@
+{
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index",
+  "indexVersion": "1.0.0",
+  "sourceDirectory": ".docs/00.00_Primary_Architecture/Prefect_Integration",
+  "sourceFileCount": 2,
+  "totalRecords": 28,
+  "description": "Index of all relevant features, classes, entities, components, and contracts defined in the GPWCF Primary Architecture Prefect Integration domain documents. Links are relative to this index file location.",
+  "records": [
+    {
+      "number": 1,
+      "name": "Prefect Integration Binding (Wave 5 Artifact 1)",
+      "category": "Architectural Design / Feature",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "Wave 5 detailed design (artifact 1) defining the Prefect 3.9.2 integration boundary that binds GPWCF's runtime-independent Stage, Step, SPU, and selected Supporting Pattern contracts to Prefect-native Flows, Deployments, Subflows, and Tasks while preserving domain ownership, identities, results, and operational evidence."
+    },
+    {
+      "number": 2,
+      "name": "Prefect Integration Package",
+      "category": "Class / Component",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "The integration package's responsibility, ownership, and dependency boundary; owns Prefect integration concerns separate from Core, with Prefect as opt-in dependency never a Core dependency."
+    },
+    {
+      "number": 3,
+      "name": "Integration Boundary / Responsibility",
+      "category": "Feature / Boundary",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "Defines the boundary that binds GPWCF domain contracts to Prefect-native execution constructs while preserving domain ownership, identities, results, and operational evidence as distinct from Prefect operational records."
+    },
+    {
+      "number": 4,
+      "name": "Prefect 3.9.2 Runtime Decision",
+      "category": "Decision Record / ADR",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "Accepted governing decision: Prefect 3.9.2 is the initial pinned external workflow runtime; decision record ADR-GPWCF-PREFECT-001; no reconsideration of Prefect adoption in this artifact."
+    },
+    {
+      "number": 5,
+      "name": "Stage Flow/Deployment Binding",
+      "category": "Feature / Pattern Binding",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "Native Prefect realization of Stage execution as Stage Flow/Deployment using the accepted run_deployment(..., as_subflow=True) profile from PHASE-02 topology qualification."
+    },
+    {
+      "number": 6,
+      "name": "run_deployment(as_subflow=True) Profile",
+      "category": "Feature / Mechanism",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "Accepted Stage invocation mechanism from PHASE-02: Root-owned Prefect dispatch Task calls run_deployment(..., as_subflow=True), creating a deployment Flow Run with synthetic parent linkage and explicit Stage result persistence."
+    },
+    {
+      "number": 7,
+      "name": "Step Subflow Binding",
+      "category": "Feature / Pattern Binding",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "Native Prefect realization of Step execution as a Step Subflow; Stage-to-Step dispatch through a Prefect Task invoking a native Step Subflow while preserving the public Step callable boundary and native child Flow Run."
+    },
+    {
+      "number": 8,
+      "name": "SPU Task Binding",
+      "category": "Feature / Pattern Binding",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "Native Prefect realization of SPU execution as a Prefect Task inside the owning Step Subflow; SPU Tasks submit to the Step Flow's ThreadPoolTaskRunner and join their futures; SPUExecutionResult remains distinct from StepExecutionResult."
+    },
+    {
+      "number": 9,
+      "name": "Supporting Pattern Task Binding",
+      "category": "Feature / Pattern Binding",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "Native Prefect realization of selected Supporting Pattern (Validation, Error Handling, Observation) execution as Prefect Tasks, preserving each pattern's specialized behavior, result, identity, association, lifecycle, and custody contract."
+    },
+    {
+      "number": 10,
+      "name": "Invocation Translation",
+      "category": "Feature / Responsibility",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "Translation of GPWCF domain invocations to native Prefect Flow/Task run invocations while preserving domain identity, invocation acceptance, and result semantics; dispatch Tasks carry no GPWCF business or composition semantics."
+    },
+    {
+      "number": 11,
+      "name": "Domain/Native Identity Correlation",
+      "category": "Feature / Concept",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "Correlation between GPWCF domain identities (Pipeline, Stage, Step, SPU, invocation) and Prefect native identities (Flow Run IDs, Task Run IDs, Deployment IDs); neither namespace substitutes for the other."
+    },
+    {
+      "number": 12,
+      "name": "Typed Result Preservation",
+      "category": "Feature / Result Handling",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "Preservation of typed domain results (SPUExecutionResult, StepExecutionResult, StageResult) through Prefect execution without replacing them with Prefect operational State; Prefect State is operational execution evidence, not a domain result."
+    },
+    {
+      "number": 13,
+      "name": "Stage Result Persistence/Retrieval",
+      "category": "Feature / Integration Requirement",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "Stage result persistence/retrieval obligations using persist_result=True; Root waits for Deployment Flow Run terminal state and loads persisted Stage domain result through Prefect result reference; multi-host storage remains unqualified."
+    },
+    {
+      "number": 14,
+      "name": "Integration Public API Boundary",
+      "category": "Feature / API Boundary",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "Configuration ownership and integration Public API boundary; Core must remain usable with Prefect absent; no Prefect types leak into Core API; Public API is an explicit curated stable boundary under public_api."
+    },
+    {
+      "number": 15,
+      "name": "Configuration Ownership",
+      "category": "Feature / Responsibility",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "Configuration ownership for the integration package; defines how integration configuration is held and applied without creating a universal scheduler, dispatcher, worker manager, deployment manager, or runtime registry."
+    },
+    {
+      "number": 16,
+      "name": "PHASE-01/02 Qualification Limits",
+      "category": "Feature / Evidence Boundary",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "The exact PHASE-01/02 evidence and qualification limits: native hierarchy qualification, same-host two-worker deployment qualification, nondeterministic Stage sibling overlap, serialized Step sibling subflows, SPU Task fan-out/fan-in evidence; production GPWCF binding remains unqualified."
+    },
+    {
+      "number": 17,
+      "name": "Excluded Concerns (Non-Goals)",
+      "category": "Feature / Explicit Non-Goal",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+      "description": "Excludes: GPWCF Pipeline Root Entity/Aggregate, universal workflow adapter/plugin manager/runtime registry/scheduler/dispatcher/worker manager/deployment manager, generic business workflow definition, universal serializer/result codec registry/Publisher service/event bus/recovery manager, unqualified failure/cancellation/timeout/retry/worker-loss/recovery/multi-host/high-scale behavior."
+    },
+    {
+      "number": 18,
+      "name": "Operational Mapping (Wave 5 Artifact 2)",
+      "category": "Architectural Design / Feature",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+      "description": "Wave 5 detailed design (artifact 2) defining the operational mapping between GPWCF domain invocations/results/identities/lifecycle/custody and Prefect-native execution records/identities/States, explicitly preventing operational status from being mistaken for domain outcome or safe settlement."
+    },
+    {
+      "number": 19,
+      "name": "Domain vs Prefect Operational Identity Namespaces",
+      "category": "Feature / Conceptual Distinction",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+      "description": "Separation of domain and Prefect operational identity namespaces: domainNamespace (PipelineInvocationIdentity, StageIdentity, StepIdentity, SPUIdentity, ...) vs prefactNamespace (PipelineFlowRunId, StageFlowRunId, StepFlowRunId, SPUTaskRunId, ...); neither namespace substitutes for the other."
+    },
+    {
+      "number": 20,
+      "name": "Domain-to-Native Invocation Mapping",
+      "category": "Feature / Mapping",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+      "description": "Mapping of Stage, Step, SPU, and Supporting Pattern invocations to native Flow/Task runs; defines how each GPWCF invocation boundary corresponds to a Prefect-native execution construct while preserving parent/child correlation."
+    },
+    {
+      "number": 21,
+      "name": "Domain Result vs Prefect State Interpretation",
+      "category": "Feature / Conceptual Distinction",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+      "description": "Distinction between domain result and Prefect State interpretation: no Prefect State value by itself proves a GPWCF domain success/failure/cancellation settlement/result acceptance/publication acceptance/safe release; no GPWCF domain result proves Prefect persisted/retrieved/operationally completed every native execution record."
+    },
+    {
+      "number": 22,
+      "name": "Parent/Child Correlation",
+      "category": "Feature / Mapping",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+      "description": "Parent/child correlation between Pipeline Root Flow Run, Stage Flow Run, Step Subflow Flow Run, and SPU Task Run; synthetic deployment/subflow invocation records create indirect parent linkage chains preserved through native Prefect task_inputs.__parents__ and parent_task_run_id."
+    },
+    {
+      "number": 23,
+      "name": "Synthetic Deployment/Subflow Invocation Records",
+      "category": "Feature / Mechanism",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+      "description": "Prefect-generated synthetic Task Runs that link deployment/subflow invocations to parent dispatch Task Runs; Stage Flow Run.parent_task_run_id points to the synthetic Task Run, not directly to the user-defined Root dispatch Task Run; task_inputs.__parents__ contains the Root dispatch Task Run ID."
+    },
+    {
+      "number": 24,
+      "name": "Result Persistence/Retrieval Mapping",
+      "category": "Feature / Mapping",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+      "description": "Mapping of result persistence/retrieval across the integration boundary; persisted Stage domain results retrieved separately from Prefect State; serialization/persistence failures remain operational failures and do not fabricate domain results."
+    },
+    {
+      "number": 25,
+      "name": "Serialization Failure Semantics",
+      "category": "Feature / Mapping Constraint",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+      "description": "Serialization failure semantics for result persistence/retrieval: failures are operational failures, not domain outcomes; no universal serializer, codec registry, or artifact storage service is introduced."
+    },
+    {
+      "number": 26,
+      "name": "Cancellation/Timeout/Recovery Mapping Constraints",
+      "category": "Feature / Mapping Constraint",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+      "description": "Mapping constraints for cancellation, timeout, retry, worker loss, recovery, and lifecycle: no universal retry/cancellation/timeout/compensation/recovery policy; unqualified failure/cancellation/timeout/retry/worker-loss/recovery behavior remains open."
+    },
+    {
+      "number": 27,
+      "name": "Operational Evidence Retention",
+      "category": "Feature / Responsibility",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+      "description": "Operational evidence retention and reporting responsibilities; concurrency evidence is exact and not generalized beyond the qualified two-worker profile; all open operational questions remain visible and are not described as qualified."
+    },
+    {
+      "number": 28,
+      "name": "Governing Rule: No State/Domain Inference",
+      "category": "Feature / Governing Rule",
+      "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+      "description": "Governing rule: Prefect State and native identifiers describe how the external runtime executed and recorded a native Flow/Task; GPWCF domain identities, invocation acceptance, results, outcomes, lifecycle, and custody describe what the domain contract accepted, produced, and settled. Neither namespace substitutes for the other (noStateInference and noDomainInference)."
+    }
+  ]
+}
+

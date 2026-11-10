@@ -1,0 +1,66 @@
+{
+  "documentType": "PrefectNativeHierarchyQualificationEvidence",
+  "documentVersion": "1.0.0",
+  "status": "qualified-hierarchy-with-sibling-flow-concurrency-unresolved",
+  "runtime": {
+    "python": "3.15.1",
+    "prefect": "3.9.2",
+    "platform": "Windows x64"
+  },
+  "runRoot": "C:\\Trading\\Projects\\Shared_Memory_Reqgion_Broker\\SMRB\\SMRB.GenericPipelineWorkflowComponentsFramework\\.poc\\Prefect_Native_Hierarchy_Qualification\\evidence\\run-5f8ffd7d-ec75-4380-8d25-cf8054a2dde0",
+  "counts": {
+    "pipelineRootFlows": 1,
+    "stageParentFlows": 2,
+    "stepSubflows": 4,
+    "spuTaskRuns": 8
+  },
+  "correlation": {
+    "stageFlowsHaveNativeParentTaskRun": true,
+    "stepSubflowsHaveNativeParentTaskRun": true,
+    "spuTasksHaveNativeTaskRunId": true,
+    "domainIdentityAndNativeRunIdentityAreSeparate": true
+  },
+  "concurrency": {
+    "rootSiblingStageFlowsOverlapInThisRun": false,
+    "siblingStepSubflowsOverlapByStage": {
+      "5126448e-7225-4287-a051-a49bdd446007": false,
+      "30de335c-c7a9-42e7-ad82-07af8d4fa2f5": false
+    },
+    "stepSiblingConcurrencyDisposition": "sibling-step-subflows-serialized-for-all-stages",
+    "spuTaskFanoutOverlapsByStep": {
+      "107f2d9e-f16a-4519-991d-b89a1eec97e3": true,
+      "2c4c78b4-134c-4adf-9a18-25d6e08e3a42": true,
+      "0f711a6d-ec83-4f01-bcba-ff909111a4da": true,
+      "f94b6144-0250-4eec-beb3-6500726b9b0a": true
+    },
+    "interpretation": "This run records Root-to-Stage sibling Flow overlap as an observation, not a guarantee; cross-run evidence shows that sibling Stage Flow runs sometimes serialize. Step-internal SPU Task fan-out was observed for every Step. Sibling Step Subflow overlap is also variable. Neither sibling-Flow concurrency level is a deterministic guarantee in the tested local profile."
+  },
+  "nativeStatesAndExceptions": {
+    "rootFlowState": {
+      "name": "Completed",
+      "type": "COMPLETED"
+    },
+    "stageAndStepFlowNormalReturnsObserved": 6,
+    "spuTaskStatesObserved": 8,
+    "controlledFailureTaskState": "FAILED",
+    "controlledFailureExceptionType": "RuntimeError",
+    "controlledFailureDidNotProduceDomainResult": true,
+    "failureProbeParentFlowRemainedCompleted": true
+  },
+  "typedResults": {
+    "stepExecutionResultFieldsPreserved": true,
+    "spuExecutionResultDistinctFromStepExecutionResult": true,
+    "prefectStateNotUsedAsDomainResult": true
+  },
+  "notTested": [
+    "Real GPWCF production Stage/Step/SPU runtime classes (the current framework project has no executable implementations yet)",
+    "Supporting Unit binding",
+    "Domain-specific exception-to-result mapping and recovery (the isolated Prefect failure boundary probe is covered)",
+    "Cancellation and timeout settlement",
+    "Retry/replay/idempotency",
+    "Process-tree termination",
+    "Persistence restart/recovery",
+    "Full Generator Stage 1-13 integration"
+  ],
+  "executionProfile": "local-prefect-server-api-sqlite-single-worker"
+}

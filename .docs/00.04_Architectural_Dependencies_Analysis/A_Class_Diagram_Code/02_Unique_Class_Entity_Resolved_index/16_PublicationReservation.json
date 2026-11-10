@@ -1,0 +1,10 @@
+{
+  "serialNumber": 16,
+  "name": "PublicationReservation",
+  "category": "Class / Entity",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/11,00_Publication.json",
+  "description": "Opaque, Publisher-issued capability that authorizes one complete entry for one specific handling operation attempt and secures the resources needed for the promised handoff; enforces the one-attempt/one-entry authorization rule.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

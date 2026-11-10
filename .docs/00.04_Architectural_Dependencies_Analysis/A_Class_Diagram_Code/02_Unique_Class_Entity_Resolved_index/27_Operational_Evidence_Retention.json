@@ -1,0 +1,10 @@
+{
+  "serialNumber": 27,
+  "name": "Operational Evidence Retention",
+  "category": "Feature / Responsibility",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/13.00_Operational_Mapping.json",
+  "description": "Operational evidence retention and reporting responsibilities; concurrency evidence is exact and not generalized beyond the qualified two-worker profile; all open operational questions remain visible and are not described as qualified.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

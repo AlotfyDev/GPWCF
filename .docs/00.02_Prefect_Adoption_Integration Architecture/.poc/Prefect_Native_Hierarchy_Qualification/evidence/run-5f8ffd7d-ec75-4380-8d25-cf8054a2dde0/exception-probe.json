@@ -1,0 +1,10 @@
+{
+  "exceptionType": "RuntimeError",
+  "exceptionMessage": "PHASE-01 controlled failure probe; expected and isolated",
+  "prefectTaskRunId": "01a1bc76-f63e-72bd-a3e0-d86f2797d9da",
+  "prefectTaskStateName": "Failed",
+  "prefectTaskStateType": "FAILED",
+  "domainStructuredResultProduced": false,
+  "prefectProbeFlowStateName": "Completed",
+  "prefectProbeFlowStateType": "COMPLETED"
+}

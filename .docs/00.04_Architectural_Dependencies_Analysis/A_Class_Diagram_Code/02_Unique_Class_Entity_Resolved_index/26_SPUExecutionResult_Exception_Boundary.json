@@ -1,0 +1,10 @@
+{
+  "serialNumber": 26,
+  "name": "SPUExecutionResult Exception Boundary",
+  "category": "Feature / Contract Rule",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+  "description": "An exception that prevents execute from returning is not an SPUExecutionResult; no universal conversion from exceptions to SPUError occurrences or structured result elements is imposed.",
+  "resolvedFrom": "02,00_Step_SPU_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "step-spu-level-domain-features-entities-classes-components-index"
+}

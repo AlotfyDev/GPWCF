@@ -1,0 +1,22 @@
+digraph "Supporting Pattern Optional Dependency Graph" {
+  rankdir=LR;
+  node [shape=box, style=filled, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=8, len=1.5];
+  label="Supporting Pattern Optional Dependency Graph";
+  labelloc=t;
+  Core [fillcolor="#e6f3ff"];
+  ValidatorUnit [fillcolor="#fff2e6", tooltip="SPU Validator Unit"];
+  ErrorHandlingUnit [fillcolor="#fff2e6", tooltip="Error Handling Unit"];
+  ObservationUnit [fillcolor="#fff2e6", tooltip="Observation Unit"];
+  Step [fillcolor="#fff2e6", tooltip="Step (concrete consumer of patterns)"];
+  Core -> SupportingPatternContracts [label="defines contracts", style=dotted, color="#0066cc"];
+  Step -> ValidatorUnit [label="optional selection", style=dashed, color="#cc6600"];
+  Step -> ErrorHandlingUnit [label="optional selection", style=dashed, color="#cc6600"];
+  Step -> ObservationUnit [label="optional selection", style=dashed, color="#cc6600"];
+  ValidatorUnit -> Core [label="NO dependency", style=dashed, color="#ff0000"];
+  ErrorHandlingUnit -> Core [label="NO dependency", style=dashed, color="#ff0000"];
+  ObservationUnit -> Core [label="NO dependency", style=dashed, color="#ff0000"];
+  ValidatorUnit -> Prefect [label="NO dependency", style=dashed, color="#ff0000"];
+  ErrorHandlingUnit -> Prefect [label="NO dependency", style=dashed, color="#ff0000"];
+  ObservationUnit -> Prefect [label="NO dependency", style=dashed, color="#ff0000"];
+}

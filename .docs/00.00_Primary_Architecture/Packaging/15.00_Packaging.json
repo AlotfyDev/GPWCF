@@ -1,0 +1,410 @@
+{
+  "documentType": "GPWCFDetailedArchitectureDesign",
+  "documentId": "gpwcf.architecture-closure.wave6-packaging",
+  "documentVersion": "1.0.0",
+  "status": "draft-for-architecture-review",
+  "designSequence": {
+    "wave": 6,
+    "waveName": "Dependency, Packaging, and Public API Architecture",
+    "artifactNumber": 2,
+    "predecessorArtifacts": [
+      "14,00_Dependency.json",
+      "../Wave5_Prefect_Integration_Binding_Operational_Mapping/12.00_Prefect_Integration_Binding.json",
+      "../Wave5_Prefect_Integration_Binding_Operational_Mapping/13.00_Operational_Mapping.json",
+      ".docs/03.00_GPWCF_Structure_Architecture/Filesystem_Architecture.json",
+      ".docs/03.00_GPWCF_Structure_Architecture/Dependency_and_Public_API_Architecture.json"
+    ],
+    "nextArtifact": "16.00_Public_API_Architecture.json"
+  },
+  "purpose": "Define the initial Python distribution model, build backend, project metadata, optional Prefect installation extra, dependency lock strategy, package discovery, and clean installation/build verification profiles for GPWCF.",
+  "scope": {
+    "included": [
+      "Single-distribution versus split-distribution decision.",
+      "PEP 517/518 build-system and PEP 621 project metadata.",
+      "Setuptools build backend selection and pin.",
+      "Core runtime dependency metadata and optional Prefect extra.",
+      "Source package discovery and package-data policy.",
+      "Build/development/runtime lock separation.",
+      "Installation commands and packaging verification profiles.",
+      "Future conditions for splitting Core and Prefect Integration distributions."
+    ],
+    "excluded": [
+      "Actual creation of pyproject.toml or lock files.",
+      "Actual installation/upgrading of Setuptools, Prefect, or other packages.",
+      "Implementation of production Core or Prefect Integration source modules.",
+      "Reopening the accepted Prefect 3.9.2 integration decision.",
+      "A GPWCF-local dependency bundle or copied virtual environment."
+    ]
+  },
+  "architecturalOptions": [
+    {
+      "optionId": "PACKAGING-A",
+      "name": "TwoSeparateDistributionsImmediately",
+      "description": "Build gpwcf-core and gpwcf-prefect as separately published distributions from the initial release.",
+      "advantages": [
+        "Physical installation isolation: Core consumers do not receive Prefect Integration source files.",
+        "Independent versioning and release cadence are possible.",
+        "Integration can evolve its dependency closure separately."
+      ],
+      "disadvantages": [
+        "Requires coordinated multi-distribution build/release and version compatibility policy from the first release.",
+        "Adds package metadata/build configuration and release automation complexity before multiple integrations or independent release cadence are demonstrated.",
+        "May create premature distribution boundaries while Core and its initial Prefect Integration are developed as one framework release."
+      ],
+      "disposition": "deferred"
+    },
+    {
+      "optionId": "PACKAGING-B",
+      "name": "SingleDistributionWithOptionalPrefectExtra",
+      "description": "Build one gpwcf distribution containing Core and the optional Prefect Integration package. Declare Prefect only under the optional [prefect] extra; Core base metadata has no third-party runtime dependencies.",
+      "advantages": [
+        "One versioned framework artifact and simpler initial release process.",
+        "Core-only installation does not install Prefect.",
+        "Prefect Integration remains a separate logical package and Public API surface.",
+        "The existing monorepo/package structure can evolve without immediate multi-distribution release machinery.",
+        "A future split remains possible without changing Core domain ownership."
+      ],
+      "disadvantages": [
+        "Core-only consumers receive the Integration source package files even though they do not install Prefect.",
+        "Integration and Core initially share one distribution version/release cadence.",
+        "Import guards and packaging tests are required to ensure the optional boundary is real."
+      ],
+      "disposition": "recommended-for-initial-release"
+    },
+    {
+      "optionId": "PACKAGING-C",
+      "name": "SingleDistributionWithPrefectAsBaseDependency",
+      "description": "Install Prefect as a mandatory base dependency of GPWCF.",
+      "advantages": [
+        "Simplifies integration imports for every consumer."
+      ],
+      "disadvantages": [
+        "Makes Core dependent on an external workflow runtime.",
+        "Violates the Core-only installation/import guarantee.",
+        "Forces Prefect onto consumers that do not select Prefect Integration."
+      ],
+      "disposition": "rejected"
+    }
+  ],
+  "selectedDesign": {
+    "decision": "Use one gpwcf distribution for the initial release with a rigorously optional Prefect extra. Preserve the logical Core and Prefect Integration package/API boundaries, and split distributions only when independent release/dependency needs are demonstrated.",
+    "distribution": {
+      "name": "gpwcf",
+      "importPackage": "gpwcf",
+      "artifactTypes": [
+        "Wheel",
+        "Source Distribution (sdist)"
+      ],
+      "initialVersionRecommendation": "0.1.0",
+      "versioning": "Semantic Versioning for the distribution's supported Public API. Internal implementation changes that do not alter supported contracts do not require a major API break.",
+      "releaseCadence": "One framework release initially; Core and Prefect Integration public contracts are versioned together while the optional extra controls runtime dependency installation.",
+      "sourceLayout": "src/gpwcf",
+      "futureSplitTrigger": [
+        "Prefect Integration requires a materially different release cadence from Core.",
+        "Additional workflow integrations create independent dependency closures or platform support matrices.",
+        "Integration implementation size/distribution policy requires consumers not to receive its source package files.",
+        "A consumer demand for independent Integration versioning is demonstrated."
+      ],
+      "futureSplitRule": "If split is justified, preserve the public import namespace and define explicit Core/Integration version compatibility; do not introduce the split merely to simulate dependency isolation already provided by the optional extra."
+    },
+    "buildSystem": {
+      "standard": "PEP 517/518",
+      "buildBackend": "setuptools.build_meta",
+      "buildBackendDistribution": "setuptools",
+      "buildBackendVersion": "84.2.1",
+      "buildBackendRequirement": "setuptools==84.2.1",
+      "buildSystemDeclaration": {
+        "requires": [
+          "setuptools==84.2.1"
+        ],
+        "build-backend": "setuptools.build_meta"
+      },
+      "classification": "Isolated build-system dependency only; it is not a GPWCF runtime dependency.",
+      "whySetuptools": [
+        "It is a stable, widely used Python packaging backend with PEP 517 build hooks.",
+        "It supports declarative PEP 621 project metadata in pyproject.toml.",
+        "The current 84.2.1 release declares Python >=3.10 support and includes Python 3.15 build support in its release history.",
+        "The project uses a pure-Python src layout and does not require a custom backend."
+      ],
+      "whyNotCustomBackend": "No custom build logic or native extension build is required. A custom backend would introduce unnecessary code and maintenance.",
+      "wheelDependency": "Do not add wheel as a separate build-system requirement unless a clean build demonstrates a concrete need; setuptools.build_meta provides the wheel/sdist build hooks.",
+      "buildFrontend": {
+        "tool": "build",
+        "command": "python -m build",
+        "classification": "Developer/build frontend only; not a package runtime dependency.",
+        "versionPolicy": "Pin in the separate development/build lock after the build toolchain is selected."
+      },
+      "buildIsolation": "Use PEP 517 build isolation. The build frontend creates an isolated environment containing only the declared build-system requirements; do not rely on packages incidentally installed in SMRB .env."
+    },
+    "projectMetadata": {
+      "canonicalFile": "pyproject.toml",
+      "metadataStandard": "PEP 621 [project]",
+      "requiredFields": [
+        "name",
+        "version",
+        "description",
+        "readme",
+        "requires-python",
+        "dependencies"
+      ],
+      "initialValues": {
+        "name": "gpwcf",
+        "version": "0.1.0",
+        "requires-python": ">=3.15,<3.16",
+        "dependencies": []
+      },
+      "pythonSupportPolicy": "The current evidenced support baseline is CPython 3.15.1 x64 on Windows x64. The initial requires-python range is limited to Python 3.15.x; broader versions/platforms require an explicit CI/test support matrix before metadata is widened.",
+      "metadataCaution": "Author, license expression, classifiers, project URLs, and description must be populated from approved repository/project metadata during implementation; do not invent legal or ownership information in this design."
+    },
+    "runtimeDependencies": {
+      "coreBaseDependencies": [],
+      "prefectExtra": {
+        "extraName": "prefect",
+        "requirement": "prefect==3.9.2",
+        "meaning": "Install the accepted external workflow runtime only when the consumer opts into Prefect Integration.",
+        "metadataConcept": "[project.optional-dependencies] prefect = [prefect==3.9.2]"
+      },
+      "otherOptionalPatternExtras": "Do not create empty extras for Validation, Error Handling, Observation, or Diagnostics while their generic contracts have no third-party runtime dependencies. Add a pattern-specific extra only if that pattern later acquires an actual runtime package requirement.",
+      "noBasePrefect": "Prefect must not appear in [project].dependencies or any unconditional Core requirement file.",
+      "noGeneratorDependency": "pygccxml>=3.0.0 remains in the Generator consumer requirements only."
+    },
+    "packageDiscovery": {
+      "layout": "src",
+      "packageDirectory": "src/gpwcf",
+      "discovery": "Setuptools package discovery is rooted at src and includes gpwcf* packages.",
+      "namespacePackages": false,
+      "requiredPackageFiles": [
+        "__init__.py for every supported regular package.",
+        "py.typed at the gpwcf package root to mark inline typing information."
+      ],
+      "packageData": [
+        "Include py.typed.",
+        "Include only runtime files explicitly required by shipped package modules.",
+        "Do not include .docs, .poc, .dependencies, .env, PoC evidence, consumer Stage Models, Generator data, or local virtual-environment assets in the wheel."
+      ],
+      "tests": "Tests remain repository verification assets and are not imported as runtime package modules. Their inclusion in sdist is a separate source-distribution convenience decision; they are never part of the installed runtime package."
+    },
+    "installationCommands": [
+      {
+        "profile": "Core-only consumer",
+        "command": "pip install gpwcf",
+        "installedRuntimeDependencies": [],
+        "guarantee": "Installs Core package without Prefect."
+      },
+      {
+        "profile": "Core plus Prefect Integration",
+        "command": "pip install 'gpwcf[prefect]'",
+        "installedRuntimeDependencies": [
+          "prefect==3.9.2",
+          "Verified Prefect transitive runtime closure"
+        ],
+        "guarantee": "Installs the optional Prefect runtime dependency while preserving the separate Integration import boundary."
+      },
+      {
+        "profile": "Core editable development",
+        "command": "pip install --editable .",
+        "installedRuntimeDependencies": [],
+        "guarantee": "Editable Core development without Prefect."
+      },
+      {
+        "profile": "Core plus Prefect editable development",
+        "command": "pip install --editable '.[prefect]'",
+        "installedRuntimeDependencies": [
+          "prefect==3.9.2",
+          "Verified Prefect transitive runtime closure"
+        ],
+        "guarantee": "Editable integration development with explicit optional runtime."
+      }
+    ],
+    "lockStrategy": {
+      "metadataVsLock": "pyproject.toml declares direct runtime requirements. Lock files pin the complete resolved environment for reproducible developer/CI/deployment profiles.",
+      "prefectLock": {
+        "proposedFile": "requirements-prefect.lock",
+        "purpose": "Record the minimized exact Prefect 3.9.2 transitive runtime closure with hashes/platform markers after clean isolated resolution.",
+        "creationGate": "Must be reconstructed from a clean environment that installs only gpwcf[prefect], then reviewed for runtime relevance, licenses, markers, and hashes.",
+        "notAllowed": "Do not copy the 106-package Prefect environment snapshot as the minimal lock."
+      },
+      "buildLock": {
+        "proposedFile": "requirements-build.lock",
+        "purpose": "Pin the build frontend and any developer tools required to create/verify sdist and wheel.",
+        "runtimeUse": "Never installed as a consumer runtime dependency."
+      },
+      "developmentLock": {
+        "proposedFile": "requirements-dev.lock",
+        "purpose": "Pin selected test/type-check/lint/architecture-validation tools once the project's verification toolchain is explicitly approved.",
+        "currentStatus": "No GPWCF-specific third-party test/type-check/lint dependency is currently declared. Do not populate speculative tools before the test policy is selected."
+      },
+      "solutionAggregator": "The SMRB root requirements.txt remains the solution-level developer aggregator. It is not replaced by package metadata and must not silently add the Prefect extra to every Core consumer profile."
+    },
+    "dependencyEnvironmentIsolation": {
+      "sharedDependenciesRoot": "C:\\Trading\\Projects\\Shared_Memory_Reqgion_Broker\\SMRB\\.dependencies",
+      "sharedEnvironment": "SMRB .env",
+      "rule": "Continue using the existing SMRB shared dependency ownership and environment. Do not create GPWCF/.dependencies, copy the shared environment, or assume the contents of .dependencies are shipped package dependencies.",
+      "packageRule": "The installed distribution is resolved from pyproject metadata and the selected extra, not from the developer's currently activated .env."
+    },
+    "buildOutputs": {
+      "artifacts": [
+        "dist/gpwcf-0.1.0-py3-none-any.whl",
+        "dist/gpwcf-0.1.0.tar.gz"
+      ],
+      "sourceOfTruth": "The source package under src/gpwcf and pyproject.toml.",
+      "generatedFiles": [
+        "build/",
+        "dist/",
+        "gpwcf.egg-info/"
+      ],
+      "repositoryPolicy": "Generated build outputs are not committed unless a separate repository release policy explicitly requires them."
+    }
+  },
+  "packagingVerification": {
+    "coreOnlyCleanEnvironment": [
+      "Create a clean CPython 3.15.1 x64 environment with no Prefect and no Generator dependencies.",
+      "Install the built wheel using pip install gpwcf.",
+      "Verify gpwcf.public_api.core imports successfully.",
+      "Verify Prefect is not installed and no Prefect module was imported.",
+      "Verify no pygccxml or Generator module is imported/required.",
+      "Verify optional Supporting Pattern submodules can be omitted."
+    ],
+    "prefectExtraCleanEnvironment": [
+      "Create a clean CPython 3.15.1 x64 environment.",
+      "Install gpwcf[prefect] from the built artifact using the minimized lock.",
+      "Verify prefect==3.9.2 is installed.",
+      "Verify gpwcf.public_api.integrations.prefect imports successfully.",
+      "Verify Core remains independently importable and does not import private Integration modules.",
+      "Run a minimal Stage/Step/SPU binding smoke test against the accepted native topology."
+    ],
+    "metadataInspection": [
+      "Inspect wheel METADATA and verify no unconditional Requires-Dist: prefect entry exists.",
+      "Verify prefect==3.9.2 is guarded by the prefect extra marker.",
+      "Verify no pygccxml, Generator, C++/vcpkg, or SMRB development dependencies appear in GPWCF metadata.",
+      "Verify package metadata declares the supported Python range."
+    ],
+    "artifactConsistency": [
+      "Build both wheel and sdist in an isolated build environment.",
+      "Install from wheel and from sdist into clean Core-only environments.",
+      "Verify both artifacts contain the same supported public package modules.",
+      "Verify .docs, .poc, .dependencies, .env, and consumer assets are excluded from the wheel.",
+      "Verify py.typed is present."
+    ],
+    "importIsolation": [
+      "Import gpwcf.public_api.core in an environment without Prefect.",
+      "Inspect sys.modules/import tracing to prove Prefect is not imported transitively.",
+      "Import only one optional Supporting Pattern and verify other patterns are not loaded.",
+      "Import gpwcf.public_api.integrations.prefect only in the Prefect-extra environment."
+    ]
+  },
+  "requiredGoverningArtifactChanges": [
+    {
+      "target": "Filesystem_Architecture.json",
+      "changes": [
+        "Keep pyproject.toml as required project/build metadata.",
+        "Record setuptools.build_meta and the pinned build-system requirement.",
+        "Record the single gpwcf distribution with optional Prefect extra.",
+        "Add py.typed and package discovery configuration.",
+        "Add proposed lock files as dependency manifests only; do not create a dependency bundle."
+      ]
+    },
+    {
+      "target": "Dependency_and_Public_API_Architecture.json",
+      "changes": [
+        "Resolve the distribution arrangement as one distribution plus optional Prefect extra for the initial release.",
+        "Record setuptools==84.2.1 as build-only and prefect==3.9.2 as optional runtime.",
+        "Retain Prefect transitive closure as a release gate.",
+        "Separate build/dev/test locks from runtime requirements."
+      ]
+    }
+  ],
+  "externalTechnicalReferences": [
+    {
+      "source": "PyPI setuptools project",
+      "url": "https://pypi.org/project/setuptools/",
+      "supports": "Setuptools 84.2.1 release metadata and declared Python >=3.10 requirement."
+    },
+    {
+      "source": "Setuptools build system support",
+      "url": "https://setuptools.pypa.io/en/latest/build_meta.html",
+      "supports": "setuptools.build_meta PEP 517 backend and wheel/sdist build hooks."
+    },
+    {
+      "source": "Setuptools release history",
+      "url": "https://setuptools.pypa.io/en/latest/history.html",
+      "supports": "Python 3.15 build support in the Setuptools 84.x release line."
+    },
+    {
+      "source": "Python Packaging User Guide: Writing pyproject.toml",
+      "url": "https://packaging.python.org/en/latest/guides/writing-pyproject-toml/",
+      "supports": "PEP 517/518 build-system declaration and PEP 621 project metadata."
+    }
+  ],
+  "conformanceRequirements": [
+    {
+      "id": "PKG-001",
+      "requirement": "The initial release uses one gpwcf distribution with a rigorously optional Prefect extra."
+    },
+    {
+      "id": "PKG-002",
+      "requirement": "Core base runtime dependencies remain empty."
+    },
+    {
+      "id": "PKG-003",
+      "requirement": "Prefect is declared only under the prefect optional extra as prefect==3.9.2."
+    },
+    {
+      "id": "PKG-004",
+      "requirement": "The package uses src/gpwcf layout and PEP 621 metadata in pyproject.toml."
+    },
+    {
+      "id": "PKG-005",
+      "requirement": "The build backend is setuptools.build_meta pinned to setuptools==84.2.1, subject to clean CPython 3.15.1 build verification."
+    },
+    {
+      "id": "PKG-006",
+      "requirement": "Build-system dependencies are isolated from runtime dependencies."
+    },
+    {
+      "id": "PKG-007",
+      "requirement": "The wheel includes py.typed and excludes docs, PoC, dependencies, virtual environment, and consumer-specific assets."
+    },
+    {
+      "id": "PKG-008",
+      "requirement": "Core-only installation/import succeeds without Prefect, pygccxml, or Generator assets."
+    },
+    {
+      "id": "PKG-009",
+      "requirement": "The Prefect extra installs Prefect 3.9.2 and its minimized verified transitive closure."
+    },
+    {
+      "id": "PKG-010",
+      "requirement": "The 106-package environment snapshot is not used as the minimal Prefect dependency lock."
+    },
+    {
+      "id": "PKG-011",
+      "requirement": "No GPWCF-local .dependencies directory or copied .env is created."
+    },
+    {
+      "id": "PKG-012",
+      "requirement": "Build, development, test, and verification tools are excluded from runtime metadata."
+    },
+    {
+      "id": "PKG-013",
+      "requirement": "A future split distribution requires an explicit release/dependency rationale and compatibility policy."
+    }
+  ],
+  "acceptanceCriteria": [
+    "One distribution and the optional Prefect extra preserve the Core-only dependency/import guarantee.",
+    "Prefect 3.9.2 remains opt-in and is not a base dependency.",
+    "Setuptools build backend and Python 3.15.1 compatibility have a documented evidence basis and clean-build gate.",
+    "Project metadata, package discovery, py.typed, and source layout are explicit.",
+    "Build/runtime/dev dependencies are separated.",
+    "Prefect transitive dependency lock is minimized and reproducible before release.",
+    "SMRB shared dependency assets remain shared development state and are not copied into GPWCF.",
+    "Wheel/sdist and import-isolation verification profiles are defined.",
+    "No actual pyproject.toml, lock file, package source, or environment is modified by this artifact."
+  ],
+  "changeControl": {
+    "authority": "Wave 6 packaging proposal. It becomes an implementation constraint only after review and explicit acceptance.",
+    "sourceContractPolicy": "This artifact does not create or modify pyproject.toml, requirements files, lock files, or source packages.",
+    "implementationGate": "Create the actual pyproject.toml only after all Wave 6 artifacts and governing-artifact reconciliation are accepted.",
+    "nextStep": "Design 16.00_Public_API_Architecture.json with exact stable import namespaces, exported contract groups, consumer extension points, optional imports, and versioning rules."
+  }
+}

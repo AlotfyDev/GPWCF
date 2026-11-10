@@ -1,0 +1,10 @@
+{
+  "serialNumber": 25,
+  "name": "StageError[TErrorOccurrenceContext]",
+  "category": "Class / Generic Type",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/Error_Model.json",
+  "description": "Stage-level error occurrence representing one actual occurrence of an error within a Stage; references exactly one registered StageErrorTypeDefinition.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

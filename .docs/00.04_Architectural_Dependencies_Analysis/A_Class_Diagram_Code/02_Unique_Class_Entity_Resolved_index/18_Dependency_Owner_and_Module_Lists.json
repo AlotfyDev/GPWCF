@@ -1,0 +1,10 @@
+{
+  "serialNumber": 18,
+  "name": "Dependency Owner and Module Lists",
+  "category": "Feature / Change Control",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "Update dependency owner/module lists and dependency graph with core.identities and core.diagnostics; records required reconciliation changes to Dependency_and_Public_API_Architecture.json, Framework_Module_Boundary_Model.json, and Filesystem_Architecture.json.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

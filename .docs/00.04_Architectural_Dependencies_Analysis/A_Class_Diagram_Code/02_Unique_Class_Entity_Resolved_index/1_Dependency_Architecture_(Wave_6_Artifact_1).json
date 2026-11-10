@@ -1,0 +1,10 @@
+{
+  "serialNumber": 1,
+  "name": "Dependency Architecture (Wave 6 Artifact 1)",
+  "category": "Architectural Design / Feature",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "Wave 6 detailed design (artifact 1) finalizing GPWCF dependency ownership and allowed/forbidden dependency directions across Core, optional Supporting Patterns, Prefect Integration, consumers, and the SMRB development environment, including the newly justified identity and diagnostics modules.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

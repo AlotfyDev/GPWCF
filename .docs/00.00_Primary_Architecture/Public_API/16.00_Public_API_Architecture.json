@@ -1,0 +1,566 @@
+{
+  "documentType": "GPWCFDetailedArchitectureDesign",
+  "documentId": "gpwcf.architecture-closure.wave6-public-api",
+  "documentVersion": "1.0.0",
+  "status": "draft-for-architecture-review",
+  "designSequence": {
+    "wave": 6,
+    "waveName": "Dependency, Packaging, and Public API Architecture",
+    "artifactNumber": 3,
+    "predecessorArtifacts": [
+      "14,00_Dependency.json",
+      "15.00_Packaging.json",
+      "../Wave!_Stage_Callable_Stage Result_Pipeline Invocation/01.00_Stage_Callable.json",
+      "../Wave!_Stage_Callable_Stage Result_Pipeline Invocation/02.00_Stage_Result.json",
+      "../Wave!_Stage_Callable_Stage Result_Pipeline Invocation/03.00_Pipeline_Invocation.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/04.00_Step_Callable.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/05.00_Step_Execution_Result.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/06.00_Optional_Result_Contributions.json",
+      "../Wave3_SPU_Supporting_Pattern_Functional_Binding/07.00_SPU.json",
+      "../Wave3_SPU_Supporting_Pattern_Functional_Binding/08.00_Supporting_Pattern_Functional_Binding.json",
+      "../Wave4_Generic_Diagnostics_Error_Handling_Publication/09.00_Generic_Diagnostics.json",
+      "../Wave4_Generic_Diagnostics_Error_Handling_Publication/10.00_Error_Handling.json",
+      "../Wave4_Generic_Diagnostics_Error_Handling_Publication/11,00_Publication.json",
+      "../Wave5_Prefect_Integration_Binding_Operational_Mapping/12.00_Prefect_Integration_Binding.json",
+      "../Wave5_Prefect_Integration_Binding_Operational_Mapping/13.00_Operational_Mapping.json"
+    ]
+  },
+  "purpose": "Define the stable, supported consumer-facing Public API surfaces of GPWCF Core and the optional Prefect Integration, including what consumers may implement/customize/compose, how they invoke Stage, how optional Supporting Patterns are accessed, and how Prefect-specific binding is used without exposing private implementation paths.",
+  "scope": {
+    "included": [
+      "Core Public API and Prefect Integration Public API as separate supported contract surfaces.",
+      "Exact logical import namespaces and package ownership.",
+      "Supported consumer implementation and specialization points.",
+      "Stage/Step/SPU invocation and typed result contracts.",
+      "Optional identity, diagnostics, and Supporting Pattern API sub-surfaces.",
+      "Prefect-specific binding/configuration/correlation/result retrieval API groups.",
+      "Optional import guarantees, public symbol curation, and compatibility/versioning policy.",
+      "Public API conformance tests."
+    ],
+    "excluded": [
+      "A generic Pipeline Root Entity or Root Callable API.",
+      "A universal Stage Flow Result schema.",
+      "A universal Error Model, SupportingUnit base, composition runtime, scheduler, adapter, registry, or manager.",
+      "Prefect imports or types in Core Public API.",
+      "Consumer-specific Generator Stage/Step Models or business contracts.",
+      "Private implementation collaborators as stable consumer imports."
+    ]
+  },
+  "governingPublicApiDecision": {
+    "principle": "Public API is the stable supported consumer contract boundary. It is not merely an __init__.py re-export list or a convenient alias for internal modules.",
+    "surfaces": [
+      {
+        "id": "PUBLIC-CORE",
+        "name": "Core Public API",
+        "namespace": "gpwcf.public_api.core",
+        "owner": "GPWCF Core",
+        "availability": "Always available; no Prefect dependency.",
+        "purpose": "Expose the generic framework Entities, invocation/result contracts, identity value types, and approved consumer specialization points."
+      },
+      {
+        "id": "PUBLIC-PREFECT",
+        "name": "Prefect Integration Public API",
+        "namespace": "gpwcf.public_api.integrations.prefect",
+        "owner": "GPWCF Prefect Integration",
+        "availability": "Explicit opt-in; requires GPWCF Core and the gpwcf[prefect] installation extra.",
+        "purpose": "Expose supported binding/configuration/invocation/correlation/result-retrieval contracts for the accepted Prefect 3.9.2 integration."
+      }
+    ],
+    "optionalSubsurfaces": "Diagnostics and Supporting Pattern APIs are curated sub-surfaces beneath Core Public API. They are imported only when selected and are not eagerly re-exported by gpwcf.public_api.core.",
+    "compatibilityBoundary": "Only documented symbols under these Public API namespaces are stable consumer dependencies. Internal package modules remain private even when Python technically permits importing them."
+  },
+  "corePublicApi": {
+    "namespace": "gpwcf.public_api.core",
+    "rootImportGuarantees": [
+      "Import succeeds without Prefect installed.",
+      "Import does not import integrations.prefect or any Prefect module.",
+      "Import does not eagerly import optional Error Handling, Validation, Observation, or Diagnostics packages.",
+      "Import exposes only mandatory generic Stage/Step/SPU callable/result/identity contracts that have been approved.",
+      "No consumer/Generator module is imported."
+    ],
+    "subNamespaces": [
+      {
+        "namespace": "gpwcf.public_api.core.identities",
+        "owner": "MOD-CORE-IDENTITIES",
+        "classification": "mandatory_standalone",
+        "exports": [
+          "PipelineInvocationIdentity",
+          "ParentInvocationIdentity",
+          "StageIdentity",
+          "StageInvocationIdentity",
+          "StepIdentity",
+          "StepInvocationIdentity",
+          "SPUIdentity",
+          "SPUInvocationIdentity"
+        ],
+        "optionalPatternIdentityRule": "Identity value types for Validation, Error Handling, Observation, Association, operation, reservation, and record scopes are exposed through this namespace only when their specialized contracts define them and the identity module owns their canonical type. No generic SupportingUnitIdentity base type is introduced.",
+        "consumerUse": "Consumers construct/pass identity values according to the issuing Entity/Aggregate contract. The identity package does not generate, register, persist, or manage their lifecycle.",
+        "stability": "Nominal identity types are stable contracts; representation may be opaque and must not be inferred from a string/int implementation detail."
+      },
+      {
+        "namespace": "gpwcf.public_api.core.stage",
+        "owner": "MOD-CORE-STAGE",
+        "classification": "mandatory_aggregate",
+        "exports": [
+          "StageCallable",
+          "StageInvocation[TStageInput]",
+          "StageExecutionContext",
+          "StageResult[TStageOutput, TStageFlowResult, TStageOutcome]"
+        ],
+        "callableContract": {
+          "signature": "invoke(invocation: StageInvocation[TStageInput]) -> StageResult[TStageOutput, TStageFlowResult, TStageOutcome]",
+          "meaning": "One public invocation executes the Stage Aggregate's Stage Composition and returns its Stage-owned domain result.",
+          "input": "StageInvocation carries Stage identity, Stage invocation identity, optional consumer PipelineInvocationIdentity, optional parent invocation correlation, TStageInput, and StageExecutionContext.",
+          "result": "StageResult carries Stage result provenance, Stage output, Stage-specific Flow Result payload, and Stage-specific outcome classification.",
+          "specialization": "TStageInput, TStageOutput, TStageFlowResult, and TStageOutcome remain Stage/consumer-specialized types. No universal Stage Flow Result or universal StageOutcome taxonomy is introduced."
+        },
+        "consumerCapabilities": [
+          "Implement a concrete Stage Aggregate/StageCallable specialization.",
+          "Define Stage-specific input/output, Flow Result payload, and outcome type.",
+          "Compose permitted Step members through the Stage's public Step callable contract.",
+          "Use the Stage invocation/result boundary directly or through the Prefect Integration API."
+        ],
+        "prohibited": [
+          "Create a generic GPWCF Pipeline Root Entity.",
+          "Make Stage invoke SPUs directly.",
+          "Import Prefect types into Stage implementation.",
+          "Treat Prefect Flow State as StageOutcome or StageResult."
+        ]
+      },
+      {
+        "namespace": "gpwcf.public_api.core.step",
+        "owner": "MOD-CORE-STEP and MOD-CORE-STEP-RESULTS",
+        "classification": "mandatory_aggregate",
+        "exports": [
+          "StepCallable",
+          "StepInvocation[TInput]",
+          "StepExecutionContext",
+          "StepExecutionResult[TOutput, TValidatorResult, TErrorResult, TErrorHandlerResult]",
+          "OptionalResultContributions[TValidatorResult, TErrorResult, TErrorHandlerResult]",
+          "OptionalResultSlot[T]",
+          "Absent",
+          "Present[T]"
+        ],
+        "callableContract": {
+          "signature": "execute(invocation: StepInvocation[TInput]) -> StepExecutionResult[TOutput, TValidatorResult, TErrorResult, TErrorHandlerResult]",
+          "meaning": "One public Stage-facing invocation executes the owning Step Aggregate and its internal Step Composition.",
+          "invocation": "StepInvocation carries Step identity, Step invocation identity, owning Stage identity, parent Stage invocation identity, optional PipelineInvocationIdentity, TInput, and StepExecutionContext.",
+          "result": "StepExecutionResult preserves Step/parent Stage invocation provenance, Step processing artifact, and the typed OptionalResultContributions aggregate.",
+          "specialization": "TOutput, TValidatorResult, TErrorResult, and TErrorHandlerResult are concrete Step/consumer types. Use typing.Never for optional contribution types when the Step does not select that capability."
+        },
+        "consumerCapabilities": [
+          "Implement a concrete Step Aggregate/StepCallable specialization.",
+          "Define Step-specific input/output and optional result type arguments.",
+          "Compose SPUs and selected Supporting Pattern capabilities inside the Step's own Step Composition.",
+          "Select no, one, or multiple optional Supporting Pattern capabilities where their contracts permit.",
+          "Use the Stage-facing Step callable contract without exposing internal Step Composition collaborators."
+        ],
+        "resultRules": [
+          "StepExecutionResult remains distinct from SPUExecutionResult, StepCompositionFlowResult, StageResult, and Prefect State.",
+          "OptionalResultContributions contains independently typed Validator, Error, and Error Handler result slots.",
+          "Absent is distinct from Present(None).",
+          "Observation Records are not included in the common Step result bundle."
+        ],
+        "prohibited": [
+          "Stage bypassing Step and invoking internal SPUs/Supporting Units.",
+          "Core Step importing Prefect.",
+          "Step result importing every optional pattern result type.",
+          "Using untyped dictionaries or dynamic result registries."
+        ]
+      },
+      {
+        "namespace": "gpwcf.public_api.core.processing_units.spu",
+        "owner": "MOD-CORE-SPU",
+        "classification": "mandatory_standalone",
+        "exports": [
+          "StepProcessingUnit[TInput, TOutput, TSPUErrorOccurrences, TSPUValidatorResult]",
+          "SPUExecutionResult[TOutput, TSPUErrorOccurrences, TSPUValidatorResult]"
+        ],
+        "callableContract": {
+          "signature": "execute(input: TInput) -> SPUExecutionResult[TOutput, TSPUErrorOccurrences, TSPUValidatorResult]",
+          "meaning": "One SPU invocation performs its assigned specialized processing responsibility and returns its own structured SPU result.",
+          "genericTypes": "TSPUErrorOccurrences and TSPUValidatorResult are consumer/Step-specialized result payload types; use typing.Never when the corresponding optional contribution is not selected.",
+          "ownership": "The SPU constructs SPUExecutionResult. Step Composition consumes it and assembles StepExecutionResult."
+        },
+        "consumerCapabilities": [
+          "Implement a concrete SPU callable.",
+          "Define its TInput/TOutput and selected optional result payload types.",
+          "Use the SPU contract as a Step-internal processing entity."
+        ],
+        "prohibited": [
+          "SPU depending on Step Composition implementation.",
+          "SPU importing Prefect.",
+          "SPU deciding Stage/Step flow transitions.",
+          "SPU returning StepExecutionResult."
+        ]
+      },
+      {
+        "namespace": "gpwcf.public_api.core.diagnostics",
+        "owner": "MOD-CORE-DIAGNOSTICS",
+        "classification": "optional_reusable",
+        "exports": [
+          "DiagnosticCode",
+          "Diagnostic[TDetails]"
+        ],
+        "importRule": "Explicit opt-in submodule. It is not imported by gpwcf.public_api.core root.",
+        "consumerUse": "Specialized contracts may attach typed descriptive Diagnostic values when useful.",
+        "semanticLimit": "Diagnostic is descriptive evidence only; it is not an Error, Failure, Exception, Outcome, Severity, RetryPolicy, or ResolutionStatus."
+      },
+      {
+        "namespace": "gpwcf.public_api.core.supporting_patterns.validation",
+        "owner": "MOD-CORE-SUPPORT-VALIDATION",
+        "classification": "optional_reusable",
+        "exports": [
+          "StepSupportingValidatorUnit behavioral/callable contract",
+          "ValidatorUnitValidationResult[TValidationOutcome, TValidationEvidence]"
+        ],
+        "importRule": "Explicit opt-in. Consumers that do not select Validation do not import this submodule.",
+        "consumerUse": "Implement a concrete Validator Unit and define its specialized input/result. Step Composition aggregates accepted validation results into the concrete StepValidatorResult.",
+        "semanticLimit": "A negative validation conclusion is a normal domain result and is not automatically an invocation failure."
+      },
+      {
+        "namespace": "gpwcf.public_api.core.supporting_patterns.error_handling",
+        "owner": "MOD-CORE-SUPPORT-EH",
+        "classification": "optional_reusable",
+        "exports": [
+          "ErrorHandlingUnit[TErrorHandlingUnitInput, THandlingOperationResult]",
+          "StepSupportingErrorHandlingUnit specialized behavior/association/lifecycle contract",
+          "ErrorHandlingOperationEntry[THandlingOperationResult]",
+          "ErrorHandlerResult[THandlingOperationEntry, TErrorHandlingContext]",
+          "OperationEntryPublisher[THandlingOperationResult]",
+          "PublicationReservation[THandlingOperationResult]",
+          "ReservationGrant",
+          "PublicationAcknowledgement",
+          "PublicationStatus",
+          "ReleaseAcknowledgement",
+          "PublisherContractViolation contract"
+        ],
+        "importRule": "Explicit opt-in. Consumers that do not select Error Handling do not import this submodule.",
+        "consumerUse": "Implement/select specialized Error Handling Unit behavior and a Step-specific Publisher/Reservation specialization.",
+        "semanticLimit": "This API does not define Error Type Definitions, Error Occurrences, ErrorResult, a global Error Model, or an automatic error-resolution policy. The Single Step Publication specialization remains Step/consumer-owned."
+      },
+      {
+        "namespace": "gpwcf.public_api.core.supporting_patterns.observation",
+        "owner": "MOD-CORE-SUPPORT-OBSERVATION",
+        "classification": "optional_reusable",
+        "exports": [
+          "StepSupportingObservationUnit contract",
+          "ObservationRecord[TObservationPayload] contract",
+          "Observation activity/identity contracts explicitly established by the specialized pattern"
+        ],
+        "importRule": "Explicit opt-in. Consumers that do not select Observation do not import this submodule.",
+        "consumerUse": "Implement bounded, callback/event, periodic, or long-lived observation behavior under the specialized contract.",
+        "semanticLimit": "No central event bus/logger/collector is supplied. Observation Records remain outside common StepExecutionResult."
+      }
+    ],
+    "rootExportPolicy": {
+      "gpwcf.public_api.core": [
+        "May explicitly re-export the stable StageCallable/StageInvocation/StageResult contract.",
+        "May explicitly re-export the stable StepCallable/StepInvocation/StepExecutionResult/OptionalResultContributions contracts.",
+        "May explicitly re-export the stable SPU callable/result contract.",
+        "May explicitly re-export canonical mandatory identity value types."
+      ],
+      "notEagerlyImported": [
+        "core.diagnostics",
+        "core.supporting_patterns.error_handling",
+        "core.supporting_patterns.validation",
+        "core.supporting_patterns.observation",
+        "integrations.prefect"
+      ],
+      "rule": "The Core root surface must remain minimal and import-safe. Optional sub-surfaces are imported by their explicit fully qualified paths."
+    }
+  },
+  "prefectIntegrationPublicApi": {
+    "namespace": "gpwcf.public_api.integrations.prefect",
+    "owner": "MOD-INTEGRATION-PREFECT",
+    "classification": "selected_external_runtime_integration",
+    "availability": "Explicit opt-in through gpwcf[prefect], with Prefect 3.9.2 pinned.",
+    "importGuarantees": [
+      "Import requires the Prefect extra; if absent, raise an actionable optional-dependency ImportError that names gpwcf[prefect].",
+      "Importing this namespace may import Prefect 3.9.2.",
+      "Importing Core Public API must never import this namespace."
+    ],
+    "publicContractGroups": [
+      {
+        "group": "Configuration",
+        "proposedExports": [
+          "PrefectIntegrationConfig",
+          "StageDeploymentConfig",
+          "ResultPersistenceConfig"
+        ],
+        "purpose": "Typed configuration for API endpoint, deployment/work-pool references, explicit Stage result persistence, and supported integration settings.",
+        "ownership": "Consumer/deployment supplies environment-specific values; Integration validates and translates them."
+      },
+      {
+        "group": "Stage binding and invocation",
+        "proposedExports": [
+          "StageDeploymentBinding",
+          "StageFlowBinding",
+          "StageInvocationHandle",
+          "StageResultRetrieval"
+        ],
+        "purpose": "Bind a concrete StageCallable to a Prefect Stage Flow/Deployment, invoke it with StageInvocation, await terminal operational state, and retrieve the exact StageResult.",
+        "contractRules": [
+          "Deployment-backed Stage invocation uses the supported run_deployment(..., as_subflow=True) profile.",
+          "In-process Stage Flow binding is a separately identified profile with its own concurrency limits.",
+          "StageResult remains a domain result separate from Prefect State.",
+          "The Root Flow remains consumer-owned."
+        ]
+      },
+      {
+        "group": "Step binding",
+        "proposedExports": [
+          "StepSubflowBinding"
+        ],
+        "purpose": "Bind the StepCallable boundary to the native Step Subflow inside the owning Stage Parent Flow.",
+        "contractRules": [
+          "Pass the complete StepInvocation.",
+          "Return the exact StepExecutionResult.",
+          "Preserve synthetic parent linkage and domain/native identity correlation.",
+          "Stage does not bypass the Step boundary."
+        ]
+      },
+      {
+        "group": "SPU binding",
+        "proposedExports": [
+          "SPUTaskBinding"
+        ],
+        "purpose": "Bind a bounded SPU callable invocation to a Prefect Task within the owning Step Subflow.",
+        "contractRules": [
+          "Invoke the SPU's exact execute(input) callable.",
+          "Return the exact SPUExecutionResult.",
+          "Preserve SPUIdentity/SPUInvocationIdentity separately from Prefect Task Run IDs."
+        ]
+      },
+      {
+        "group": "Supporting Pattern binding",
+        "proposedExports": [
+          "ValidationTaskBinding",
+          "ErrorHandlingTaskBinding",
+          "ObservationActivityBinding"
+        ],
+        "purpose": "Expose pattern-specific binding declarations for selected optional capabilities.",
+        "contractRules": [
+          "Validation bounded invocation maps to a Task while preserving negative domain results.",
+          "Error Handling maps bounded execution while preserving Publisher/Reservation and atomic acceptance semantics.",
+          "Observation binding selects Task, callback/event, scheduled/deployed, or long-lived mechanism according to the specialized activity contract.",
+          "No universal SupportingPatternBinding base class is introduced."
+        ]
+      },
+      {
+        "group": "Operational correlation and result records",
+        "proposedExports": [
+          "DomainNativeCorrelation",
+          "PrefectOperationalExecutionRecord"
+        ],
+        "purpose": "Expose domain invocation to native Flow/Task/Deployment correlation and operational execution evidence.",
+        "contractRules": [
+          "Domain and Prefect identities remain separate typed values.",
+          "One domain invocation may correlate to multiple native records.",
+          "Native parent linkage does not create domain Composition or Association.",
+          "Prefect State is never substituted for a domain result/outcome."
+        ]
+      }
+    ],
+    "supportedConsumerWorkflow": [
+      "Consumer implements a concrete StageCallable and its Stage-specific input/output/Flow Result/outcome types using Core Public API.",
+      "Consumer constructs a StageInvocation with the required Stage identity/invocation identity and optional pipeline/parent correlation.",
+      "Consumer creates/configures a StageDeploymentBinding using PrefectIntegrationConfig and StageDeploymentConfig.",
+      "Consumer Root Flow invokes the Stage binding with StageInvocation and receives a StageInvocationHandle.",
+      "Consumer waits for terminal Prefect operational State through the handle.",
+      "Consumer retrieves the exact persisted StageResult through StageResultRetrieval.",
+      "Consumer interprets StageResult using its Stage-specific domain contract and inspects PrefectOperationalExecutionRecord separately."
+    ],
+    "privateIntegrationInternals": [
+      "Native @flow/@task wrapper functions unless explicitly promoted.",
+      "Prefect TaskRunner construction details.",
+      "Synthetic deployment/subflow Task inspection helpers.",
+      "Version-specific task_inputs['__parents__'] extraction.",
+      "Private correlation storage and native run lookup implementation.",
+      "Internal serializers/result storage adapters.",
+      "Publisher process-local handle resolution internals."
+    ],
+    "apiStability": "The proposed symbol names and operations are the intended supported contract families. Exact constructor/method signatures are frozen during implementation API review and conformance testing; private wrapper functions remain non-public."
+  },
+  "consumerExtensionAndCompositionRights": {
+    "consumerMayImplement": [
+      "Concrete Stage Aggregate/StageCallable specializations.",
+      "Concrete Step Aggregate/StepCallable specializations.",
+      "Concrete SPU callable implementations.",
+      "Selected Validator, Error Handling, and Observation Unit implementations.",
+      "Consumer-specific input/output/result payload types.",
+      "Consumer-specific Step Error Models and ErrorResult schemas.",
+      "Concrete Step-specific Publisher/Reservation implementations and Recovery Owners.",
+      "Consumer Root Flow and deployment configuration."
+    ],
+    "consumerMayCustomize": [
+      "Stage/Step/SPU business inputs and outputs.",
+      "Stage-specific Flow Result and Outcome payloads.",
+      "Step-specific optional result type parameters.",
+      "Step topology and flow policy within the GPWCF contract constraints.",
+      "Which optional Supporting Patterns are selected and their specialized scopes.",
+      "Association mechanism and target scope where the specialized contract permits.",
+      "Prefect deployment/work-pool/worker/result storage configuration within the supported integration profile."
+    ],
+    "consumerMayCompose": [
+      "Stage Aggregate composition of permitted Step callable members.",
+      "Step Aggregate composition of selected SPUs and selected Supporting Pattern capabilities.",
+      "Pattern-specific Associations and supporting relationships according to the specialized contracts.",
+      "Consumer Root Flow dispatch of Stage Deployments/Flows."
+    ],
+    "consumerMayNot": [
+      "Make Stage invoke SPUs directly.",
+      "Use Step Composition internals as a stable public dependency.",
+      "Replace domain identities with Prefect IDs.",
+      "Replace domain results/outcomes with Prefect State.",
+      "Treat Prefect parent/child links as GPWCF Associations.",
+      "Depend on private implementation module paths.",
+      "Promote Generator-specific Error Model or extraction dependencies into Core.",
+      "Assume unsupported cancellation/recovery/multi-host/concurrency guarantees."
+    ],
+    "compositionOwnership": "Public API exposes the callable/identity/result/association contracts required to define permitted compositions. Internal Stage/Step Composition collaborators remain Aggregate-owned and are not exposed as universal runtime objects."
+  },
+  "publicApiVersioningAndCompatibility": {
+    "versioning": "Semantic Versioning for the supported Public API surfaces.",
+    "surfaceSeparation": "Core Public API and Prefect Integration Public API have separate documented compatibility guarantees even though the initial distribution shares one package version.",
+    "coreStability": "Core public contracts must not change merely because the Prefect version changes.",
+    "prefectCompatibility": "The initial Prefect Integration API is pinned/qualified against Prefect 3.9.2. A later Prefect version requires an explicit integration compatibility update and tests; it does not reopen the adoption decision for the initial profile.",
+    "breakingChanges": [
+      "Removing/renaming a public symbol.",
+      "Changing callable signatures or generic result semantics.",
+      "Changing identity scope/issuer/reuse semantics.",
+      "Changing OptionalResultSlot presence semantics.",
+      "Changing exception/result/custody behavior.",
+      "Changing supported Prefect binding behavior."
+    ],
+    "deprecation": "A public contract is deprecated with a documented replacement and migration window before removal, except where a security or correctness defect requires an explicitly documented urgent break.",
+    "privateModules": "Internal module paths, private helpers, wrapper functions, and incidental re-exports have no compatibility guarantee.",
+    "exportPolicy": [
+      "Use explicit symbol imports and explicit __all__ lists.",
+      "Do not use wildcard imports/re-exports.",
+      "Do not make an internal module public merely by re-exporting it accidentally.",
+      "Maintain a machine-verifiable Public API manifest and import tests."
+    ]
+  },
+  "publicApiConformanceSuite": {
+    "requiredTestGroups": [
+      {
+        "group": "Core import isolation",
+        "tests": [
+          "Import gpwcf.public_api.core in a clean environment without Prefect.",
+          "Assert no Prefect package/module is imported.",
+          "Assert no Generator/pygccxml module is imported.",
+          "Assert optional Supporting Pattern and Diagnostics packages are not eagerly imported."
+        ]
+      },
+      {
+        "group": "Documented import paths",
+        "tests": [
+          "Every documented Core and optional sub-surface import resolves.",
+          "Every documented Prefect Integration import resolves when the extra is installed.",
+          "No undocumented internal path is required by a consumer fixture."
+        ]
+      },
+      {
+        "group": "Callable/result contract typing",
+        "tests": [
+          "StageCallable signature and StageResult generic types match Wave 1.",
+          "StepCallable signature and StepExecutionResult generic types match Wave 2.",
+          "OptionalResultContributions preserves independent typed slots and Absent/Present(None).",
+          "StepProcessingUnit and SPUExecutionResult generic signatures match Wave 3."
+        ]
+      },
+      {
+        "group": "Optional pattern isolation",
+        "tests": [
+          "Import Error Handling without Validation/Observation.",
+          "Import Validation without Error Handling/Observation.",
+          "Import Observation without Error Handling/Validation.",
+          "Import Core result types without any optional pattern package."
+        ]
+      },
+      {
+        "group": "Dependency direction",
+        "tests": [
+          "Prefect Integration imports Core only through Core Public API.",
+          "Core imports no Prefect Integration module.",
+          "SPU imports no Step implementation.",
+          "Optional pattern packages import no Step Composition implementation.",
+          "No Consumer/Generator private package is imported by Core or Integration."
+        ]
+      },
+      {
+        "group": "Prefect Integration API",
+        "tests": [
+          "Importing Integration without gpwcf[prefect] produces an actionable optional-dependency error.",
+          "Stage Deployment binding preserves StageInvocation and returns StageResult.",
+          "Step Subflow binding preserves StepInvocation and returns StepExecutionResult.",
+          "SPU Task binding preserves SPUExecutionResult and domain/native identity separation.",
+          "Operational correlation records preserve native parent chains without exposing private metadata as Core contracts.",
+          "Stage result persistence/retrieval preserves domain result identity and type."
+        ]
+      },
+      {
+        "group": "Packaging metadata",
+        "tests": [
+          "Core wheel metadata has no unconditional Prefect dependency.",
+          "Prefect is guarded by the prefect extra.",
+          "py.typed is included.",
+          "No .docs/.poc/.dependencies/.env or consumer assets are included in the wheel."
+        ]
+      }
+    ],
+    "architectureTests": [
+      "Public API manifest matches the exported __all__ symbols.",
+      "Public API module ownership maps to Framework_Module_Boundary_Model.",
+      "Every public symbol has a source contract/design owner and versioning classification.",
+      "No duplicate public identity/result type exists under multiple internal packages."
+    ]
+  },
+  "requiredGoverningArtifactChanges": [
+    {
+      "target": "Dependency_and_Public_API_Architecture.json",
+      "changes": [
+        "Update Core Public API contract groups to include StageCallable/StageInvocation/StageResult, StepInvocation/StepExecutionResult/OptionalResultContributions, generic SPU result types, and canonical identities.",
+        "Add optional Diagnostics and separate Supporting Pattern public sub-surfaces.",
+        "Update Prefect Integration API to the binding/configuration/correlation/result retrieval contract groups defined here.",
+        "Resolve the prior Stage Callable, Stage Flow Result, and Step optional result slot readiness gaps according to Waves 1-4.",
+        "Keep production Prefect binding/failure recovery qualification as a separate implementation/test gate."
+      ]
+    },
+    {
+      "target": "Filesystem_Architecture.json",
+      "changes": [
+        "Allocate the explicit public_api/core and public_api/integrations/prefect source packages.",
+        "Allocate the documented optional public sub-surfaces for identities, diagnostics, and Supporting Patterns.",
+        "Keep internal modules outside public_api and do not wildcard re-export them."
+      ]
+    },
+    {
+      "target": "Framework_Module_Boundary_Model.json",
+      "changes": [
+        "Add MOD-CORE-IDENTITIES and MOD-CORE-DIAGNOSTICS.",
+        "Map each Public API surface/sub-surface to its logical module owner.",
+        "Keep consumer and Prefect Integration ownership boundaries separate."
+      ]
+    }
+  ],
+  "acceptanceCriteria": [
+    "Core and Prefect Integration Public APIs are separate explicit supported consumer boundaries.",
+    "The Core root import is Prefect-free and does not eagerly import optional patterns/diagnostics.",
+    "The Stage, Step, and SPU callable/result signatures match the detailed designs in Waves 1-3.",
+    "Optional result contributions and specialized pattern APIs remain typed and opt-in.",
+    "The API defines what consumers may implement, customize, compose, and invoke.",
+    "The consumer owns Pipeline Root; no generic Root API is created.",
+    "The Prefect Integration API exposes supported binding/configuration/correlation/result retrieval without exposing private wrappers or native metadata internals.",
+    "Public symbols and imports are explicit, curated, versioned, and tested.",
+    "Internal module paths have no consumer compatibility guarantee.",
+    "No specialized source contract or production source package is modified by this artifact."
+  ],
+  "changeControl": {
+    "authority": "Wave 6 Public API proposal. It becomes the supported consumer contract only after architecture review, governing-artifact reconciliation, and implementation conformance tests.",
+    "sourceContractPolicy": "This artifact does not modify source contracts or create Public API __init__.py files.",
+    "implementationGate": "Do not create public_api package files or export symbols until the six-wave design set and governing PHASE-03 artifacts are reconciled and accepted.",
+    "nextStep": "Wave 6 detailed design is complete at the artifact level. Perform a cross-wave consistency review of all six waves and reconcile the four PHASE-03 governing artifacts before creating source directories or implementation files."
+  }
+}

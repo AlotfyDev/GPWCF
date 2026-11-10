@@ -1,0 +1,10 @@
+{
+  "serialNumber": 12,
+  "name": "Typed Result Preservation",
+  "category": "Feature / Result Handling",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+  "description": "Preservation of typed domain results (SPUExecutionResult, StepExecutionResult, StageResult) through Prefect execution without replacing them with Prefect operational State; Prefect State is operational execution evidence, not a domain result.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

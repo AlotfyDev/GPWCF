@@ -1,0 +1,10 @@
+{
+  "serialNumber": 5,
+  "name": "PEP 621 Project Metadata",
+  "category": "Feature / Build Policy",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "Project metadata following PEP 621 in [project] table of pyproject.toml; provides standardized project metadata declaration.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}

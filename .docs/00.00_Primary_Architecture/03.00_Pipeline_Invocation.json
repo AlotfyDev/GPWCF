@@ -1,0 +1,364 @@
+{
+  "documentType": "GPWCFDetailedArchitectureDesign",
+  "documentId": "gpwcf.architecture-closure.wave1.pipeline-invocation",
+  "documentVersion": "1.0.0",
+  "status": "draft-for-architecture-review",
+  "designSequence": {
+    "wave": 1,
+    "waveName": "Stage Callable, Stage Result, Pipeline Invocation",
+    "artifactNumber": 3,
+    "predecessorArtifacts": [
+      "01.00_Stage_Callable.json",
+      "02.00_Stage_Result.json",
+      ".docs/Identity.json",
+      ".docs/03.00_GPWCF_Structure_Architecture/Framework_Module_Boundary_Model.json",
+      ".docs/03.00_GPWCF_Structure_Architecture/Dependency_and_Public_API_Architecture.json"
+    ],
+    "nextWave": "Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions"
+  },
+  "purpose": "Close the pipeline-invocation correlation gap without creating a GPWCF Pipeline Root Entity, Root Composition, pipeline runtime, or orchestration API. Define the minimal domain identity and propagation contract needed to correlate multiple Stage invocations that participate in one consumer-owned pipeline invocation.",
+  "scope": {
+    "included": [
+      "The distinction between a logical pipeline invocation and the external runtime execution that realizes it.",
+      "The ownership and semantics of PipelineInvocationIdentity.",
+      "The propagation of pipeline and parent invocation correlation through StageInvocation and StageResult.",
+      "The minimum integrity and uniqueness requirements for correlation.",
+      "The relationship between consumer-owned root orchestration and GPWCF Stage callable boundaries.",
+      "The Prefect mapping of domain correlation identities to native operational records."
+    ],
+    "excluded": [
+      "A GPWCF Pipeline Root Entity, Root Aggregate, Root Composition, or Root Callable Contract.",
+      "A generic Pipeline Definition, Pipeline Graph, Stage collection, Stage scheduler, dispatcher, or execution engine.",
+      "A universal pipeline input/output schema or PipelineResult.",
+      "A universal pipeline retry, resume, cancellation, compensation, recovery, or lifecycle policy.",
+      "A mandatory global identity registry or cross-process identity service.",
+      "Any assumption that every Stage invocation belongs to a pipeline; standalone Stage invocation remains valid.",
+      "Any assumption that a Prefect Root Flow or Deployment is a GPWCF domain entity."
+    ]
+  },
+  "governingArchitecture": {
+    "consumerOwnership": "The consuming application owns the logical pipeline invocation, its root entry point, workflow topology, Stage selection, pipeline-level inputs/outputs, execution policy, and final pipeline-level interpretation.",
+    "externalRuntimeOwnership": "The selected external workflow framework owns the native root workflow and its actual scheduling, dispatch, execution, and native run/task records.",
+    "gpwcfOwnership": "GPWCF owns the Stage invocation contract and the semantics required to preserve Stage identity, Stage invocation identity, and any supplied pipeline/parent correlation values across its callable boundary.",
+    "noRootInference": "The existence of a PipelineInvocationIdentity does not establish a Pipeline Root Entity, Root Aggregate, Root Composition, generic PipelineResult, or GPWCF orchestration responsibility.",
+    "correlationNotComposition": "Pipeline invocation correlation is metadata that links related Stage invocations. It does not itself create a functional relationship, association, composition edge, dependency, or execution order between Stages.",
+    "relationshipMechanism": "The consuming workflow and selected external runtime implement the actual Stage-to-Stage orchestration relationships. Their mechanisms are selected according to the required semantics; no Association mechanism is mandated by the existence of a shared pipeline identity."
+  },
+  "architecturalOptions": [
+    {
+      "optionId": "PIPELINE-INVOCATION-A",
+      "name": "NoFrameworkCorrelationContract",
+      "description": "Keep every pipeline invocation identifier entirely consumer-defined and pass it through the Stage boundary as an unconstrained application value.",
+      "advantages": [
+        "No additional GPWCF identity type or package allocation.",
+        "Maximum freedom for consumers."
+      ],
+      "disadvantages": [
+        "Weakens the ability of Core to guarantee that the pipeline correlation value is distinct from Stage and native runtime identities.",
+        "Encourages consumers and integrations to use arbitrary strings or untyped metadata.",
+        "Makes generic Stage invocation/result correlation less consistent across consumers."
+      ],
+      "disposition": "not-selected"
+    },
+    {
+      "optionId": "PIPELINE-INVOCATION-B",
+      "name": "PipelineInvocationIdentityOnly",
+      "description": "Define a small nominal PipelineInvocationIdentity value object in Core. The consumer creates and owns its value; GPWCF only carries and preserves it as an optional correlation identity.",
+      "advantages": [
+        "Provides a type-distinct correlation value without defining a Pipeline Root entity or runtime.",
+        "Keeps pipeline orchestration and lifecycle with the consumer.",
+        "Allows StageInvocation and StageResult to preserve a common pipeline correlation value.",
+        "Does not require a global registry or runtime service."
+      ],
+      "disadvantages": [
+        "Adds one Core identity contract whose value is created and governed by the consumer.",
+        "Requires explicit identity namespace and equality semantics."
+      ],
+      "disposition": "recommended"
+    },
+    {
+      "optionId": "PIPELINE-INVOCATION-C",
+      "name": "GenericPipelineInvocationAggregate",
+      "description": "Introduce a GPWCF PipelineInvocation entity/aggregate that owns root invocation state and coordinates Stages.",
+      "advantages": [
+        "Could centralize generic pipeline-level state if GPWCF were intended to own pipeline orchestration."
+      ],
+      "disadvantages": [
+        "Contradicts the established GPWCF scope and consumer/external-runtime ownership.",
+        "Duplicates the selected external workflow runtime's root execution responsibilities.",
+        "Creates a new mandatory abstraction without an established generic root contract."
+      ],
+      "disposition": "rejected"
+    },
+    {
+      "optionId": "PIPELINE-INVOCATION-D",
+      "name": "PipelineInvocationContextAndRuntime",
+      "description": "Introduce a generic context object, context propagation service, registry, and runtime manager for pipeline invocation.",
+      "advantages": [
+        "Could provide a centralized propagation mechanism."
+      ],
+      "disadvantages": [
+        "Overbuilds a correlation requirement into a runtime subsystem.",
+        "Introduces service-locator/registry/manager pressure and hidden global state.",
+        "Confuses carrying an identity with owning or executing a pipeline."
+      ],
+      "disposition": "rejected"
+    }
+  ],
+  "selectedDesign": {
+    "decision": "Define PipelineInvocationIdentity as a small immutable nominal Core value object, while leaving creation, lifecycle, root orchestration, topology, and pipeline-level policy with the consumer.",
+    "identityContract": {
+      "name": "PipelineInvocationIdentity",
+      "semanticRole": "Opaque identity of one logical consumer-owned pipeline invocation.",
+      "logicalOwnership": "Consumer-owned invocation; GPWCF provides only the type-safe correlation representation.",
+      "physicalAllocation": "Allocate PipelineInvocationIdentity and ParentInvocationIdentity once under core.identities.invocation. Their values remain consumer/caller-owned. StageIdentity and StageInvocationIdentity are allocated under core.identities.stage while their semantic issuance/ownership remains with the Stage Aggregate. The narrowly scoped core.identities module contains nominal immutable value types only; it provides no identity generator, registry, service, or lifecycle manager. Do not create a broad core.shared_contracts or core.pipeline runtime package.",
+      "publicApi": "gpwcf.public_api.core exposes the supported nominal identity type because it appears in the Stage invocation/result public contracts.",
+      "representation": {
+        "decision": "Opaque non-empty value with nominal type distinction.",
+        "format": "No UUID, ULID, integer, or textual encoding is mandated by this design. The concrete representation must be selected consistently with the framework identity implementation and consumer serialization requirements.",
+        "namespace": "PipelineInvocationIdentity must not be interchangeable with StageIdentity, StageInvocationIdentity, ParentInvocationIdentity, Prefect Flow Run ID, Task Run ID, or Deployment ID.",
+        "equality": "Equality is based on the complete opaque identity value within the PipelineInvocationIdentity type. Cross-type equality or implicit conversion is prohibited."
+      },
+      "creationAndLifecycle": [
+        "The consumer creates the identity when it establishes a new logical pipeline invocation.",
+        "The same identity is propagated to every Stage invocation that participates in that same logical pipeline invocation.",
+        "The consumer owns the identity's lifetime and determines when the logical pipeline invocation is considered complete or abandoned.",
+        "GPWCF does not allocate, persist, register, retire, or globally coordinate PipelineInvocationIdentity values.",
+        "A standalone Stage invocation may omit PipelineInvocationIdentity."
+      ],
+      "uniqueness": "The consumer must ensure that distinct logical pipeline invocations receive distinct identities within the consumer's declared identity scope. GPWCF validates the value's structural validity but does not provide global uniqueness enforcement."
+    },
+    "parentInvocationCorrelation": {
+      "purpose": "Preserve the immediate caller/parent invocation relationship independently of the pipeline-wide correlation identity.",
+      "identityName": "ParentInvocationIdentity",
+      "semanticRole": "Opaque identity of the invocation that directly requested the current Stage invocation, when such a caller invocation exists and correlation is required.",
+      "ownership": "The caller that owns the parent invocation.",
+      "required": false,
+      "distinction": [
+        "PipelineInvocationIdentity identifies the logical pipeline invocation shared across participating Stages.",
+        "ParentInvocationIdentity identifies the immediate caller invocation in the invocation chain.",
+        "StageInvocationIdentity identifies the current Stage invocation.",
+        "These identities may refer to related execution activity but are never aliases for one another."
+      ],
+      "representation": "A nominal opaque value type or a precisely typed caller-owned identity reference. It must not be represented as an untyped arbitrary metadata dictionary. The final concrete type allocation must avoid duplicate identity definitions.",
+      "noImplicitRoot": "The absence of a parent invocation identity does not cause GPWCF to create a root invocation identity. The consumer's native root execution remains outside GPWCF."
+    },
+    "invocationPropagation": {
+      "stageInvocationFields": {
+        "stage_identity": "Required Stage domain identity.",
+        "stage_invocation_identity": "Required identity of this Stage invocation.",
+        "pipeline_invocation_identity": "Optional PipelineInvocationIdentity supplied by the consumer.",
+        "parent_invocation_identity": "Optional ParentInvocationIdentity supplied by the immediate caller.",
+        "input": "Concrete Stage input contract.",
+        "execution_context": "Explicit Stage execution context; no native runtime object is exposed."
+      },
+      "stageResultFields": {
+        "stage_identity": "Copied from the invocation and validated against the producing Stage.",
+        "stage_invocation_identity": "Copied from the invocation and used as the primary result correlation key.",
+        "pipeline_invocation_identity": "Copied unchanged when supplied.",
+        "parent_invocation_identity": "Copied unchanged when supplied."
+      },
+      "propagationRules": [
+        "The consumer creates PipelineInvocationIdentity once for the logical pipeline invocation and passes it to each participating Stage invocation.",
+        "Each Stage invocation receives its own distinct StageInvocationIdentity.",
+        "The immediate caller supplies ParentInvocationIdentity where hierarchical invocation correlation is required.",
+        "A Stage must not invent, replace, normalize, or discard supplied correlation identities.",
+        "A StageResult must preserve the correlation values from the StageInvocation that produced it.",
+        "A child invocation receives the same PipelineInvocationIdentity when it belongs to the same logical pipeline invocation, while its ParentInvocationIdentity identifies the actual immediate parent invocation.",
+        "A nested Stage or other callable may participate in a pipeline without becoming a child of a GPWCF Pipeline entity; the parent-child relationship is defined by the caller and external workflow runtime."
+      ],
+      "standaloneInvocation": "A Stage may be invoked without PipelineInvocationIdentity when it is used independently of a consumer pipeline. StageIdentity and StageInvocationIdentity remain required."
+    },
+    "attemptAndRetrySemantics": {
+      "logicalIdentity": "PipelineInvocationIdentity identifies the logical pipeline invocation, not a Prefect Flow Run or a particular worker execution.",
+      "retryPolicy": "This design does not define whether a consumer retry reuses the same PipelineInvocationIdentity or starts a new logical identity. The consumer's retry/idempotency contract must make that distinction explicit.",
+      "stageInvocationIdentity": "Each distinct Stage invocation attempt that is admitted as a new invocation receives a distinct StageInvocationIdentity. Replaying an existing invocation identity is permitted only under an explicit idempotency/replay contract; no such generic contract is established here.",
+      "attemptIdentity": "No separate PipelineAttemptIdentity is introduced in the Core baseline. Add one only if a real consumer requires generic distinction between logical pipeline identity and pipeline attempt identity and the ownership semantics are approved.",
+      "noImplicitRetry": "A Prefect retry or worker restart must not be assumed to be a new or same domain invocation without explicit mapping rules."
+    },
+    "concurrencyAndIsolation": {
+      "identityCorrelation": "PipelineInvocationIdentity supports attribution of concurrently executing Stage invocations to the same logical pipeline invocation.",
+      "noSharedMutableContext": "Sharing a PipelineInvocationIdentity does not authorize sharing mutable StageExecutionContext, Stage input, Stage outputs, or Stage Flow Result objects between Stage invocations.",
+      "stageIsolation": "Each Stage invocation retains its own StageInvocationIdentity and invocation-scoped context even when several Stages share one PipelineInvocationIdentity.",
+      "noOrderingInference": "A shared pipeline identity does not imply execution order, dependency, serialization, mutual exclusion, or parent-child execution. Those are consumer/external-runtime topology decisions."
+    }
+  },
+  "prefectMapping": {
+    "selectedRuntime": "Prefect 3.9.2 (accepted initial external workflow runtime)",
+    "nativeRoot": "The consumer owns the Prefect Root Flow and its pipeline-level orchestration.",
+    "domainToNativeMapping": [
+      "PipelineInvocationIdentity is passed as a domain correlation value through the Root-owned dispatch Task into each Stage Deployment invocation.",
+      "StageIdentity and StageInvocationIdentity are passed separately as Stage domain parameters/correlation fields.",
+      "ParentInvocationIdentity records the domain-level immediate caller identity where supplied.",
+      "Prefect Root Flow Run ID, dispatch Task Run ID, synthetic deployment invocation Task Run ID, Stage Flow Run ID, Step Flow Run ID, SPU Task Run IDs, Deployment IDs, and worker labels remain native operational evidence."
+    ],
+    "nativeParentLinkage": "PHASE-02 established that the Stage Flow Run parent_task_run_id points to a Prefect-generated synthetic deployment invocation Task Run, whose task_inputs.__parents__ identifies the user-defined Root dispatch Task Run. The domain ParentInvocationIdentity must not be replaced by either native Task Run ID.",
+    "resultRetrieval": "The StageResult returned by the Stage Deployment is persisted/retrieved through the integration's configured result mechanism. Its PipelineInvocationIdentity remains a domain correlation value after retrieval.",
+    "qualifiedProfile": "Same-host Windows x64, CPython 3.15.1, Prefect 3.9.2, SQLite API server, one API-server worker, one Process work pool, two Process Workers with flow-run limit 1, and local code/result storage.",
+    "qualificationLimits": [
+      "This profile qualifies the tested two-worker Stage deployment pattern only.",
+      "Multi-host identity propagation and shared storage are not qualified.",
+      "Production GPWCF identity/value-object binding is not qualified.",
+      "Failure, cancellation, timeout, retry, worker loss, and recovery semantics are not qualified.",
+      "No higher-than-two concurrent Stage capacity claim is made."
+    ]
+  },
+  "dependencyAndPackageAllocation": {
+    "ownership": "The consumer owns the actual pipeline invocation and its identity lifecycle; Core owns only the nominal correlation value contract used at the Stage boundary.",
+    "packageRule": "Do not create core.pipeline, core.pipeline_invocation, pipeline_root, or pipeline_runtime packages unless a separately approved generic callable/aggregate contract is established.",
+    "identityTypeRule": "PipelineInvocationIdentity and ParentInvocationIdentity must be defined once under core.identities.invocation; StageIdentity and StageInvocationIdentity must be defined once under core.identities.stage. Their semantic issuance and lifecycle remain with their respective owners. None of these types may be duplicated under Stage contracts, Step contracts, Prefect Integration, or Consumer packages.",
+    "coreDependencyRule": "core.identities is a dependency-free value-contract module. Stage and Step aggregates retain semantic ownership of their own identity issuance/lifecycle, while consumers own PipelineInvocationIdentity creation/lifecycle. Identity value types must not depend on Stage Composition, Step Composition, Prefect Integration, or consumer implementations.",
+    "prefectDependencyRule": "integrations.prefect depends inward on Core identity and Stage public contracts. Core identity types do not import Prefect.",
+    "consumerDependencyRule": "The consumer creates the identity and depends on gpwcf.public_api.core to pass it through Stage invocations."
+  },
+  "architectureAlignmentAmendments": [
+    {
+      "target": "Framework_Module_Boundary_Model.json and Filesystem_Architecture.json",
+      "requiredChange": "Add MOD-CORE-IDENTITIES / core.identities as a mandatory standalone, dependency-free value-contract module with stage and invocation identity subpackages.",
+      "rationale": "Stage and Step invocation boundaries require shared nominal identity types while dependency direction forbids Step importing Stage identity definitions. The narrow identity module resolves this without creating a broad shared-contracts package.",
+      "scopeLimit": "Identity value types only; no ID generator, registry, service, manager, or runtime lifecycle ownership."
+    }
+  ],
+  "publicApiRequirements": {
+    "surface": "gpwcf.public_api.core",
+    "mustExpose": [
+      "PipelineInvocationIdentity as an opaque nominal correlation type.",
+      "ParentInvocationIdentity or its approved typed equivalent where required by StageInvocation.",
+      "StageInvocation and StageResult correlation fields using the canonical identity types."
+    ],
+    "mustNotExpose": [
+      "A Pipeline Root Entity or Pipeline Aggregate.",
+      "A generic Pipeline execution API or scheduler.",
+      "Prefect native IDs as substitutes for domain identities.",
+      "Consumer-specific pipeline definition or orchestration policy."
+    ]
+  },
+  "conformanceRequirements": [
+    {
+      "id": "PIPELINE-INV-001",
+      "requirement": "A PipelineInvocationIdentity identifies one logical consumer-owned pipeline invocation and is not a Pipeline Root Entity."
+    },
+    {
+      "id": "PIPELINE-INV-002",
+      "requirement": "The consumer creates and owns the lifecycle of PipelineInvocationIdentity."
+    },
+    {
+      "id": "PIPELINE-INV-003",
+      "requirement": "PipelineInvocationIdentity is nominally distinct from StageIdentity, StageInvocationIdentity, ParentInvocationIdentity, and native runtime identifiers."
+    },
+    {
+      "id": "PIPELINE-INV-004",
+      "requirement": "The same PipelineInvocationIdentity is propagated unchanged to all Stage invocations participating in the same logical pipeline invocation."
+    },
+    {
+      "id": "PIPELINE-INV-005",
+      "requirement": "Each Stage invocation has its own StageInvocationIdentity, even when multiple Stage invocations share one PipelineInvocationIdentity."
+    },
+    {
+      "id": "PIPELINE-INV-006",
+      "requirement": "ParentInvocationIdentity, when supplied, identifies the immediate caller invocation and is not replaced by a Prefect native parent Task Run ID."
+    },
+    {
+      "id": "PIPELINE-INV-007",
+      "requirement": "Pipeline invocation correlation does not imply Stage ordering, dependency, Association, Composition, or concurrency policy."
+    },
+    {
+      "id": "PIPELINE-INV-008",
+      "requirement": "A Stage can be invoked without PipelineInvocationIdentity when used independently of a consumer pipeline."
+    },
+    {
+      "id": "PIPELINE-INV-009",
+      "requirement": "No GPWCF Pipeline Root Entity, Root Composition, scheduler, or pipeline runtime is introduced by this contract."
+    },
+    {
+      "id": "PIPELINE-INV-010",
+      "requirement": "Prefect native identifiers and operational records remain separate from GPWCF/consumer domain correlation identities."
+    },
+    {
+      "id": "PIPELINE-INV-011",
+      "requirement": "Retries and replay do not reuse or replace domain invocation identities implicitly; the consumer must define retry/idempotency semantics."
+    }
+  ],
+  "decisionsAndRationales": [
+    {
+      "decisionId": "D-PIPELINE-INV-01",
+      "decision": "Provide PipelineInvocationIdentity but no PipelineInvocation Aggregate or runtime.",
+      "rationale": "A type-safe cross-Stage correlation identity closes the integration gap without contradicting consumer ownership of pipeline orchestration."
+    },
+    {
+      "decisionId": "D-PIPELINE-INV-02",
+      "decision": "Make pipeline correlation optional at the Stage boundary.",
+      "rationale": "The framework supports standalone Stage invocation and must not force every consumer to create a pipeline abstraction."
+    },
+    {
+      "decisionId": "D-PIPELINE-INV-03",
+      "decision": "Keep immediate parent invocation correlation distinct from pipeline-wide correlation.",
+      "rationale": "A pipeline identity groups related Stage invocations; a parent identity represents a direct invocation relationship. Neither substitutes for the other."
+    },
+    {
+      "decisionId": "D-PIPELINE-INV-04",
+      "decision": "Do not define a generic pipeline attempt or retry identity in this baseline.",
+      "rationale": "No accepted generic retry contract establishes the distinction or ownership semantics needed for such a type."
+    }
+  ],
+  "traceability": [
+    {
+      "source": ".docs/Identity.json",
+      "supports": [
+        "GPWCF does not own or implement consuming workflow pipeline orchestration.",
+        "Consumers own workflow topology and workflow-level operational decisions.",
+        "GPWCF provides Stage contracts and integration mechanisms, not a universal root runtime."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Level_Architecture.json",
+      "supports": [
+        "The Stage facade is the boundary through which the consuming workflow invokes a Stage.",
+        "The Stage owns its internal Step composition and Stage-specific flow semantics.",
+        "The consuming workflow/root invokes the Stage contract and consumes its outputs and Stage-specific result."
+      ]
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/05.00_Detailed_Design_Waves/Wave!_Stage_Callable_Stage Result_Pipeline Invocation/01.00_Stage_Callable.json",
+      "supports": [
+        "StageInvocation carries optional pipeline and parent correlation identities.",
+        "StageIdentity and StageInvocationIdentity remain required and distinct.",
+        "The Stage callable does not create a generic Pipeline Root contract."
+      ]
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/05.00_Detailed_Design_Waves/Wave!_Stage_Callable_Stage Result_Pipeline Invocation/02.00_Stage_Result.json",
+      "supports": [
+        "StageResult preserves optional pipeline and parent correlation values.",
+        "Stage result identity and correlation are domain data, not Prefect native IDs."
+      ]
+    },
+    {
+      "source": ".docs/02.00_Prefect_Adoption_Integration Architecture/PHASE-02/PHASE-02_Topology_Decision_Record.json",
+      "supports": [
+        "The Root is a consumer/external-runtime-owned native Prefect Flow.",
+        "Root-to-Stage native parent linkage includes a synthetic deployment invocation Task Run.",
+        "Domain correlation identities remain distinct from native Prefect identifiers.",
+        "The same-host two-worker profile is qualified; multi-host execution is not."
+      ]
+    }
+  ],
+  "acceptanceCriteria": [
+    "The design closes the need for a stable pipeline-wide correlation identity without creating a GPWCF Pipeline Root entity or runtime.",
+    "PipelineInvocationIdentity is consumer-created and consumer-owned but type-distinct in the Core public contract.",
+    "Pipeline correlation and immediate parent invocation correlation remain distinct.",
+    "The Stage callable and result contracts propagate correlation values unchanged.",
+    "Standalone Stage invocation remains supported.",
+    "The design introduces no scheduler, registry, service locator, graph model, or pipeline lifecycle manager.",
+    "Prefect native hierarchy and IDs are mapped as operational evidence and are not substituted for domain correlation identities.",
+    "Retry and replay semantics remain explicit and are not inferred from Prefect operational behavior.",
+    "The design is consistent with the accepted Prefect adoption decision and the qualified PHASE-02 evidence boundary.",
+    "No specialized source contract or production source package is modified."
+  ],
+  "changeControl": {
+    "authority": "Wave 1 detailed design proposal. It becomes an implementation constraint only after architecture review and explicit acceptance.",
+    "sourceContractPolicy": "This artifact does not modify Identity.json, Stage_Level_Architecture.json, or any specialized contract.",
+    "implementationGate": "Do not implement identity types or alter package structure until the Wave 1 design set and the overall Architecture Closure Design are reviewed and accepted.",
+    "nextStep": "Wave 1 detailed design is complete at the artifact level and its three artifacts have passed cross-artifact type/field/ownership consistency checks. Proceed to Wave 2 sequential design. Review the complete Wave 1 set before implementation."
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 13,
+  "name": "Clean Installation/Build Verification Profiles",
+  "category": "Feature / Verification",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "Installation commands and packaging verification profiles defined; wheel/sdist and import-isolation verification profiles established; clean isolated build verification is a release gate.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}

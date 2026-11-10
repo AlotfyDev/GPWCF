@@ -1,0 +1,252 @@
+{
+  "documentId": "pipeline.publication-reservation.contract",
+  "documentVersion": "0.1.2",
+  "status": "design-baseline",
+  "title": "PublicationReservation Contract",
+  "scope": {
+    "architecturalLevel": "stage-step-component",
+    "component": "Step-specific Operation Entry Publisher",
+    "owningLevel": "step",
+    "purpose": "Define the identity, binding, lifecycle, capacity guarantee, consumption, release, and misuse semantics of a reservation that authorizes publication of exactly one ErrorHandlingOperationEntry.",
+    "normativeBoundary": "This contract defines the reservation capability and its guarantees. Operation scheduling, operation selection, and any semantic execution order remain owned by the Step-specific Error Handling Composition. Concrete protocol representations, identity generation, transfer implementation, recovery ownership, and status retention are mandatory per-Step specializations under Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json."
+  },
+  "contract": {
+    "name": "PublicationReservation",
+    "role": "An opaque, single-use publication capability issued by a composition-owned Publisher. It reserves sufficient capacity and a valid ownership-transfer path for the complete ErrorHandlingOperationEntry associated with one Handling Operation Attempt.",
+    "genericConcept": "PublicationReservation[THandlingOperationResult]",
+    "issuer": "The OperationEntryPublisher owned by the Step-specific Error Handling Composition.",
+    "holder": "The Error Handling Unit invocation that requested the reservation.",
+    "cardinality": "One reservation authorizes acceptance of at most one logical operation entry for one Handling Operation Attempt.",
+    "coreGuarantee": "While a reservation is valid and in Reserved state, the Publisher has committed sufficient retention capacity and a valid entry-handoff path to accept the complete matching entry without ordinary capacity or resource-availability rejection."
+  },
+  "identity": {
+    "publicationReservationIdentity": {
+      "meaning": "Identifies one reservation instance independently of Publisher, Invocation, Unit, Attempt, and Operation identities.",
+      "uniquenessScope": "Unique within the issuing Publisher identity scope for as long as the reservation or any publication record referring to it may be observed.",
+      "stability": "Immutable for the reservation lifetime and retained publication-status lifetime.",
+      "generation": "Selected by the Publisher. The representation is implementation-defined; collision prevention within the uniqueness scope is mandatory.",
+      "opacity": "The reservation is an opaque capability. Knowing or reproducing its identity value alone does not authorize creation, mutation, or use of the reservation.",
+      "reuse": "A reservation identity is never reassigned to another reservation within its uniqueness scope."
+    },
+    "bindingIdentities": [
+      {
+        "name": "associationTargetIdentity",
+        "meaning": "Identifies the target scope bound to that Association."
+      },
+      {
+        "name": "errorHandlingUnitAssociationIdentity",
+        "meaning": "Identifies the exact Step-owned Association selected for the Unit invocation."
+      },
+      {
+        "name": "stepInstanceIdentity",
+        "meaning": "Identifies the owning Step instance in which the authorized Unit invocation occurs."
+      },
+      {
+        "name": "publisherIdentity",
+        "meaning": "Identifies the exact Publisher instance that issued the reservation."
+      },
+      {
+        "name": "invocationIdentity",
+        "meaning": "Identifies the exact Error Handling Unit invocation; it carries the canonical errorHandlingInvocationIdentity value and is not a separate identity."
+      },
+      {
+        "name": "errorHandlingUnitIdentity",
+        "meaning": "Identifies the concrete Error Handling Unit instance requesting the reservation."
+      },
+      {
+        "name": "handlingOperationAttemptIdentity",
+        "meaning": "Identifies the specific attempt whose possible operation result the reservation is intended to retain."
+      }
+    ],
+    "bindingRules": [
+      "A reservation is permanently bound to the issuing Publisher, Invocation, Error Handling Unit, and Handling Operation Attempt.",
+      "A reservation must not be transferred to another Publisher, Invocation, Error Handling Unit, or Attempt.",
+      "A reservation is obtained before the corresponding handling operation begins.",
+      "The handlingOperationIdentity is not assigned by reservation creation. It is assigned only after a reservation has been granted and before the actual operation begins.",
+      "An ErrorHandlingOperationEntry published with the reservation must carry the same handlingOperationAttemptIdentity and the actual handlingOperationIdentity assigned to that attempt after execution began.",
+      "One Handling Operation Attempt may start at most one actual Handling Operation execution. A new execution attempt requires a new handlingOperationAttemptIdentity and a new reservation.",
+      "The handlingOperationAttemptIdentity must not be reused within the producing Error Handling Unit identity scope while any attempt, reservation, or entry carrying it may be observed.",
+      "A reservation is permanently bound to the Step instance, selected Unit Association, and association target supplied for the invocation.",
+      "A reservation must not be used to publish an entry produced under a different Association or target scope.",
+      "The published entry must preserve the exact stepInstanceIdentity, errorHandlingUnitAssociationIdentity, and associationTargetIdentity bound to the reservation.",
+      "The reservation invocationIdentity is exactly the canonical errorHandlingInvocationIdentity of the Unit invocation and must match the operation entry provenance."
+    ]
+  },
+  "stateModel": {
+    "states": [
+      {
+        "name": "Reserved",
+        "meaning": "The Publisher has granted the reservation, committed the required retention capacity and handoff path, and has not accepted or released the associated entry."
+      },
+      {
+        "name": "Consumed",
+        "meaning": "The Publisher atomically accepted the matching complete entry and consumed the reservation. The Publisher/Composition now owns the retention responsibility for that entry."
+      },
+      {
+        "name": "Released",
+        "meaning": "The reservation was explicitly released after the operation produced no result requiring publication, or after any produced result was first transferred to an explicitly authorized Step-specific Recovery Owner/alternative owner and is no longer pending publication. Reserved capacity is returned to the Publisher available capacity."
+      }
+    ],
+    "initialState": "Reserved",
+    "terminalStates": [
+      "Consumed",
+      "Released"
+    ],
+    "permittedTransitions": [
+      {
+        "from": "NotCreated",
+        "event": "grant",
+        "to": "Reserved"
+      },
+      {
+        "from": "Reserved",
+        "event": "atomicEntryAcceptance",
+        "to": "Consumed"
+      },
+      {
+        "from": "Reserved",
+        "event": "release",
+        "to": "Released"
+      }
+    ],
+    "forbiddenTransitions": [
+      "Consumed to Released",
+      "Released to Consumed",
+      "Consumed to Reserved",
+      "Released to Reserved",
+      "Any terminal state to another state"
+    ],
+    "expiry": "No time-based expiry is defined by this common contract. Validity is bounded by the issuing Publisher and Invocation lifecycle. The Publisher must not silently expire or reclaim a reservation while its associated operation may have produced an unpublished result."
+  },
+  "capacityGuarantee": {
+    "reservedUnit": "One complete, valid ErrorHandlingOperationEntry[THandlingOperationResult], including its required identity references and complete operationResult representation.",
+    "requiredGuarantees": [
+      "The Publisher reserves capacity for the complete entry, not merely a collection slot or entry count.",
+      "The Publisher accounts for both outstanding Reserved capacity and already Occupied capacity when granting additional reservations.",
+      "A granted reservation cannot later be rejected for ordinary capacity exhaustion, storage-slot exhaustion, or failure to obtain resources that the reservation was required to secure.",
+      "The reservation includes or relies on a Step-specialized handoff strategy that can transfer the complete entry into Publisher-owned retention without an ordinary operational failure.",
+      "Capacity reserved for an unconsumed reservation is not simultaneously promised to another reservation.",
+      "On successful acceptance, reserved capacity transitions to occupied retention capacity and remains occupied while the Publisher/Composition is responsible for retaining the entry.",
+      "On valid release before an operation result exists, reserved capacity returns to available capacity."
+    ],
+    "capacityInvariant": "TotalCapacity >= ReservedCapacity + OccupiedCapacity, where each term is measured using the Publisher's Step-specialized complete-entry retention accounting.",
+    "typeSpecificTransferConstraint": [
+      "The Step specialization must define a transfer representation for THandlingOperationResult and ErrorHandlingOperationEntry.",
+      "The transfer from the Unit-owned prepared entry to the reserved Publisher-owned retention slot must be non-throwing, or must use an already-prepared owning envelope/handle whose ownership transfer is non-throwing.",
+      "The Publisher must not invoke arbitrary user-defined conversion, serialization, allocation, or other potentially failing preparation after the acceptance boundary.",
+      "If the specialized result type cannot satisfy a non-throwing handoff directly, the Step must prepare a complete owning representation before invoking publish; preparation failure leaves the result under the Unit's responsibility and does not consume the reservation.",
+      "This contract does not mandate a particular language trait, container, allocator, storage technology, or pointer/handle representation.",
+      "The concrete Step must evidence its no-fail transfer strategy under Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json; a generic statement is insufficient."
+    ],
+    "nonGuarantees": [
+      "No process-crash, power-loss, machine-failure, or durable-persistence guarantee is implied.",
+      "No guarantee is made that arbitrary user-defined THandlingOperationResult construction or preparation before publish cannot throw.",
+      "No universal maximum entry size is defined; the Step specialization supplies the sizing/accounting requirements used by its Publisher."
+    ]
+  },
+  "consumptionAndRelease": {
+    "consumption": [
+      "A reservation is consumed only at the atomic acceptance point at which the matching complete entry becomes retained by the Publisher/Composition.",
+      "Consumption and entry acceptance are one indivisible contract transition.",
+      "The Publisher must not report Consumed unless the complete entry has been accepted and the Publisher/Composition has assumed responsibility for retaining it.",
+      "The Publisher must not expose an accepted entry while leaving its reservation reusable or Reserved.",
+      "Once Consumed, the reservation cannot authorize another distinct entry."
+    ],
+    "release": [
+      "The Unit may request release when the associated operation produced no result requiring publication, or when any produced result and complete entry have first been transferred to an explicitly designated Step-specific Recovery Owner/alternative owner under that Step contract; no result may remain pending publication under Unit custody.",
+      "Release is an explicit operation against the issuing Publisher; it is not inferred merely from normal return, exception propagation, or Invocation closure.",
+      "A successful release transitions Reserved to Released and returns the reserved capacity.",
+      "A reservation must not be released while a produced result remains pending publication under Unit custody. Release after result production is permitted only after a verifiable custody transfer to an authorized Step-specific alternative owner.",
+      "Publisher/Composition must not automatically release a reservation merely because the Unit invocation throws or the Invocation is closing.",
+      "If a result has been produced but remains unpublished, the reservation remains Reserved and the result remains the Unit's responsibility until publication is accepted or an explicitly defined exceptional recovery path takes ownership.",
+      "The Publisher can validate reservation identity and state, but it cannot independently inspect a Unit-local THandlingOperationResult that has not been submitted. Compliance with the no-result release precondition is therefore a normative Error Handling Unit responsibility; the Step-specific exception/recovery contract must preserve any pending result if that precondition is violated."
+    ]
+  },
+  "misuseAndRepeatedUse": {
+    "ordinaryRejectionConditions": [
+      "Unknown or invalid reservation capability.",
+      "Reservation issued by a different Publisher.",
+      "Reservation bound to a different Invocation or Error Handling Unit.",
+      "Entry attempt identity does not match the reservation's bound Handling Operation Attempt.",
+      "Entry lacks the actual handlingOperationIdentity required for an operation that began.",
+      "Entry identity or structure does not satisfy the Step-specialized entry contract."
+    ],
+    "terminalStateUse": [
+      "Publishing a different entry with a Consumed reservation is rejected as invalid reuse.",
+      "Releasing a Consumed reservation is rejected.",
+      "Publishing or releasing a Released reservation is rejected.",
+      "A rejected misuse request must not mutate the state of another reservation or duplicate an accepted entry."
+    ],
+    "idempotentRetry": [
+      "A repeated publish request using a Consumed reservation and the same logical entry identity and same immutable entry content is treated as a retry of the original publication.",
+      "Such a retry returns an acknowledgement identifying the already accepted publication and does not create another entry or consume capacity again.",
+      "A repeated publish request using the same reservation but different entry identity or different content is not an idempotent retry and is a contract violation or invalid conflicting reuse according to the Publisher's diagnostic contract; it must never create a second accepted entry."
+    ],
+    "releaseRetry": "A repeated release request for an already Released reservation may return an idempotent Released acknowledgement. It must not return capacity more than once. Releasing a Consumed reservation remains invalid."
+  },
+  "ownershipBoundary": {
+    "beforeAcceptance": "The Error Handling Unit retains responsibility for the produced THandlingOperationResult and prepared ErrorHandlingOperationEntry. Calling publish does not itself transfer retention responsibility.",
+    "atAcceptance": "Only at the atomic acceptance point does responsibility for retaining the complete entry transfer to the Publisher/Step-specific Composition.",
+    "afterAcceptance": "The Publisher/Composition retains the accepted entry for the duration required by the Step-specific collection and ErrorHandlerResult aggregation contract.",
+    "sourceObjects": "Publication does not transfer ownership of source SPUError occurrences and does not alter ErrorResult ownership."
+  },
+  "relationships": [
+    {
+      "from": "OperationEntryPublisher",
+      "to": "PublicationReservation",
+      "relationship": "issues-and-validates"
+    },
+    {
+      "from": "PublicationReservation",
+      "to": "HandlingOperationAttempt",
+      "relationship": "reserves-one-entry-for"
+    },
+    {
+      "from": "PublicationReservation",
+      "to": "ErrorHandlingOperationEntry",
+      "relationship": "authorizes-acceptance-of-at-most-one-matching-entry"
+    },
+    {
+      "from": "Step-specific Error Handling Composition",
+      "to": "accepted ErrorHandlingOperationEntry",
+      "relationship": "assumes-retention-responsibility-at-atomic-acceptance"
+    }
+  ],
+  "explicitNonGoals": [
+    "No scheduling or ordering policy for Handling Operations is defined.",
+    "No universal retry policy for executing a Handling Operation is defined; only publication retry of the same logical entry is covered.",
+    "No durable persistence or crash-recovery guarantee is introduced.",
+    "No universal concrete storage, allocation, allocator, container, or memory-management mechanism is mandated.",
+    "No reservation is shared across multiple operation attempts or multiple entries.",
+    "No reservation is a substitute for handlingOperationAttemptIdentity or handlingOperationIdentity."
+  ],
+  "references": [
+    {
+      "document": "OperationEntryPublisher_Contract.json",
+      "relationship": "publisher API and acceptance protocol"
+    },
+    {
+      "document": "ErrorHandlingUnit_Contract.json",
+      "relationship": "Unit invocation, operation attempt, result production, and publication responsibilities"
+    },
+    {
+      "document": "ErrorHandlerResult_Contract.json",
+      "relationship": "published operation-entry structure and aggregation"
+    },
+    {
+      "document": "Single_Step_Publication_Specialization_Contract.json",
+      "relationship": "mandatory concrete per-Step specialization"
+    },
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Association_Contract.json",
+      "relationship": "Association identity and target binding added to the immutable reservation scope."
+    },
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Contract.json",
+      "relationship": "Canonical Unit invocation identity carried by the reservation invocationIdentity binding."
+    }
+  ],
+  "openDesignDetails": [
+    "The exact allocator, storage container, synchronization primitive, and implementation-level handoff mechanism remain Step implementation choices, subject to the concrete no-fail transfer obligation."
+  ]
+}

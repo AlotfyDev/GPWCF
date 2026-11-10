@@ -1,0 +1,10 @@
+{
+  "serialNumber": 51,
+  "name": "Stage Composition Owns Step Membership",
+  "category": "Feature / Responsibility",
+  "type": "Feature",
+  "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-03_GPWCF_Structure/Framework_Module_Boundary_Model.json",
+  "description": "Stage Composition coordinates Step public contracts only; Step Composition coordinates SPUs and selected Supporting Units. Composition is an aggregate responsibility owned by the Entity/Aggregate whose internal elements it coordinates.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

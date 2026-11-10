@@ -1,0 +1,10 @@
+{
+  "serialNumber": 13,
+  "name": "ErrorHandlerResult",
+  "category": "Class / Entity",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/10.00_Error_Handling.json",
+  "description": "Aggregate of accepted operation entries produced by Error Handling; distinct from ErrorResult and does not assert error resolution.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 11,
+  "name": "Domain/Native Identity Correlation",
+  "category": "Feature / Concept",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+  "description": "Correlation between GPWCF domain identities (Pipeline, Stage, Step, SPU, invocation) and Prefect native identities (Flow Run IDs, Task Run IDs, Deployment IDs); neither namespace substitutes for the other.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

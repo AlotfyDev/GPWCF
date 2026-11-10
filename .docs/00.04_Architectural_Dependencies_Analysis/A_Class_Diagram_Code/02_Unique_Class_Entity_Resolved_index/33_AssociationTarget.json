@@ -1,0 +1,10 @@
+{
+  "serialNumber": 33,
+  "name": "AssociationTarget",
+  "category": "Entity / Concept",
+  "type": "Entity",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/Step_Composition_Association_Coordination_Contract.json",
+  "description": "The Step-owned scope to which a component is applicable under an association; not necessarily the exact subject/resource acted upon by every invocation or operation.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

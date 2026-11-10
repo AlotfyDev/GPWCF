@@ -1,0 +1,10 @@
+{
+  "serialNumber": 7,
+  "name": "Step Subflow Binding",
+  "category": "Feature / Pattern Binding",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+  "description": "Native Prefect realization of Step execution as a Step Subflow; Stage-to-Step dispatch through a Prefect Task invoking a native Step Subflow while preserving the public Step callable boundary and native child Flow Run.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

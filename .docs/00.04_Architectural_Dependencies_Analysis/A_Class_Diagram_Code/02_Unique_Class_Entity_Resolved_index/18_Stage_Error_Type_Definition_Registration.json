@@ -1,0 +1,10 @@
+{
+  "serialNumber": 18,
+  "name": "Stage Error Type Definition Registration",
+  "category": "Feature / Responsibility",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/Stage_Level_Architecture.json",
+  "description": "The concrete Stage owns specialized StageErrorTypeDefinition types and definitions for its Stage-level error domain. The Stage registers its StageErrorTypeDefinition instances through the StageErrorTypeDefinitionRegistry Instance assigned to it by the Pipeline; the Pipeline retains exclusive ownership of that Registry Instance.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

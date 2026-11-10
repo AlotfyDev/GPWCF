@@ -1,0 +1,415 @@
+{
+  "documentId": "pipeline.step-supporting-validator-unit.behavioral.contract",
+  "documentVersion": "0.1.0",
+  "status": "design-baseline",
+  "title": "Step Supporting Validator Unit Behavioral Contract",
+  "scope": {
+    "architecturalLevel": "stage-step",
+    "component": "StepSupportingValidatorUnit",
+    "owningLevel": "Step",
+    "purpose": "Define the behavioral responsibilities, invocation boundary, validation result semantics, and provenance obligations of an optional Step Supporting Validator Unit.",
+    "appliesTo": "A concrete Step specialization that selects and uses one or more Step Supporting Validator Unit instances."
+  },
+  "terminology": {
+    "validatorUnitInstance": {
+      "identity": "validatorUnitIdentity",
+      "meaning": "One concrete runtime instance that performs a specialized validation responsibility."
+    },
+    "validatorInvocation": {
+      "identity": "validatorInvocationIdentity",
+      "meaning": "One distinct attempt to invoke a validator-unit instance for one authorized validation request under one specific association."
+    },
+    "associationContext": {
+      "meaning": "The identity-bearing association under which the invocation is authorized, including the Step-owned target scope to which that association applies."
+    },
+    "targetContext": {
+      "meaning": "The concrete validation-relevant context or target information supplied for the associated target scope. It is distinct from the target's identity."
+    },
+    "validationOutcome": {
+      "meaning": "The domain-specific conclusion produced by applying the validator's validation semantics to the supplied validation input and context.",
+      "constraint": "The common contract does not define a universal pass/fail boolean, severity model, or interpretation."
+    },
+    "validationEvidence": {
+      "meaning": "Optional information supporting, explaining, or substantiating the validation outcome, as defined by the concrete validator specialization."
+    },
+    "validationResult": {
+      "meaning": "The structured result of one normally completed validator invocation, including its outcome and the provenance needed to attribute that outcome to the invocation and its authorized association."
+    }
+  },
+  "architecturalPrinciples": {
+    "optionality": [
+      "A Step is not required to select, provision, associate, or invoke any Validator Unit.",
+      "The existence of this contract does not make validation mandatory for every Step.",
+      "A concrete Step selects Validator Units only when its processing responsibility requires their validation capabilities."
+    ],
+    "behavioralSpecialization": [
+      "This contract defines reusable behavioral obligations and boundaries, not a universal validation algorithm or domain model.",
+      "The concrete Validator Unit specialization defines what is validated, the meaning of its outcome, the structure of its evidence, and the validation rules applied.",
+      "The concrete Step defines how the selected Validator Unit is used within its own processing composition."
+    ],
+    "compositionAuthority": [
+      "Step Composition determines when an invocation is authorized, selects the applicable association, supplies the invocation context, and coordinates consumption and retention of the returned result.",
+      "The Validator Unit owns the execution of its specialized validation semantics and the production of its Validator Unit Validation Result.",
+      "The Validator Unit does not own Step flow control, Step orchestration, association management, or Step-level result aggregation."
+    ],
+    "identitySeparation": [
+      "validatorUnitIdentity, validatorUnitAssociationIdentity, associationTargetIdentity, stepInstanceIdentity, and validatorInvocationIdentity identify different architectural facts and must not be conflated.",
+      "A validator invocation is bound to exactly one association context, even when the same validator instance participates in multiple associations.",
+      "Repeated invocations under the same association receive distinct validatorInvocationIdentity values."
+    ],
+    "resultIndependence": [
+      "A Validator Unit Validation Result is distinct from SPUExecutionResult, StepCompositionFlowResult, StepValidatorResult, StepExecutionResult, ErrorResult, and ErrorHandlerResult.",
+      "A validation outcome is not itself a Step flow-control decision.",
+      "A validation result may be retained as historical evidence after its association has ended and after its validator instance has been released."
+    ]
+  },
+  "behavioralContract": {
+    "capability": "A Validator Unit evaluates a supplied validation input in the context of one authorized Step-owned target association and produces a specialized validation outcome with the provenance required to interpret that outcome.",
+    "responsibilities": [
+      "Apply the validation rules and semantics defined by the concrete Validator Unit specialization.",
+      "Use only the validation input and target context supplied or made accessible through the authorized invocation boundary.",
+      "Treat the supplied association context as the scope under which the invocation is authorized; do not select or substitute another association or target.",
+      "Produce a structured validation result for each invocation that completes normally, including the required invocation and association provenance.",
+      "Preserve the semantic distinction between the validation outcome and any evidence explaining that outcome.",
+      "Expose or return the result through the interaction mechanism defined by the concrete specialization without assuming ownership of Step-level aggregation.",
+      "Report invocation inability or implementation-level failure through the applicable failure/exception boundary without fabricating a validation outcome."
+    ],
+    "nonResponsibilities": [
+      "Selecting, creating, changing, rebinding, or ending Validator Unit Associations.",
+      "Provisioning, admitting, retaining, quiescing, or releasing the Validator Unit instance.",
+      "Choosing invocation timing, frequency, ordering, or coordination with SPU execution.",
+      "Choosing Step transitions or deciding whether a validation outcome terminates, pauses, retries, or otherwise changes Step flow.",
+      "Aggregating results from multiple Validator Unit instances into StepValidatorResult.",
+      "Constructing StepExecutionResult or modifying its other aggregate fields.",
+      "Creating SPU errors or Step errors merely because a validation outcome represents an invalid or unacceptable condition.",
+      "Defining a universal validation algorithm, pass/fail convention, severity taxonomy, or evidence format."
+    ]
+  },
+  "invocationContract": {
+    "invocationAuthority": "Step Composition exclusively authorizes and coordinates invocation of a Validator Unit within the owning Step.",
+    "conceptualInvocationBoundary": {
+      "name": "ValidatorUnitInvocation",
+      "description": "A logical invocation boundary consisting of a distinct invocation identity, one authorized association context, validation input, and any specialization-defined invocation context.",
+      "implementationFreedom": [
+        "The contract does not require a separately allocated request object, a particular method name, or a universal callable signature.",
+        "The concrete specialization may use a direct method call, an interface, a message, or another explicit interaction mechanism appropriate to its implementation.",
+        "The interaction mechanism must preserve the semantic input and identity obligations defined by this contract."
+      ]
+    },
+    "requiredInvocationInformation": [
+      {
+        "name": "stepInstanceIdentity",
+        "meaning": "Identifies the owning Step instance within which the invocation is authorized.",
+        "sourceAuthority": "Step Composition.",
+        "requirement": "Must be available to the invocation and result provenance where required to distinguish Step instances."
+      },
+      {
+        "name": "validatorUnitIdentity",
+        "meaning": "Identifies the concrete Validator Unit instance being invoked.",
+        "sourceAuthority": "The owning Step's instance/lifecycle coordination.",
+        "requirement": "Must identify the actual runtime instance performing the validation."
+      },
+      {
+        "name": "validatorUnitAssociationIdentity",
+        "meaning": "Identifies the particular association that authorizes this invocation.",
+        "sourceAuthority": "Step Composition's authoritative association state.",
+        "requirement": "Exactly one association identity must be bound to each invocation."
+      },
+      {
+        "name": "associationTargetIdentity",
+        "meaning": "Identifies the Step-owned target scope bound to the selected association.",
+        "sourceAuthority": "The authoritative association record maintained by Step Composition.",
+        "requirement": "Must correspond to the target bound to validatorUnitAssociationIdentity; it must not be independently substituted by the Validator Unit."
+      },
+      {
+        "name": "validatorInvocationIdentity",
+        "meaning": "Identifies this particular invocation attempt.",
+        "sourceAuthority": "Step Composition or the Step-defined invocation identity mechanism.",
+        "requirement": "Must be assigned or reserved before invocation begins and remain stable throughout invocation and result attribution."
+      },
+      {
+        "name": "validationInput",
+        "meaning": "The data, values, artifact, or references that the Validator Unit must evaluate.",
+        "sourceAuthority": "Defined and supplied by the concrete Step's invocation design.",
+        "requirement": "Its type, ownership, mutability, and validity rules are specialization-specific."
+      },
+      {
+        "name": "targetContext",
+        "meaning": "The validation-relevant context for the associated target scope, beyond the target's identity alone.",
+        "sourceAuthority": "Defined and supplied or exposed by the concrete Step's invocation design.",
+        "requirement": "Its representation, completeness, freshness, mutability, and access mode are specialization-specific."
+      }
+    ],
+    "specializationDefinedInvocationInformation": [
+      "Additional validation parameters, policies, configuration, or environmental context required by the concrete Validator Unit.",
+      "A target snapshot, immutable view, borrowed reference, handle, query interface, or other target-context access mechanism where required.",
+      "Correlation information connecting the validation request to a particular Step or SPU processing activity, if the concrete Step requires it.",
+      "Invocation constraints such as deadline, cancellation capability, or resource budget only where explicitly defined by the concrete specialization."
+    ],
+    "associationAndTargetBindingRules": [
+      "Step Composition selects an association that is valid for the Validator Unit instance and target scope at the point invocation is authorized.",
+      "The invocation is correlated with that exact validatorUnitAssociationIdentity and associationTargetIdentity pair.",
+      "The Validator Unit must not infer the target identity from validationInput when an authoritative associationTargetIdentity is supplied.",
+      "The targetContext must represent or provide access to the target scope identified by associationTargetIdentity; the concrete Step defines how that correspondence is established and maintained.",
+      "If the same Validator Unit instance has multiple active associations, the invocation context must disambiguate the selected association explicitly.",
+      "An invocation already authorized under one association must not be silently redirected to another association if associations change while work is in progress.",
+      "The concrete Step defines whether the invocation receives a target snapshot or accesses a live target context, including any consistency guarantees."
+    ],
+    "authorizationAndReadiness": [
+      "The Validator Unit may be invoked only when its instance is admitted and satisfies the applicable readiness conditions under the Lifecycle Contract.",
+      "The selected association must be valid and usable for new invocation under the Association Contract.",
+      "Step Composition is responsible for ensuring these preconditions before authorizing invocation.",
+      "The Validator Unit may reject or fail an invocation that violates its declared implementation-specific readiness, concurrency, or input constraints; such rejection is not a validation outcome unless the concrete specialization explicitly defines it as one."
+    ],
+    "invocationCardinality": {
+      "commonRule": "One invocation identity identifies one invocation attempt. A normally completed invocation produces one structured Validator Unit Validation Result, whose outcome may itself represent zero, one, or multiple validation findings according to the specialization.",
+      "notMandated": [
+        "Invocation frequency or trigger.",
+        "Synchronous versus asynchronous execution.",
+        "Sequential versus concurrent invocation.",
+        "Reentrant invocation.",
+        "Whether a validation request is retried as a new invocation.",
+        "Whether a Validator Unit instance may serve multiple associations concurrently."
+      ],
+      "specializationObligation": "The concrete Step and Validator Unit specialization define invocation scheduling, concurrency, reentrancy, retry identity, and any asynchronous completion/correlation mechanism."
+    }
+  },
+  "validationResultContract": {
+    "conceptualType": "ValidatorUnitValidationResult[TValidationOutcome, TValidationEvidence]",
+    "producer": "The invoked Validator Unit instance.",
+    "consumer": "Step Composition.",
+    "meaning": "A structured, invocation-scoped result describing the validation outcome produced by one normally completed Validator Unit invocation.",
+    "requiredElements": [
+      {
+        "name": "stepInstanceIdentity",
+        "meaning": "The owning Step instance under which the validation was performed."
+      },
+      {
+        "name": "validatorUnitIdentity",
+        "meaning": "The Validator Unit instance that performed the validation."
+      },
+      {
+        "name": "validatorUnitAssociationIdentity",
+        "meaning": "The exact association under which the invocation was authorized."
+      },
+      {
+        "name": "associationTargetIdentity",
+        "meaning": "The target scope to which the association applied."
+      },
+      {
+        "name": "validatorInvocationIdentity",
+        "meaning": "The distinct invocation attempt that produced this result."
+      },
+      {
+        "name": "validationOutcome",
+        "meaning": "The specialization-defined validation conclusion. Its type and interpretation are not standardized by this common contract."
+      }
+    ],
+    "optionalElements": [
+      {
+        "name": "validationEvidence",
+        "meaning": "Specialization-defined evidence, findings, diagnostics, measurements, or explanations supporting the validation outcome."
+      },
+      {
+        "name": "validationSubjectReference",
+        "meaning": "A reference or identity for the particular subject evaluated, when it is distinct from the association target or necessary for interpretation."
+      },
+      {
+        "name": "completionMetadata",
+        "meaning": "Specialization-defined information needed to interpret when or under which validation conditions the result was produced."
+      }
+    ],
+    "resultSemantics": [
+      "The result represents validation semantics, not invocation infrastructure status.",
+      "A validation outcome that expresses rejection, invalidity, non-compliance, or another negative domain conclusion is still a normally produced validation result, not automatically an invocation failure.",
+      "The common contract does not require validationOutcome to be boolean, nor does it prescribe names such as Passed, Failed, Valid, or Invalid.",
+      "An invocation that does not complete normally does not fabricate a Validator Unit Validation Result.",
+      "If a specialization supports partial findings or multiple result fragments before invocation completion, it must define their explicit result/custody contract; the common contract does not imply implicit partial-result publication."
+    ],
+    "identityAndProvenanceInvariants": [
+      "Every result must identify exactly one validator invocation.",
+      "The validatorUnitIdentity in the result must identify the instance that actually performed the invocation.",
+      "The validatorUnitAssociationIdentity and associationTargetIdentity must match the association context bound to that invocation.",
+      "The result's provenance must not be rewritten if the association later changes or ends.",
+      "Two results from two different invocations must remain distinguishable even if they have identical validation outcomes and were produced under the same association.",
+      "Historical references to the identities do not imply that the instance remains alive or that the association remains active."
+    ]
+  },
+  "resultProductionAndCustody": {
+    "productionOwnership": [
+      "The Validator Unit owns the validation computation and the construction of its specialized Validator Unit Validation Result.",
+      "While the result is being constructed and before it is handed off through the defined invocation boundary, the Validator Unit is responsible for preserving the integrity of the result.",
+      "The Validator Unit must not expose a result as complete before all fields required by its specialized result contract and provenance obligations are established."
+    ],
+    "handoffToStepComposition": [
+      "For a normally completed invocation, the Validator Unit returns or otherwise publishes the complete result through the interaction mechanism defined by the concrete specialization.",
+      "Upon successful handoff/acceptance, Step Composition becomes responsible for custody, retention, and subsequent use of that result within the Step.",
+      "The concrete specialization defines the precise handoff/acceptance point and whether the mechanism transfers ownership, transfers an immutable value, or establishes another explicit custody arrangement.",
+      "A result must not be treated as transferred merely because a handoff was attempted when the selected interaction mechanism can report rejection or indeterminate acceptance.",
+      "If the interaction mechanism permits an indeterminate handoff outcome, the concrete Step must define reconciliation and recovery ownership so that a produced result is neither silently lost nor aggregated twice."
+    ],
+    "postHandoffResponsibilities": [
+      "Step Composition retains the result according to the concrete Step's result/evidence retention policy.",
+      "Step Composition determines whether and how the result contributes to StepValidatorResult and ultimately to the optional validatorResult element of StepExecutionResult.",
+      "Step Composition may correlate the result with other SPU or supporting-unit results without changing the original validation outcome or provenance.",
+      "The Validator Unit does not retain ownership of a handed-off result solely because its own runtime instance remains alive.",
+      "The Validator Unit does not construct or mutate StepValidatorResult or StepExecutionResult."
+    ],
+    "preservationRules": [
+      "A result successfully handed off to Step Composition remains subject to the Step's retention contract even if a later internal operation fails or throws an exception.",
+      "A later invocation failure does not authorize discarding a previously accepted validation result.",
+      "Releasing the Validator Unit instance does not delete, mutate, or invalidate a result whose retention is still required.",
+      "If result content depends on instance-owned resources, the concrete specialization must define how the content is detached or materialized before those resources are released.",
+      "An exception after a result has been accepted must not revoke or rewrite that accepted result."
+    ]
+  },
+  "failureAndExceptionBoundary": {
+    "principle": "Validation conclusions, invocation failures, and lifecycle failures are distinct categories.",
+    "rules": [
+      "A validation outcome expressing an unacceptable condition is not, by itself, an exception or execution failure.",
+      "Input rejection, inability to access target context, internal validator failure, cancellation, and other abnormal invocation conditions are classified by the concrete Validator Unit and Step specialization.",
+      "The common contract does not prescribe a universal exception taxonomy, error object, retry policy, or conversion of exceptions into Error Occurrences.",
+      "An exception or abnormal termination does not automatically produce a validation result.",
+      "A thrown exception remains distinct from any validation result already handed off and accepted before the exception occurred.",
+      "If the concrete interaction mechanism allows partial result production before abnormal termination, its specialization must define the custody and recovery obligations for those partial results explicitly.",
+      "The Validator Unit does not decide whether Step Composition continues, retries, branches, or terminates the Step after an invocation failure."
+    ]
+  },
+  "associationAndLifecycleBoundaries": {
+    "associationContract": {
+      "reference": "Step_Supporting_Validator_Unit_Association_Contract.json",
+      "validatorUnitResponsibilities": [
+        "Use only the association context selected and supplied by Step Composition for the invocation.",
+        "Preserve the association and target identities in the result provenance.",
+        "Report an unusable or inconsistent association context to Step Composition without independently changing association state."
+      ],
+      "explicitBoundary": "The Association Contract governs applicability, target binding, association identity, validity, and dissociation. This Behavioral Contract governs what the Validator Unit does during an invocation under an already-authorized association."
+    },
+    "lifecycleContract": {
+      "reference": "Step_Supporting_Validator_Unit_Lifecycle_Contract.json",
+      "validatorUnitResponsibilities": [
+        "Satisfy its declared readiness and invocation-safety requirements.",
+        "Preserve result integrity through the defined handoff boundary.",
+        "Report inability to accept or continue work under its specialized behavior."
+      ],
+      "explicitBoundary": "The Lifecycle Contract governs provisioning, preparation, readiness, admission, availability, reuse, quiescence, and release. This Behavioral Contract does not establish or alter instance lifecycle state."
+    },
+    "stepCompositionAuthority": [
+      "Step Composition authorizes invocation and selects the applicable association.",
+      "Step Composition supplies or makes available validationInput and targetContext under the concrete Step's interaction design.",
+      "Step Composition retains accepted results and decides their Step-specific use and aggregation.",
+      "Step Composition coordinates invocation failures with the concrete Step's flow and recovery policy.",
+      "Step Composition coordinates association and lifecycle changes without delegating their authority to the Validator Unit."
+    ]
+  },
+  "retentionAndHistoricalInterpretation": {
+    "principle": "A validation result and its provenance may outlive both the association under which it was produced and the Validator Unit runtime instance that produced it.",
+    "rules": [
+      "The concrete Step defines the retention duration, storage representation, access policy, and release conditions for validation results and evidence.",
+      "Any retained result must preserve the required provenance identities for as long as the result may be observed or referenced.",
+      "An ended association remains identifiable as historical provenance but cannot authorize new invocations.",
+      "A released Validator Unit instance may remain referenced by historical result identity without remaining callable.",
+      "Retained result content must remain interpretable without requiring the original Validator Unit runtime instance to remain alive, unless the concrete Step independently defines another explicit dependency.",
+      "The concrete Step defines whether results are immutable after handoff; the common contract requires that historical provenance and outcome semantics not be silently rewritten."
+    ],
+    "minimumProvenance": [
+      "stepInstanceIdentity",
+      "validatorUnitIdentity",
+      "validatorUnitAssociationIdentity",
+      "associationTargetIdentity",
+      "validatorInvocationIdentity"
+    ],
+    "retentionAuthority": "Step Composition applies the concrete Step's result/evidence retention policy. This contract defines attribution and integrity obligations but does not prescribe a storage mechanism or universal retention period."
+  },
+  "specializationRequirements": {
+    "required": [
+      "Define the validation responsibility, subject, and rules implemented by the concrete Validator Unit.",
+      "Define the concrete validationInput type, ownership, mutability, and validity requirements.",
+      "Define the targetContext representation and how it is bound to associationTargetIdentity.",
+      "Define the concrete invocation interaction mechanism while preserving all required invocation identities and context.",
+      "Define the validationOutcome type and its domain-specific interpretation without relying on an assumed common boolean convention.",
+      "Define the validationEvidence structure, if evidence is produced, and whether it is optional or required.",
+      "Define any additional result fields and any validation subject identity distinct from the association target.",
+      "Define invocation completion and the exact result handoff/acceptance point.",
+      "Define result custody and recovery behavior if handoff acceptance can be rejected or remain indeterminate.",
+      "Define invocation failure, exception, cancellation, and partial-result behavior where applicable.",
+      "Define synchronous/asynchronous behavior, concurrency, reentrancy, and retry identity rules where applicable.",
+      "Define how Step Composition consumes and aggregates accepted Validator Unit Validation Results into the Step-specific StepValidatorResult.",
+      "Define result/evidence retention and detachment requirements consistently with the instance Lifecycle Contract."
+    ],
+    "completionRule": "A concrete Validator Unit specialization is behaviorally complete when its invocation inputs, association/target binding, outcome/evidence semantics, result provenance, custody boundary, and applicable failure/concurrency behavior are explicit and consistent with the Association and Lifecycle Contracts."
+  },
+  "explicitNonGoals": [
+    "No mandatory Validator Unit for every Step.",
+    "No universal method signature, request class, response class implementation, or transport protocol.",
+    "No universal validation algorithm, boolean pass/fail result, severity taxonomy, or evidence schema.",
+    "No universal target snapshot, live-reference, handle, or target-context access mechanism.",
+    "No universal invocation order, frequency, trigger, scheduler, or execution topology.",
+    "No universal synchronous, asynchronous, concurrent, or reentrant execution requirement.",
+    "No association creation, mutation, rebinding, or dissociation authority for the Validator Unit.",
+    "No instance provisioning, admission, reuse, quiescence, or release authority for the Validator Unit.",
+    "No Step flow-control, branching, retry, termination, or recovery authority for the Validator Unit.",
+    "No construction of StepValidatorResult or StepExecutionResult by the Validator Unit.",
+    "No automatic conversion of validation outcomes, invocation failures, or exceptions into SPUError or StepError occurrences.",
+    "No mandatory global result registry, validation manager, central mediator, or universal result-storage mechanism."
+  ],
+  "relationships": [
+    {
+      "from": "Step Composition",
+      "to": "Validator Unit Invocation",
+      "relationship": "authorizes-and-supplies-one-specific-association-context-and-validation-input"
+    },
+    {
+      "from": "Validator Unit Instance",
+      "to": "Validator Unit Validation Result",
+      "relationship": "performs-validation-and-produces-a-result-for-each-normally-completed-invocation"
+    },
+    {
+      "from": "Validator Unit Validation Result",
+      "to": "Step Composition",
+      "relationship": "is-handed-off-for-custody-retention-and-Step-specific-consumption"
+    },
+    {
+      "from": "Step Composition",
+      "to": "StepValidatorResult",
+      "relationship": "aggregates-applicable-accepted-validator-results-under-concrete-Step-rules"
+    },
+    {
+      "from": "StepValidatorResult",
+      "to": "StepExecutionResult.validatorResult",
+      "relationship": "is-exposed-as-the-optional-Step-level-validation-aggregate"
+    }
+  ],
+  "references": [
+    {
+      "document": "Step_Supporting_Validator_Unit_Association_Contract.json",
+      "relationship": "Association identity, target binding, applicability, validity, and dissociation boundaries."
+    },
+    {
+      "document": "Step_Supporting_Validator_Unit_Lifecycle_Contract.json",
+      "relationship": "Instance readiness, admission, invocation eligibility, quiescence, reuse, release, and evidence lifetime separation."
+    },
+    {
+      "document": "../00.00_Step/Step_Composition_Contract.json",
+      "relationship": "Step Composition authority over internal invocation coordination, result collection, flow, and lifecycle decisions."
+    },
+    {
+      "document": "../00.00_Step/Step_Contract.json",
+      "relationship": "Owning Step boundary and Stage-facing interface."
+    },
+    {
+      "document": "../01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      "relationship": "SPU boundary when an SPU instance is the validator association target."
+    },
+    {
+      "document": "../01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "relationship": "Step-level validatorResult aggregation boundary and distinction between Validator Unit results and StepValidatorResult."
+    }
+  ],
+  "openDesignDetails": [
+    "Define the concrete Validator Unit invocation input and target-context types for each Step specialization.",
+    "Define the concrete Validator Unit Validation Result type and the Step-specific StepValidatorResult aggregation model.",
+    "Define result handoff mechanics for any specialization whose interaction model is asynchronous or can report indeterminate acceptance.",
+    "Define the concrete Step's retention and release policy for validation result content and evidence."
+  ]
+}

@@ -1,0 +1,428 @@
+{
+  "documentType": "GPWCFDetailedArchitectureDesign",
+  "documentId": "gpwcf.architecture-closure.wave4.generic-error-handling",
+  "documentVersion": "1.0.0",
+  "status": "draft-for-architecture-review",
+  "designSequence": {
+    "wave": 4,
+    "waveName": "Generic Diagnostics, Error Handling, and Publication",
+    "artifactNumber": 2,
+    "predecessorArtifacts": [
+      "09.00_Generic_Diagnostics.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/05.00_Step_Execution_Result.json",
+      "../Wave2_Step Callable_StepExecutionResult_ OptionalResultContributions/06.00_Optional_Result_Contributions.json",
+      "../Wave3_SPU_Supporting_Pattern_Functional_Binding/08.00_Supporting_Pattern_Functional_Binding.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlingUnit_Contract.json",
+      ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlerResult_Contract.json"
+    ],
+    "nextArtifact": "11,00_Publication.json"
+  },
+  "purpose": "Define the reusable optional Error Handling capability as a specialized Supporting Pattern, including its generic type boundaries, unit/association/lifecycle ownership, operation-result aggregation, and dependency isolation, without promoting any consumer Error Model into GPWCF Core.",
+  "scope": {
+    "included": [
+      "The logical boundary and ownership of the optional Error Handling Supporting Pattern.",
+      "The generic Error Handling Unit callable and per-operation result model.",
+      "The separation of Error Handling Unit, ErrorResult, ErrorHandlerResult, and source Error Occurrences.",
+      "The Step-specialized target occurrence reference boundary.",
+      "The relationship among Error Handling Unit, Step-specific Error Handling Composition, OperationEntryPublisher, PublicationReservation, and Recovery Owner.",
+      "Association and lifecycle ownership constraints.",
+      "The generic-to-specialized dependency boundary and Public API allocation."
+    ],
+    "excluded": [
+      "A universal Error Model, Error Type Definition, Error Occurrence, Error Registry, or ErrorResult schema.",
+      "A universal error taxonomy, severity model, resolution guarantee, retry policy, or failure enum.",
+      "A universal Error Handling Unit base class shared with Validation and Observation.",
+      "A central Error Handling Manager, global Publisher, plugin registry, or runtime mediator.",
+      "A universal concrete Publisher storage/concurrency implementation.",
+      "A universal Single Step Publication policy for all Steps.",
+      "Automatic exception-to-error or error-to-success conversion."
+    ]
+  },
+  "governingArchitecture": {
+    "classification": "Optional reusable Supporting Pattern owned by the Step specialization when selected.",
+    "functionalPurpose": "Execute one or more authorized handling operations against target occurrences/resources made available by the owning Step and publish the resulting operation entries through the Step-specific publication contract.",
+    "stepCompositionOwnership": "Step Composition selects the Error Handling Unit, establishes/ends its Association, authorizes invocation, supplies the invocation-scoped Publisher capability, coordinates lifecycle, and integrates accepted entries into the Step-specific ErrorHandlerResult.",
+    "unitOwnership": "The Error Handling Unit owns its operation execution and each THandlingOperationResult it produces until the publication acceptance/custody transfer point. It does not own source Error Occurrences, ErrorResult, StepExecutionResult, or Step flow.",
+    "errorModelOwnership": "The concrete Step Error Model owns source error definitions, occurrences, references, and ErrorResult semantics. The Error Handling capability consumes authorized read-only target access and does not redefine that model.",
+    "publicationOwnership": "The Step-specific Error Handling Composition owns the Publisher capability and accepted-entry storage. The Unit receives an invocation-scoped capability and does not own the Publisher.",
+    "optionalNature": "A Step may select no, one, or multiple specialized Error Handling Units. The framework does not require Error Handling for every Step or SPU."
+  },
+  "semanticDistinctions": {
+    "errorOccurrence": "A specialized source-domain occurrence classified by the owning Error Model. Error Handling may inspect/reference it under bounded access but does not own or mutate it.",
+    "errorResult": "The Step Error Model's aggregate/representation of source error occurrences. It remains separate from the operation results produced while handling those occurrences.",
+    "handlingOperationResult": "The specialized result of one actual handling operation. It describes what that operation produced and does not by itself prove that the target occurrence was resolved.",
+    "errorHandlerResult": "The Step-specific aggregate of accepted Error Handling operation entries. It preserves operation identity, target references, result values, and publication provenance.",
+    "failure": "A contract-specific failure to fulfill an operation or publication obligation. No universal Failure type is introduced.",
+    "exception": "A thrown invocation/operation exception. It is not automatically an Error Occurrence, HandlingOperationResult, or ErrorHandlerResult entry.",
+    "diagnostic": "Optional descriptive evidence that may accompany a specialized violation/result. It does not replace acceptance knowledge, failure semantics, custody, or domain outcome.",
+    "prefectState": "Native operational execution evidence. It is not an Error Occurrence, ErrorResult, HandlingOperationResult, or ErrorHandlerResult."
+  },
+  "architecturalOptions": [
+    {
+      "optionId": "EH-A",
+      "name": "PromoteConsumerErrorModel",
+      "description": "Move Error Type Definitions, Error Occurrences, registries, and ErrorResult into a universal Core Error Model.",
+      "advantages": [
+        "One apparent framework-wide error vocabulary."
+      ],
+      "disadvantages": [
+        "Promotes Generator-specific registry and ownership assumptions.",
+        "Erases the distinction between SPU-level, Stage-level, and consumer-specific error families.",
+        "Makes an Error Model mandatory for consumers that may not need one.",
+        "Conflates error classification with the separate Error Handling capability."
+      ],
+      "disposition": "rejected"
+    },
+    {
+      "optionId": "EH-B",
+      "name": "UniversalSupportingUnit",
+      "description": "Make Error Handling, Validation, and Observation implementations conform to one common SupportingUnit interface/result.",
+      "advantages": [
+        "Appears to simplify runtime binding."
+      ],
+      "disadvantages": [
+        "Collapses distinct invocation cardinality, output, event, association, lifecycle, and custody semantics.",
+        "Creates an unowned universal abstraction and runtime adaptation pressure."
+      ],
+      "disposition": "rejected"
+    },
+    {
+      "optionId": "EH-C",
+      "name": "SpecializedOptionalErrorHandling",
+      "description": "Keep Error Handling as its own optional pattern package. Use existing generic input/result/publication contracts while keeping concrete occurrence references and Error Models Step/consumer-owned.",
+      "advantages": [
+        "Preserves existing specialized contracts and ownership.",
+        "Allows optional imports and installation.",
+        "Supports different source error families without a universal Error base.",
+        "Keeps publication and recovery semantics explicit."
+      ],
+      "disadvantages": [
+        "Concrete Step specializations must bind their own target occurrence and operation result types.",
+        "Each Step selecting publication must complete its concrete Publisher/Reservation proof."
+      ],
+      "disposition": "recommended"
+    }
+  ],
+  "selectedDesign": {
+    "decision": "Retain Error Handling as an optional specialized Supporting Pattern. Reuse the existing generic callable/operation/publication contracts; keep all Error Model semantics and concrete publication policy outside the generic Core Error Handling module.",
+    "module": {
+      "moduleId": "MOD-CORE-SUPPORT-EH",
+      "package": "core.supporting_patterns.error_handling",
+      "classification": "optional_reusable",
+      "publicApi": "gpwcf.public_api.core.supporting_patterns.error_handling",
+      "runtimeDependencies": [],
+      "selectionRule": "A consumer imports this package only when a concrete Step selects Error Handling."
+    },
+    "genericContracts": {
+      "errorHandlingUnit": {
+        "genericType": "ErrorHandlingUnit[TErrorHandlingUnitInput, THandlingOperationResult]",
+        "conceptualCallable": "execute(input: TErrorHandlingUnitInput, operationEntryPublisher: OperationEntryPublisher[THandlingOperationResult]) -> None",
+        "meaning": "One Unit invocation may perform zero, one, or multiple handling operation attempts and publishes one structured operation entry for each operation execution that produces a result.",
+        "inputOwnership": "The concrete Step defines TErrorHandlingUnitInput, including the exact Association context, operation context, authorized target-occurrence access, and required configuration/dependencies.",
+        "operationResultOwnership": "The concrete Error Handling Unit defines THandlingOperationResult for one actual operation execution, not for the whole Unit invocation.",
+        "normalReturn": "Normal return means the Unit invocation completed normally. It does not imply zero operations, zero results, or that all targeted errors were resolved.",
+        "exception": "An exception remains distinct from a returned operation result. If a result was already produced before the exception, the Unit and Step-specific Recovery Owner preserve its custody."
+      },
+      "targetOccurrenceReferenceBoundary": {
+        "type": "HandledErrorOccurrenceReference (Step-specialized)",
+        "owner": "Concrete Step Error Model and its specialized target access contract.",
+        "meaning": "A typed reference to the exact source occurrence/resource that a handling operation is authorized to inspect or target.",
+        "rules": [
+          "The generic Error Handling package does not define a universal ErrorOccurrence base class or generic TErrorTargetReference type.",
+          "The concrete Step supplies the exact HandledErrorOccurrenceReference type and read-only resolution/access capability in TErrorHandlingUnitInput.",
+          "The reference preserves the source producer identity and occurrence identity required by the Step Error Model.",
+          "The Unit receives access only to targets authorized by the selected Association and input contract.",
+          "The Unit cannot create replacement source occurrences or mutate ErrorResult."
+        ]
+      },
+      "operationEntry": {
+        "genericType": "ErrorHandlingOperationEntry[THandlingOperationResult]",
+        "meaning": "One complete immutable record of one actual handling operation execution, including its Unit/Association/target/invocation/attempt/operation identities and specialized result.",
+        "targetReferenceRule": "Target occurrence references are defined by the concrete Step Error Model and carried in the specialized entry representation; they are not generalized into a Core ErrorOccurrence base type.",
+        "minimumSemanticContent": [
+          "Step instance identity.",
+          "Error Handling Unit identity.",
+          "Error Handling Unit Association identity.",
+          "Association target identity.",
+          "Error Handling Unit invocation identity.",
+          "Handling Operation Attempt identity.",
+          "Handling Operation identity, assigned after reservation grant and before execution.",
+          "Exact Step-specialized target occurrence reference(s), when the operation is occurrence-targeted.",
+          "THandlingOperationResult.",
+          "Publication/reservation provenance required to prove acceptance and custody."
+        ],
+        "ownership": "The Unit prepares the entry; the Step-specific Publisher accepts and retains it atomically; the Step-specific Error Handling Composition aggregates accepted entries."
+      },
+      "errorHandlerResult": {
+        "genericType": "ErrorHandlerResult[THandlingOperationEntry, TErrorHandlingContext]",
+        "meaning": "The Step-specific aggregate of accepted operation entries published by the selected Error Handling Unit invocation(s).",
+        "typeParameters": [
+          {
+            "name": "THandlingOperationEntry",
+            "meaning": "The Step-specialized entry type used to represent one operation execution. It may be ErrorHandlingOperationEntry[THandlingOperationResult] or a Step-defined tagged union/variant when multiple Units have different operation result types."
+          },
+          {
+            "name": "TErrorHandlingContext",
+            "meaning": "The Step-specific context associated with the aggregate when required; use the concrete Step context type or None when no aggregate context is required."
+          }
+        ],
+        "owner": "Step-specific Error Handling Composition.",
+        "rules": [
+          "It aggregates accepted entries only; an unaccepted or indeterminate entry is not silently included as accepted.",
+          "It preserves each entry's Unit, Association, target, invocation, attempt, operation, and result provenance.",
+          "It is distinct from ErrorResult and does not imply that any source occurrence has been resolved.",
+          "It is the TErrorHandlerResult contribution carried through StepExecutionResult."
+        ]
+      },
+      "publisherAndReservation": {
+        "operationEntryPublisher": "OperationEntryPublisher[THandlingOperationResult] is an invocation-scoped capability supplied by Step-specific Error Handling Composition.",
+        "publicationReservation": "PublicationReservation[THandlingOperationResult] is a Publisher-issued capability that authorizes one complete entry for one handling operation attempt and secures the concrete capacity/resources required for final transfer.",
+        "authority": "The specialized Publisher contract owns the atomic acceptance point and accepted-entry retention. The Unit does not infer acceptance from a publish call or Prefect Task State.",
+        "detailAllocation": "The exact reserve/publish/status/release state machine, no-fail transfer, recovery, identity generation, and retention requirements are specified in 11,00_Publication.json."
+      }
+    },
+    "associationAndLifecycle": {
+      "association": {
+        "owner": "Step Composition.",
+        "scope": "The concrete Step chooses the exact target scope and Association. An Error Handling Unit invocation is bound to the exact Association selected for it; it must not infer or substitute another Association.",
+        "identity": "Unit identity, Association identity, association target identity, and occurrence identity remain distinct.",
+        "flexibility": "A Supporting Pattern may be associated with a Step, SPU, or another scope only where its specialized contract permits. The current Step Error Handling specialization governs only the scopes it explicitly defines.",
+        "termination": "Ending an Association prevents new invocations under that Association but does not automatically release the Unit or revoke accepted entries."
+      },
+      "lifecycle": {
+        "owner": "Step Composition.",
+        "unitResponsibility": "The Unit performs its own preparation, readiness reporting, operation setup/shutdown, and resource release.",
+        "separation": [
+          "Unit instance lifetime is distinct from Association lifetime.",
+          "Unit instance lifetime is distinct from invocation and operation lifetimes.",
+          "Publisher capability lifetime is invocation-scoped and distinct from Unit lifetime.",
+          "Accepted entries and ErrorHandlerResult may outlive the Unit instance and its Associations."
+        ],
+        "quiescence": "Before release, Step Composition closes admission, reconciles active operations and reservations, and ensures every produced result has a known custodian or explicit unresolved Recovery Owner.",
+        "noManager": "No generic lifecycle manager, pool, factory, or state machine is introduced."
+      }
+    },
+    "errorModelIsolation": {
+      "genericPackageMustNotDefine": [
+        "SPUErrorTypeDefinition or StageErrorTypeDefinition.",
+        "SPUError or StageError concrete occurrence families.",
+        "SPUErrorTypeDefinitionRegistry or StageErrorTypeDefinitionRegistry.",
+        "ErrorResult schema or occurrence aggregation.",
+        "A universal error taxonomy or global registry."
+      ],
+      "consumerSpecialization": "A concrete Step supplies its own Error Model, target occurrence reference types, registries if required, and ErrorResult contract. The Error Handling Unit consumes bounded typed references supplied by that Step.",
+      "generatorBoundary": "The current Generator Common Error Model remains consumer-specific. Its pipeline-owned registry matrix and concrete error types are not dependencies of core.supporting_patterns.error_handling.",
+      "diagnostics": "A specialized operation/Publisher violation may include Diagnostic[TDetails] from optional core.diagnostics, but Error Handling does not require that package and does not interpret diagnostic details."
+    },
+    "flowAndResultRules": {
+      "noFlowOwnership": "The Error Handling Unit does not control Step, Stage, or Pipeline flow.",
+      "noResolutionClaim": "A produced HandlingOperationResult or accepted ErrorHandlerResult entry does not prove that the target occurrence is resolved.",
+      "noAutomaticConversion": "A thrown exception is not automatically converted into ErrorResult, HandlingOperationResult, or ErrorHandlerResult.",
+      "optionalContribution": "The concrete ErrorHandlerResult may populate OptionalResultContributions.error_handler_result. It is never merged into error_result.",
+      "observationSeparation": "Observation Records are not Error Handling operation entries and are not included in ErrorHandlerResult unless a specialized contract explicitly defines an operation-specific observation payload."
+    }
+  },
+  "prefectIntegrationBoundary": {
+    "selectedRuntime": "Prefect 3.9.2 (accepted initial external workflow runtime)",
+    "nativeRealization": "A bounded Error Handling Unit invocation or explicitly bounded handling operation may be wrapped as a Prefect Task inside the owning Step Subworkflow.",
+    "bindingResponsibilities": [
+      "Pass the exact Step-defined TErrorHandlingUnitInput and invocation-scoped Publisher capability.",
+      "Preserve Unit, Association, target, invocation, attempt, operation, and reservation identities separately from Prefect native IDs.",
+      "Return/retain the exact operation result/entry and publication acceptance evidence through the specialized Publisher protocol.",
+      "Keep Prefect Task State separate from operation result, reservation state, publication acceptance, and custody.",
+      "Do not assume one Unit invocation equals one handling operation.",
+      "Do not assume Task completion proves the complete entry was accepted or the error was resolved."
+    ],
+    "notQualified": [
+      "Production Error Handling Unit binding to Prefect.",
+      "Reservation/Publisher behavior across process boundaries.",
+      "No-fail result transfer under the selected concrete Step payload types.",
+      "Ambiguous acceptance escrow and Recovery Owner implementation.",
+      "Failure, cancellation, timeout, retry, worker-loss, recovery, and safe release."
+    ]
+  },
+  "dependencyRules": {
+    "allowed": [
+      "core.supporting_patterns.error_handling may depend on core.identities value contracts.",
+      "A specialized Error Handling contract may optionally depend on core.diagnostics.",
+      "The selected Step may depend on the Error Handling contract surface only when it selects the capability.",
+      "integrations.prefect may depend inward on the generic Error Handling contracts and selected specialized Step contracts."
+    ],
+    "forbidden": [
+      "core.supporting_patterns.error_handling must not depend on Generator Common Error Model.",
+      "core.supporting_patterns.error_handling must not depend on Step Composition implementation.",
+      "core.supporting_patterns.error_handling must not depend on Prefect.",
+      "The generic package must not import concrete Step Error Model occurrence types.",
+      "No mandatory dependency on Validation or Observation packages.",
+      "No generic registry, manager, scheduler, global Publisher, or central mediator."
+    ]
+  },
+  "publicApiRequirements": {
+    "surface": "gpwcf.public_api.core.supporting_patterns.error_handling",
+    "mustExpose": [
+      "The generic Error Handling Unit contract.",
+      "ErrorHandlingOperationEntry[THandlingOperationResult].",
+      "ErrorHandlerResult[THandlingOperationEntry, TErrorHandlingContext].",
+      "PublicationReservation[THandlingOperationResult] and OperationEntryPublisher[THandlingOperationResult] protocol contracts.",
+      "The identity and Association value contracts needed to construct valid specialized invocations."
+    ],
+    "optInRule": "The Error Handling Public API is optional. Importing Core or using Stage/Step/SPU without Error Handling must not need this package.",
+    "mustNotExpose": [
+      "A universal Error Model or concrete Generator Error types.",
+      "A global Publisher implementation or manager.",
+      "A universal handling policy or resolution Boolean.",
+      "Prefect native objects as generic Error Handling types."
+    ]
+  },
+  "requiredGoverningContractChanges": [
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Framework_Module_Boundary_Model.json",
+      "change": "Retain MOD-CORE-SUPPORT-EH as optional_reusable; specify its generic identity/result/publication dependencies and forbid dependencies on Generator Error Model, Step Composition implementation, Prefect, and other optional patterns.",
+      "reason": "Makes the optional package's dependency closure explicit.",
+      "changeType": "module-boundary-clarification",
+      "approval": "Requires architecture acceptance and cross-artifact reconciliation."
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Filesystem_Architecture.json",
+      "change": "Allocate generic Error Handling contracts and publication protocol under core.supporting_patterns.error_handling without adding core.error_model or a universal supporting_units package.",
+      "reason": "The optional capability owns its behavior and publication contracts while the consumer owns the concrete Error Model.",
+      "changeType": "filesystem-allocation-clarification",
+      "approval": "Requires architecture acceptance and cross-artifact reconciliation."
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlingUnit_Contract.json",
+      "change": "No semantic change proposed; preserve its TErrorHandlingUnitInput and THandlingOperationResult specializations.",
+      "reason": "The existing contract already expresses the generic operation boundary and publication semantics.",
+      "changeType": "explicitly-no-change",
+      "approval": "No source contract modification proposed."
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlerResult_Contract.json",
+      "change": "No semantic change proposed; preserve ErrorHandlerResult[THandlingOperationEntry, TErrorHandlingContext] and its accepted-entry aggregate semantics.",
+      "reason": "The existing result contract already owns the two-parameter aggregate contract and its distinction from ErrorResult.",
+      "changeType": "explicitly-no-change",
+      "approval": "No source contract modification proposed."
+    }
+  ],
+  "conformanceRequirements": [
+    {
+      "id": "EH-GEN-001",
+      "requirement": "Error Handling remains an optional independent Supporting Pattern."
+    },
+    {
+      "id": "EH-GEN-002",
+      "requirement": "The generic package defines no universal Error Model, Error Occurrence, Error Registry, or ErrorResult schema."
+    },
+    {
+      "id": "EH-GEN-003",
+      "requirement": "ErrorHandlingUnit uses Step/consumer-specialized input and per-operation result types."
+    },
+    {
+      "id": "EH-GEN-004",
+      "requirement": "One Unit invocation may contain zero, one, or multiple operation attempts and results."
+    },
+    {
+      "id": "EH-GEN-005",
+      "requirement": "Every actual operation result is tied to its exact attempt, operation, target, Association, and Unit invocation provenance."
+    },
+    {
+      "id": "EH-GEN-006",
+      "requirement": "The Unit does not own or mutate source Error Occurrences or ErrorResult."
+    },
+    {
+      "id": "EH-GEN-007",
+      "requirement": "ErrorHandlerResult[THandlingOperationEntry, TErrorHandlingContext] aggregates accepted operation entries and remains distinct from ErrorResult."
+    },
+    {
+      "id": "EH-GEN-008",
+      "requirement": "Publisher/Reservation acceptance and recovery custody follow the specialized protocol and are not inferred from Prefect State."
+    },
+    {
+      "id": "EH-GEN-009",
+      "requirement": "Step Composition owns Association, invocation authorization, lifecycle, and Step-specific aggregate integration."
+    },
+    {
+      "id": "EH-GEN-010",
+      "requirement": "The generic Error Handling package imports no Generator Error Model, Prefect, or Step Composition implementation."
+    },
+    {
+      "id": "EH-GEN-011",
+      "requirement": "Diagnostics remain optional descriptive evidence and do not replace Error, Failure, Exception, or Outcome semantics."
+    },
+    {
+      "id": "EH-GEN-012",
+      "requirement": "No universal Error Handling Manager, plugin registry, scheduler, global Publisher, or resolution policy is introduced."
+    }
+  ],
+  "traceability": [
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlingUnit_Contract.json",
+      "supports": [
+        "ErrorHandlingUnit is generic over Step-specific input and per-operation result.",
+        "One invocation may execute multiple operation attempts.",
+        "Reservation precedes operation execution; publication acceptance is the custody handoff point.",
+        "The Unit does not own source occurrences, ErrorResult, StepExecutionResult, or Step flow."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/ErrorHandlerResult_Contract.json",
+      "supports": [
+        "ErrorHandlerResult uses THandlingOperationEntry and TErrorHandlingContext generic parameters.",
+        "ErrorHandlerResult aggregates accepted operation entries and remains distinct from ErrorResult."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Contract.json",
+      "supports": [
+        "Error Handling Unit is a Step-owned optional Supporting Unit.",
+        "Behavior, Association, and Lifecycle contracts are distinct and specialized.",
+        "Unit identity is distinct from Association, invocation, operation, and result lifetimes."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Association_Contract.json",
+      "supports": [
+        "Association identity and target identity are distinct from Unit identity.",
+        "One invocation is bound to the exact Association selected by Step Composition."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/Step_Supporting_Error_Handling_Unit_Lifecycle_Contract.json",
+      "supports": [
+        "Step Composition owns lifecycle decisions and coordinates admission, quiescence, reuse, and release.",
+        "Accepted results and ErrorHandlerResult may outlive the Unit instance and its Associations."
+      ]
+    },
+    {
+      "source": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.02_Step_Error_Handling/Single_Step_Publication_Specialization_Contract.json",
+      "supports": [
+        "The concrete Step must define no-fail result transfer, Recovery Owner, identity generation, status retention, and end-to-end publication traces."
+      ]
+    },
+    {
+      "source": ".docs/03.00_GPWCF_Structure_Architecture/Architecture_Closure_Design/05.00_Detailed_Design_Waves/Wave4_Generic_Diagnostics_Error_Handling_Publication/09.00_Generic_Diagnostics.json",
+      "supports": [
+        "Diagnostic is descriptive only and is not a universal Error, Failure, Exception, or Outcome.",
+        "Diagnostic may be used optionally by specialized Error Handling contracts."
+      ]
+    }
+  ],
+  "acceptanceCriteria": [
+    "Error Handling is a reusable optional capability, not a universal Error Model.",
+    "All source Error Model semantics remain with the concrete Step/consumer.",
+    "The Unit input, operation results, entries, and aggregate are explicitly typed and match the existing contract generic parameters.",
+    "Operation attempt/execution identities and Association/target provenance remain distinct.",
+    "Publisher/Reservation acceptance and recovery custody remain authoritative and separate from Prefect operational State.",
+    "ErrorHandlerResult remains distinct from ErrorResult and does not assert resolution.",
+    "Association and lifecycle remain Step Composition-owned.",
+    "No generic runtime manager, registry, scheduler, or global Publisher is introduced.",
+    "The design is consistent with the current specialized Error Handling contracts and Wave 2 optional result contribution model.",
+    "No specialized source contract is modified by this artifact."
+  ],
+  "changeControl": {
+    "authority": "Wave 4 detailed design proposal. It becomes an implementation constraint only after architecture review and explicit acceptance.",
+    "sourceContractPolicy": "This artifact preserves the existing ErrorHandlingUnit, ErrorHandlerResult, Association, and Lifecycle specialized contracts; it does not edit them.",
+    "implementationGate": "Do not implement or promote generic Error Handling package dependencies until Wave 4 and the concrete publication design are reviewed and accepted.",
+    "nextStep": "Review 11,00_Publication.json. It must specify the generic reservation/publication protocol boundary and the required per-Step specialization proof without choosing one universal storage or concurrency implementation."
+  }
+}

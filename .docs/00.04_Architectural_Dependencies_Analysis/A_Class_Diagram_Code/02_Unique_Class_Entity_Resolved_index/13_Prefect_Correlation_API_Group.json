@@ -1,0 +1,10 @@
+{
+  "serialNumber": 13,
+  "name": "Prefect Correlation API Group",
+  "category": "Feature / API Group",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Prefect Integration Public API group exposing supported Prefect correlation contract; domain/native identity correlation preserved without conflating namespaces.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

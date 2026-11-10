@@ -1,0 +1,21 @@
+digraph "Dependency Direction Rules (Acyclic, Forbidden Directions)" {
+  rankdir=LR;
+  node [shape=box, style=filled, fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=8, len=1.5];
+  label="Dependency Direction Rules (Acyclic, Forbidden Directions)";
+  labelloc=t;
+  Core [fillcolor="#e6f3ff"];
+  Prefect [fillcolor="#ffe6e6", tooltip="Prefect 3.9.2 external runtime"];
+  SupportingPatterns [fillcolor="#fff2e6"];
+  Consumers [fillcolor="#f0f0f0", tooltip="Consumer projects (external to GPWCF)"];
+  Core -> PublicAPI [label="exposes only", color="#0066cc"];
+  PrefectIntegration -> Core [label="FORBIDDEN", style=dashed, color="#ff0000"];
+  SPU -> Step [label="FORBIDDEN (reverse)", style=dashed, color="#ff0000"];
+  SupportingPatterns -> Core [label="FORBIDDEN", style=dashed, color="#ff0000"];
+  Consumers -> GPWCF_Internal [label="FORBIDDEN (Public API only)", style=dashed, color="#ff0000"];
+  Core -> StandardLibrary [label="imports only", color="#0066cc"];
+  PrefectIntegration -> Prefect [label="opt-in dependency", color="#cc6600"];
+  PublicAPI -> Core [label="depends on", color="#0066cc"];
+  PublicAPI -> PrefectIntegration [label="depends on (integration)", color="#cc6600"];
+  { rank=same; Core; SupportingPatterns; }
+}

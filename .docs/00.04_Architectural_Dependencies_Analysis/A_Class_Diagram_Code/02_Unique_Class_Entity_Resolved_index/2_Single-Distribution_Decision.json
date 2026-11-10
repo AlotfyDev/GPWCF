@@ -1,0 +1,10 @@
+{
+  "serialNumber": 2,
+  "name": "Single-Distribution Decision",
+  "category": "Feature / Packaging Decision",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "Selected option B: one gpwcf distribution containing Core and optional Prefect Integration package; Prefect declared only under optional [prefect] extra; Core base metadata has no third-party runtime dependencies.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}

@@ -1,0 +1,43 @@
+@startuml
+title Dependency, Packaging & Public API Associations
+skinparam monochrome true
+skinparam roundcorner 0
+
+class "Core" as Core <<Component>> {
+  standard-library-only
+  domain contracts
+}
+class "Prefect Integration Package" as PIP <<Component>> {
+  Prefect opt-in extra
+}
+class "Public API" as PA <<Component>> {
+  curated stable boundary
+  core + prefect public APIs
+}
+class "gpwcf Distribution" as Dist <<Component>> {
+  single distribution + optional Prefect extra
+}
+class "Setuptools Build Backend" as SB <<Component>> {
+  setuptools==84.2.1 / build_meta
+}
+class "core.identities" as CI <<Module>> {
+  nominal identity value types
+}
+class "core.diagnostics" as CD <<Module>> {
+  optional diagnostic value contract
+}
+
+Dist ..> Core : includes
+Dist ..> PIP : includes optional extra
+Core --> PA : exposes Core API
+PIP --> PA : exposes Integration API
+PIP .> Prefect : optional dependency (never Core)
+Dist --> SB : isolated build backend
+Core ..> CI : identity module
+Core ..> CD : diagnostics module (optional)
+CI .- CD : distinct modules
+
+note right of Dist : Core installs & imports without Prefect
+Forbidden dependency directions remain prohibited
+
+@enduml

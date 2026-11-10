@@ -1,0 +1,10 @@
+{
+  "serialNumber": 12,
+  "name": "Dependency Closure",
+  "category": "Feature / Policy",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "Dependency closure and release gates: dependency graph is acyclic and all forbidden dependency directions remain prohibited; every runtime/build/development dependency has one explicit owner.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

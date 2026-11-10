@@ -1,0 +1,203 @@
+{
+  "documentId": "pipeline.step-supporting-error-handling-unit.association.contract",
+  "documentVersion": "0.1.2",
+  "status": "design-baseline",
+  "title": "Step Supporting Error Handling Unit Association Contract",
+  "scope": {
+    "architecturalLevel": "stage-step",
+    "component": "StepSupportingErrorHandlingUnitAssociation",
+    "owningLevel": "StepComposition",
+    "purpose": "Define the Step-owned relationship that makes an Error Handling Unit instance applicable to a Step-defined target scope, including identity, multiplicity, invocation binding, change, dissociation, and historical provenance.",
+    "appliesTo": "A concrete Step specialization that associates one or more Error Handling Unit instances with Step, SPU, or other internal target scopes."
+  },
+  "definition": {
+    "association": "An explicit Step Composition-owned relationship between one Error Handling Unit runtime instance and one target scope within one Step instance.",
+    "associationIsNot": [
+      "Ownership of the Unit instance by the target.",
+      "Transfer of association-management, invocation, or lifecycle authority to the target.",
+      "An invocation, operation execution, operation target, or ErrorHandlerResult.",
+      "A guarantee that the Unit is currently admitted, ready, or executing.",
+      "A guarantee that every error occurrence in the target scope is eligible for handling."
+    ]
+  },
+  "identities": {
+    "stepInstanceIdentity": "Identifies the owning Step instance.",
+    "errorHandlingUnitIdentity": "Identifies one concrete Error Handling Unit runtime instance independently of its associations.",
+    "associationTargetIdentity": "Identifies the target scope to which the Unit is applicable.",
+    "errorHandlingUnitAssociationIdentity": "Identifies one particular relationship between one Unit instance and one target scope within one Step instance."
+  },
+  "targetScope": {
+    "permittedKinds": [
+      "A specific SPU instance or SPU-defined internal scope.",
+      "The owning Step instance as a whole.",
+      "Another explicitly identified Step-internal scope, operation boundary, component, or context defined by the concrete Step."
+    ],
+    "rules": [
+      "The common contract does not restrict an association target to an SPU.",
+      "The target scope is identified independently of the Unit instance and Association.",
+      "The target exposes or defines the context within which the Unit may be applicable; it does not transfer ownership or flow-control authority.",
+      "The concrete Step defines target identity representation, compatibility, and the precise scope of applicability.",
+      "associationTargetIdentity must distinguish the target scope kind and the concrete target instance within the owning Step."
+    ]
+  },
+  "multiplicity": {
+    "permitted": [
+      "One Unit instance may have multiple associations to distinct target scopes where the Step permits it.",
+      "Multiple Unit instances may be associated with the same target scope where the Step permits it."
+    ],
+    "notMandated": [
+      "One-to-one or one-to-many mapping.",
+      "Exclusive use of a Unit by one target.",
+      "A universal maximum number of associations.",
+      "A universal requirement that every target have an associated Unit."
+    ],
+    "identityRule": "Every association has its own identity even when the Unit instance or target scope is shared."
+  },
+  "authorityAndOwnership": {
+    "authority": "The owning Step Composition is the sole authority for establishing, activating where applicable, changing, rebinding, deactivating, and ending Unit Associations.",
+    "rules": [
+      "The Unit may consume the association context supplied for an invocation but may not create, select, mutate, replace, or terminate its own associations.",
+      "An SPU may be a target but does not thereby acquire authority over the Unit or its association.",
+      "Association does not transfer ownership of target resources, error occurrences, occurrence registries, Publisher instances, or operation results.",
+      "Step Composition retains association authority even when the technical implementation uses callbacks, references, registrations, or handles owned by another component."
+    ],
+    "separation": [
+      "Association existence is distinct from Unit admission/readiness under the Lifecycle Contract.",
+      "Association existence is distinct from invocation authorization and operation execution.",
+      "Association termination is distinct from Unit instance release.",
+      "Association metadata retention is distinct from operation-result retention."
+    ]
+  },
+  "establishment": {
+    "preconditions": [
+      "The Unit instance is known to Step Composition and has a stable errorHandlingUnitIdentity.",
+      "The target scope is known and has an associationTargetIdentity within the owning Step instance.",
+      "The Unit satisfies the lifecycle and admission preconditions required by the concrete Step.",
+      "The Unit capability is compatible with the target scope under the Step specialization."
+    ],
+    "rules": [
+      "Step Composition creates a distinct errorHandlingUnitAssociationIdentity for the relationship.",
+      "The association records the Step, Unit, and target identities as one explicit binding.",
+      "The association becomes eligible to authorize invocations only when the Step-defined establishment and activation conditions are satisfied.",
+      "Association establishment does not necessarily trigger an invocation or operation."
+    ]
+  },
+  "invocationBinding": {
+    "rule": "Every invocation performed under an association is bound to exactly one errorHandlingUnitAssociationIdentity and its corresponding associationTargetIdentity.",
+    "requiredProvenance": [
+      "stepInstanceIdentity",
+      "errorHandlingUnitIdentity",
+      "errorHandlingUnitAssociationIdentity",
+      "associationTargetIdentity",
+      "errorHandlingInvocationIdentity"
+    ],
+    "constraints": [
+      "When a Unit instance has multiple associations, Step Composition explicitly selects the association for each invocation.",
+      "The association target identity supplied for an invocation must match the target bound to that association.",
+      "The Unit must not infer, substitute, or silently broaden the selected association scope.",
+      "An invocation already authorized under an association remains attributable to that original association if the association changes or ends while the invocation is in progress.",
+      "An operation may target specific Error Occurrences or other resources that are narrower than, or otherwise distinct from, the association target; this does not mutate the association binding."
+    ]
+  },
+  "associationChange": {
+    "rules": [
+      "A change in applicability or target scope is an explicit Step Composition decision.",
+      "If the identity of the relationship changes, the preferred representation is to end the old association and establish a new association identity.",
+      "An in-flight invocation remains attributed to the association under which it was authorized.",
+      "The concrete Step defines how target access capabilities, registrations, and handles are updated and reconciled."
+    ],
+    "noImplicitEffects": [
+      "Changing an association does not create, release, or replace the Unit instance.",
+      "Changing an association does not rewrite existing invocation identities or operation entries.",
+      "Changing an association does not resolve or delete Error Occurrences.",
+      "Changing an association does not decide the retention or aggregation of already produced operation results."
+    ]
+  },
+  "dissociation": {
+    "authority": "Step Composition exclusively coordinates and authorizes association termination.",
+    "rules": [
+      "Dissociation ends the association's authority to authorize new invocations.",
+      "Dissociation does not automatically release or shut down the Unit instance.",
+      "Dissociation does not revoke operations already completed or entries already accepted.",
+      "The concrete Step defines whether an in-flight invocation may finish under its original association, must be cancelled, or must be reconciled before dissociation is complete.",
+      "Pending operations and produced-but-unaccepted results must be reconciled under the behavioral and lifecycle custody requirements.",
+      "Historical operation entries retain the original association and target provenance after dissociation."
+    ]
+  },
+  "historicalProvenance": {
+    "requiredAttribution": [
+      "stepInstanceIdentity",
+      "errorHandlingUnitIdentity",
+      "errorHandlingUnitAssociationIdentity",
+      "associationTargetIdentity",
+      "errorHandlingInvocationIdentity",
+      "handlingOperationAttemptIdentity",
+      "handlingOperationIdentity"
+    ],
+    "rules": [
+      "Dissociation does not invalidate operation entries produced under the association.",
+      "Historical association identity remains interpretable while any invocation record, operation entry, recovery record, or aggregate refers to it.",
+      "Retaining association metadata does not require retaining the Unit runtime instance, target object, borrowed view, callback, or handle.",
+      "Association identities must not be reused while historical evidence may still refer to them."
+    ]
+  },
+  "specializationRequirements": {
+    "required": [
+      "Define concrete Step, Unit, target, and Association identity representations and uniqueness scopes.",
+      "Define permitted target kinds and target-scope compatibility rules.",
+      "Define allowed multiplicity, sharing, and exclusivity constraints.",
+      "Define establishment, activation, deactivation, change, and dissociation mechanics.",
+      "Define target access capabilities and their ownership/lifetime.",
+      "Define in-flight invocation and operation behavior during association change or dissociation.",
+      "Define how association identity and target provenance are carried into operation entries and retained recovery evidence."
+    ],
+    "completionRule": "A concrete association specialization is complete when target scope, identity, multiplicity, authority, activation, invocation binding, dissociation, in-flight work, and historical provenance are explicit."
+  },
+  "explicitNonGoals": [
+    "No universal SPU-only association rule.",
+    "No universal one-to-one mapping, cardinality, or exclusivity.",
+    "No transfer of ownership or authority to the association target.",
+    "No automatic Unit construction, admission, invocation, release, or result aggregation caused by association changes.",
+    "No mandatory global association registry or central association manager.",
+    "No assumption that association target equals the target of every handling operation."
+  ],
+  "references": [
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Contract.json",
+      "relationship": "Invocation, operation target, operation result, and provenance requirements under an association."
+    },
+    {
+      "document": "ErrorHandlingUnit_Contract.json",
+      "relationship": "Detailed operation-attempt and publication protocol, subject to the broader association scope defined by the Supporting Unit contracts."
+    },
+    {
+      "document": "Step_Supporting_Error_Handling_Unit_Lifecycle_Contract.json",
+      "relationship": "Admission and lifecycle preconditions for association establishment and use."
+    },
+    {
+      "document": "../00.00_Step/Step_Composition_Contract.json",
+      "relationship": "Step Composition authority over internal component association and lifecycle coordination."
+    },
+    {
+      "document": "../00.00_Step/Step_Contract.json",
+      "relationship": "Owning Step aggregate boundary."
+    },
+    {
+      "document": "../../../Common/Step_Composition_Association_Coordination_Contract.json",
+      "relationship": "Framework-level association coordination invariants refined by this specialized Association Contract; specialized identity names and behavior remain authoritative."
+    }
+  ],
+  "frameworkCoordination": {
+    "commonContract": "../../../Common/Step_Composition_Association_Coordination_Contract.json",
+    "conformance": "This contract specializes the shared Step Composition coordination invariants. Where the shared contract defines only conceptual identity roles or lifecycle distinctions, this document supplies the component-specific identity names, semantics, mechanics, and constraints.",
+    "precedence": "The common contract governs cross-cutting Step Composition coordination invariants. This specialized contract governs component-specific behavior and mechanics. Neither contract changes the component pattern?s distinct behavioral result semantics."
+  },
+  "frameworkIdentityRoleMapping": {
+    "stepInstanceIdentity": "stepInstanceIdentity",
+    "componentInstanceIdentity": "errorHandlingUnitIdentity",
+    "associationTargetIdentity": "associationTargetIdentity",
+    "componentAssociationIdentity": "errorHandlingUnitAssociationIdentity",
+    "componentInvocationIdentity": "errorHandlingInvocationIdentity",
+    "targetIdentitySemantics": "associationTargetIdentity identifies both the target scope kind and the concrete target instance within the owning Step; it must not be represented by a bare SPU identity when the target scope may instead be Step-wide or another Step-internal scope."
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 18,
+  "name": "Public API Conformance Tests",
+  "category": "Feature / Verification",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Public API conformance tests verify supported exports, not private imports; tests validate public API manifest matches exported __all__ symbols, module ownership maps to Framework_Module_Boundary_Model, no duplicate public identity/result type under multiple internal packages.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

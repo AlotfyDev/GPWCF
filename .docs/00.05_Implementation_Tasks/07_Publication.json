@@ -1,0 +1,45 @@
+{
+  "taskId": "07_Publication",
+  "serialNumber": 7,
+  "target": "Publication / Atomic Acceptance",
+  "category": "Supporting Pattern",
+  "description": "Implement the mandatory per-Step Single Step Publication Specialization: concrete ReservationGrant, PublicationAcknowledgement, PublicationStatus, PublicationRejection, ReleaseAcknowledgement representations; named Step-owned Recovery Owner and recovery procedure; identity generation/uniqueness/stability/retirement rules; publication-status record retention/tombstone/expiry; end-to-end state and custody trace. Ensures no-fail ownership transfer boundary.",
+  "implementationClasses": [
+    "ReservationGrant",
+    "PublicationAcknowledgement",
+    "PublicationStatus",
+    "PublicationRejection",
+    "ReleaseAcknowledgement",
+    "PublisherContractViolation",
+    "Recovery Owner",
+    "publicationSequenceNumber"
+  ],
+  "relatedDiagrams": {
+    "class": "03_Diagrams_Codes_Files/04_Error_Handling.dot",
+    "sequence": "B_Sequencial_Diagram_Code/08_Publication_Specialization_Sequence.puml",
+    "association": "C_Association_Diagram_Code/07_Publication_Associations.puml",
+    "dependency": "D_Architectural_Dependency_Diagram_Code/04_Supporting_Pattern_Optional_Dependency.dot"
+  },
+  "dependencies": [
+    "04_Error_Handling"
+  ],
+  "acceptanceCriteria": [
+    "Concrete publication protocol representations defined per Step",
+    "No-fail final ownership-transfer strategy for THandlingOperationResult and ErrorHandlingOperationEntry",
+    "Named Step-owned Recovery Owner with recovery procedure for contract violation/indeterminate acceptance",
+    "Identity generation, uniqueness, stability, retirement, reuse rules defined",
+    "Publication-status retention, tombstone, expiry rules defined",
+    "End-to-end state and custody trace covering all branches",
+    "Exception/missing acknowledgement never treated as proof of rejection"
+  ],
+  "definitionOfDone": [
+    "Publication protocol representation tests",
+    "Recovery Owner custody transfer tests",
+    "Idempotent retry tests (same logical entry, consumed reservation)",
+    "Architecture test: TBD not permitted for required specializations"
+  ],
+  "priority": "high",
+  "status": "pending",
+  "estimatedEffort": "high",
+  "testStrategy": "Publication protocol tests; recovery/custody tests; idempotent retry tests; ambiguous outcome tests"
+}

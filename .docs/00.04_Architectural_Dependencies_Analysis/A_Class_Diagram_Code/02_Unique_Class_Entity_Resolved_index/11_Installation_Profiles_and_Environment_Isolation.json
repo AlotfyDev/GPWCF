@@ -1,0 +1,10 @@
+{
+  "serialNumber": 11,
+  "name": "Installation Profiles and Environment Isolation",
+  "category": "Feature / Policy",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Dependency/14,00_Dependency.json",
+  "description": "Installation profiles and environment isolation guarantees ensure Core-only installation works without Prefect; build backend dependencies remain isolated from runtime dependencies.",
+  "resolvedFrom": "00.01_Dependency_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "dependency-domain-features-entities-classes-components-index"
+}

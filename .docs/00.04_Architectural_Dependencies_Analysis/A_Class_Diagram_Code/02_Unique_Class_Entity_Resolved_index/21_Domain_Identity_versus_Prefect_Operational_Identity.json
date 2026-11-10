@@ -1,0 +1,10 @@
+{
+  "serialNumber": 21,
+  "name": "Domain Identity versus Prefect Operational Identity",
+  "category": "Feature / Conceptual Distinction",
+  "type": "Feature",
+  "link": "../../../../.docs/00.02_Prefect_Adoption_Integration Architecture/PHASE-01/PHASE-01_Topology_Decision_Record.json",
+  "description": "GPWCF domain identities (Pipeline, Stage, Step, SPU, invocation) remain separate from Prefect Flow Run IDs and Task Run IDs. Prefect State is operational execution evidence, not a domain result.",
+  "resolvedFrom": "03,00_Stage_Step_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-step-level-domain-features-entities-classes-components-index"
+}

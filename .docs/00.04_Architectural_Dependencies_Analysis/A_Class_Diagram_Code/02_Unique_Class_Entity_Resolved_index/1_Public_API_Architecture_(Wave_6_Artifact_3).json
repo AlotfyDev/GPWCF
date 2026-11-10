@@ -1,0 +1,10 @@
+{
+  "serialNumber": 1,
+  "name": "Public API Architecture (Wave 6 Artifact 3)",
+  "category": "Architectural Design / Feature",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Wave 6 detailed design (artifact 3) defining the stable, supported consumer-facing Public API surfaces of GPWCF Core and the optional Prefect Integration, including what consumers may implement/customize/compose, how they invoke Stage, how optional Supporting Patterns are accessed, and how Prefect-specific binding is used without exposing private implementation paths.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

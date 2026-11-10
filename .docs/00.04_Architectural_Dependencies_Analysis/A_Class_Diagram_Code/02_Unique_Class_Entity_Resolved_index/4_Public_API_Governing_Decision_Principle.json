@@ -1,0 +1,10 @@
+{
+  "serialNumber": 4,
+  "name": "Public API Governing Decision Principle",
+  "category": "Feature / Governing Rule",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Public_API/16.00_Public_API_Architecture.json",
+  "description": "Public API is the stable supported consumer contract boundary; it is not merely an __init__.py re-export list or a convenient alias for internal modules; public symbols are explicit, curated, versioned, and tested.",
+  "resolvedFrom": "00.03_Public_API_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "public-api-domain-features-entities-classes-components-index"
+}

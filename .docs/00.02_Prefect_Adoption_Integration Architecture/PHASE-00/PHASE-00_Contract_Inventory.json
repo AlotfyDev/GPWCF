@@ -1,0 +1,143 @@
+{
+  "documentType": "GPWCFPrefectAdoptionContractInventory",
+  "documentId": "GPWCF-PREFECT-PHASE-00-CONTRACT-INVENTORY",
+  "documentVersion": "1.0.0",
+  "status": "baseline-frozen-for-native-qualification; production-callable-implementation-gaps-open",
+  "capturedAt": "2026-11-08",
+  "decisionReference": "ADR-GPWCF-PREFECT-001",
+  "architectureReference": "../Prefect_Adoption_And_Integration_Architecture_v1.0.json",
+  "projectBaseline": {
+    "project": "SMRB.GenericPipelineWorkflowComponentsFramework",
+    "projectIdentityDocument": ".docs/Identity.json",
+    "identityStatus": "identityEstablished=false; implementationCapabilities=Not yet implemented or verified; consumerIntegration=Not yet established",
+    "implementationObservation": "The GPWCF project entry-point Python file is empty and requirements.txt states that the current framework baseline uses the Python standard library only. The inspected project contains architecture contracts but no executable Stage/Step/SPU runtime implementation classes.",
+    "interpretation": "PHASE-01 is therefore a Prefect native-capability qualification using explicitly labelled contract-shaped fixtures. It is not evidence of real GPWCF production-class binding."
+  },
+  "contracts": [
+    {
+      "role": "Stage structural architecture",
+      "path": ".docs/Architecture/Stage_Level/Stage_Level_Architecture.json",
+      "documentId": "pipeline.stage-level.architecture",
+      "version": "0.4.0",
+      "status": "design-baseline",
+      "relevantContract": "Stage owns its Step composition and exposes a Stage facade to the consuming workflow; no concrete Python class or fixed callable signature is prescribed."
+    },
+    {
+      "role": "Step public callable",
+      "path": ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Contract.json",
+      "documentId": "pipeline.step.contract",
+      "version": "0.4.0",
+      "status": "design-baseline",
+      "relevantContract": "execute(input: TInput) -> StepExecutionResult[TOutput]. Stage interacts only through this public Step boundary and must not invoke internal SPUs or Supporting Units directly."
+    },
+    {
+      "role": "Step internal composition",
+      "path": ".docs/Architecture/Stage_Level/Stage_Step_Level/00.00_Step/Step_Composition_Contract.json",
+      "documentId": "pipeline.step-composition.contract",
+      "version": "0.3.0",
+      "status": "design-baseline",
+      "relevantContract": "Concrete Step owns Step Composition; it defines internal component selection, transition semantics, execution evidence and result assembly. No universal StepComposition callable signature or separate runtime object is mandated."
+    },
+    {
+      "role": "SPU callable",
+      "path": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/Step_Processing_Unit_SPU_Contract.json",
+      "documentId": "pipeline.step-processing-unit.contract",
+      "version": "0.2.0",
+      "status": "design-baseline",
+      "relevantContract": "Step Composition invokes specialized StepProcessingUnit[TInput,TOutput] instances; SPUs do not own Step flow control."
+    },
+    {
+      "role": "SPU structured result",
+      "path": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.00_Step_Processing_Unit_SPU/SPUExecutionResult_Contract.json",
+      "documentId": "pipeline.spu-execution-result.contract",
+      "version": "0.1.0",
+      "status": "design-baseline",
+      "relevantContract": "SPUExecutionResult[TOutput] is the normally returned per-SPU result; it is not StepExecutionResult and does not own Step aggregation."
+    },
+    {
+      "role": "Step public result",
+      "path": ".docs/Architecture/Stage_Level/Stage_Step_Level/01.05_StepExecutionResult/StepExecutionResult_Contract.json",
+      "documentId": "pipeline.step-execution-result.contract",
+      "version": "0.2.0",
+      "status": "design-baseline",
+      "relevantContract": "StepExecutionResult[TOutput] is assembled by the Step/Step Composition and exposes independently optional processingArtifact, validatorResult, errorResult and errorHandlerResult. No universal success boolean is introduced."
+    }
+  ],
+  "integrationBoundary": {
+    "pipelineRoot": {
+      "authority": "Prefect owns the native Root Flow and pipeline-level orchestration.",
+      "gpwcfContract": "No separate concrete GPWCF Root callable contract was identified in the inspected project documents.",
+      "phase01Shape": "A PoC Root Flow invokes multiple Stage Parent Flows and passes explicit invocation correlation."
+    },
+    "stage": {
+      "authority": "Stage specialization owns Stage-facing behavior and its Step membership/flow semantics; Prefect executes the native Stage Parent Flow.",
+      "callableStatus": "The Stage facade is specified as an architectural role; concrete Python callable/class shape remains to be implemented or specialized."
+    },
+    "step": {
+      "authority": "Concrete Step owns the public execute contract and Step Composition semantics.",
+      "callableStatus": "The generic execute signature and StepExecutionResult return type are specified; concrete Step implementations and concrete TInput/TOutput specializations are not yet present in the GPWCF Python package."
+    },
+    "spu": {
+      "authority": "Concrete SPU owns its specialized processing behavior and SPUExecutionResult.",
+      "callableStatus": "Generic SPU callable/result contracts are documented; no production SPU Python classes are currently present."
+    }
+  },
+  "referenceConsumer": {
+    "project": "SMRB.PayloadDescriptionGenerator",
+    "stageModelRoot": "../.docs/Payload_Type_Definition_Description_Generator",
+    "stageModelCount": 13,
+    "stageIds": [
+      "STG-01",
+      "STG-02",
+      "STG-03",
+      "STG-04",
+      "STG-05",
+      "STG-06",
+      "STG-07",
+      "STG-08",
+      "STG-09",
+      "STG-10",
+      "STG-11",
+      "STG-12",
+      "STG-13"
+    ],
+    "decompositionRule": "Stage Model objectives and execution_steps are not presumed to be GPWCF Steps or SPUs. Concrete Step/SPU instances must be derived from the specialized Stage and Step contracts before PHASE-03/04 production binding."
+  },
+  "identityAndResultRules": [
+    "Pipeline, Stage, Step and SPU domain identities remain separate from Prefect Flow Run and Task Run IDs.",
+    "Prefect State is operational execution evidence, not a domain result.",
+    "SPUExecutionResult and StepExecutionResult remain distinct types and assembly boundaries.",
+    "A Step Flow is invoked only through the public Step.execute facade from its owning Stage.",
+    "Stage Flow code does not call Step-owned SPU or Supporting Unit Tasks directly.",
+    "Supporting Unit patterns are excluded from this PHASE-01 minimal vertical slice; no generic Supporting Unit runtime is introduced."
+  ],
+  "environmentBaseline": {
+    "pythonExecutable": "C:\\poc\\GPWCF\\prefect-env-managed\\Scripts\\python.exe",
+    "pythonVersion": "3.15.1",
+    "prefectVersion": "3.9.2",
+    "prefectLicense": "Apache-2.0",
+    "platform": "Windows x64",
+    "pipCheck": "passed; No broken requirements found.",
+    "installedDistributionCount": 106,
+    "lockFile": "prefect-3.9.2-managed-lock.txt",
+    "manifestFile": "Prefect_Environment_And_Dependency_Manifest.json",
+    "limitation": "The captured lock is a snapshot of the existing PoC environment, not yet a minimized GPWCF runtime dependency set. Clean reconstruction and transitive license review remain open."
+  },
+  "phase00Disposition": {
+    "completed": [
+      "Accepted Prefect decision copied into a scoped ADR without rewriting historical candidate evidence.",
+      "Generic Stage/Step/SPU/result contracts and versions inventoried.",
+      "Existing CPython 3.15.1 / Prefect 3.9.2 isolated environment verified.",
+      "Full installed-environment lock and package metadata manifest captured.",
+      "No specialized GPWCF contracts modified."
+    ],
+    "open": [
+      "No executable GPWCF production Stage/Step/SPU classes exist yet.",
+      "No concrete Generator-specific Step/SPU decomposition is approved by this inventory.",
+      "Root and Stage facade callable shapes require target-specific implementation contracts or explicit specializations.",
+      "Clean environment reconstruction from the captured lock has not yet been independently tested.",
+      "Complete third-party license review remains open."
+    ],
+    "status": "baseline-frozen-for-native-qualification; PHASE-01 may proceed with contract-shaped PoC fixtures; production integration remains blocked on concrete GPWCF callable implementations/specializations."
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "serialNumber": 1,
+  "name": "Prefect Integration Binding (Wave 5 Artifact 1)",
+  "category": "Architectural Design / Feature",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Prefect_Integration/12.00_Prefect_Integration_Binding.json",
+  "description": "Wave 5 detailed design (artifact 1) defining the Prefect 3.9.2 integration boundary that binds GPWCF's runtime-independent Stage, Step, SPU, and selected Supporting Pattern contracts to Prefect-native Flows, Deployments, Subflows, and Tasks while preserving domain ownership, identities, results, and operational evidence.",
+  "resolvedFrom": "05,00_Prefect_Integration_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "prefect-integration-domain-features-entities-classes-components-index"
+}

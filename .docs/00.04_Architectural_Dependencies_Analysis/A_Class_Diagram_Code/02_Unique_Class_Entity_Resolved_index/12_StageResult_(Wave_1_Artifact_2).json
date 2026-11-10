@@ -1,0 +1,10 @@
+{
+  "serialNumber": 12,
+  "name": "StageResult (Wave 1 Artifact 2)",
+  "category": "Architectural Design / Feature",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Stage_Level/02.00_Stage_Result.json",
+  "description": "Wave 1 detailed design (artifact 2) defining a generic Stage invocation result envelope enabling caller and external workflow integration to retrieve and correlate a Stage result while preserving Stage-specific output, Stage Flow Result, and Stage domain outcome as distinct typed values.",
+  "resolvedFrom": "04,00_Stage_Level_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "stage-level-domain-features-entities-classes-components-index"
+}

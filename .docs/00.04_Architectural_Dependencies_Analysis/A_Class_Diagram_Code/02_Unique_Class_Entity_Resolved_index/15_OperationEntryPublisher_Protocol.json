@@ -1,0 +1,10 @@
+{
+  "serialNumber": 15,
+  "name": "OperationEntryPublisher Protocol",
+  "category": "Class / Contract",
+  "type": "Class",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Common/11,00_Publication.json",
+  "description": "Wave 4 detailed design (artifact 3) defining the reservation-backed OperationEntryPublisher protocol; the Step-specific Error Handling Composition-owned invocation-scoped capability that accepts and retains complete ErrorHandlingOperationEntry values, the only authoritative delivery path for operation entries.",
+  "resolvedFrom": "01.00_Common_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "common-domain-features-entities-classes-components-index"
+}

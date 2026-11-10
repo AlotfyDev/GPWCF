@@ -1,0 +1,10 @@
+{
+  "serialNumber": 1,
+  "name": "Packaging Architecture (Wave 6 Artifact 2)",
+  "category": "Architectural Design / Feature",
+  "type": "Feature",
+  "link": "../../../../.docs/00.00_Primary_Architecture/Packaging/15.00_Packaging.json",
+  "description": "Wave 6 detailed design (artifact 2) defining the initial Python distribution model, build backend, project metadata, optional Prefect installation extra, dependency lock strategy, package discovery, and clean installation/build verification profiles for GPWCF.",
+  "resolvedFrom": "00.02_Packaging_Domain_Features_Entities_Classes_Components_Index.json",
+  "indexId": "packaging-domain-features-entities-classes-components-index"
+}
